@@ -42,25 +42,3 @@ jobs:
         git add data/blog/posts_en.json
         git commit -m "Auto-update blog content [skip ci]" || echo "No changes to commit"
         git push
-
-    # Deploy to Cloud Run
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v1'
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
-        
-    - name: 'Set up Cloud SDK'
-      uses: 'google-github-actions/setup-gcloud@v1'
-
-    - name: 'Build and Push Container'
-      run: |
-        gcloud auth configure-docker
-        gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/amz-website:latest .
-
-    - name: 'Deploy to Cloud Run'
-      run: |
-        gcloud run deploy amz-website-service \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/amz-website:latest \
-          --region us-central1 \
-          --platform managed \
-          --allow-unauthenticated
