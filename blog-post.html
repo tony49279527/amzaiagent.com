@@ -322,29 +322,31 @@
             // I will Update the Python Script to write to JSON.
 
             const script = document.createElement('script');
-            script.src = `data/blog/posts_en.json?v=${new Date().getTime()}`;
+            script.src = `data/blog/blog_posts.js?v=${new Date().getTime()}`;
             script.onload = () => {
-                fetch('data/blog/posts_en.json')
-                    .then(r => r.json())
-                    .then(posts => {
-                        // Logic to find post by ID or Slug
-                        // Old logic used ID, new bot uses Slug. 
-                        // Let's support both.
-                        let post = posts.find(p => p.id === postId);
-                        if (!post && window.location.search.includes('slug')) {
-                            const slug = new URLSearchParams(window.location.search).get('slug');
-                            post = posts.find(p => p.slug === slug);
-                        }
+                // blog_posts.js sets window.blogPostsEN
+                const posts = window.blogPostsEN || [];
 
-                        if (!post) {
-                            articleContent.innerHTML = '<div style="text-align: center; padding: 4rem;">Article not found</div>';
-                            return;
-                        }
+                // Logic to find post by ID or Slug
+                let post = posts.find(p => p.id === postId);
+                if (!post && window.location.search.includes('slug')) {
+                    const slug = new URLSearchParams(window.location.search).get('slug');
+                    post = posts.find(p => p.slug === slug || p.id === slug);
+                }
+                // Also try matching by id as slug
+                if (!post) {
+                    post = posts.find(p => p.id === postId || p.slug === postId);
+                }
 
-                        document.title = `${post.title} - Amz AI Agent`;
-                        updateBreadcrumbTitle(post.title);
+                if (!post) {
+                    articleContent.innerHTML = '<div style="text-align: center; padding: 4rem;">Article not found</div>';
+                    return;
+                }
 
-                        articleContent.innerHTML = `
+                document.title = `${post.title} - Amz AI Agent`;
+                updateBreadcrumbTitle(post.title);
+
+                articleContent.innerHTML = `
                         <article>
                             <header class="article-header">
                                 ${post.tags && post.tags.length > 0 ? `<span class="article-tag">${post.tags[0]}</span>` : ''}
@@ -362,7 +364,6 @@
                             </div>
                         </article>
                     `;
-                    });
             };
             document.head.appendChild(script);
         });
