@@ -39,8 +39,15 @@ def get_free_tier_prompt(
     sources_text = _format_sources(web_sources)
     products_text = _format_products(amazon_products)
 
-    return f"""You are an expert Amazon market analyst and product selection strategist. 
-Analyze the following products in the "{category}" category to help a potential seller evaluate market entry opportunities.
+    return f"""You are a Lead Market Analyst.
+Your task is to write a **High-Quality Market Entry Assessment** (Lite Version).
+The goal is to impress the user with professional insights so they upgrade to Pro.
+
+**CRITICAL REQUIREMENTS:**
+1. **Length**: 2500+ words (Comprehensive but concise)
+2. **Data**: You MUST cite specific review examples (at least 3-5 key quotes).
+3. **Structure**: Professional Business Chinese.
+4. **Tables**: Include at least 2 tables (Market Score and Pain Points).
 
 === INPUT DATA ===
 Category: {category}
@@ -53,44 +60,48 @@ Marketplace: {marketplace}
 === PRODUCT DATA ===
 {products_text}
 
-=== ANALYSIS REQUIREMENTS ===
+---
 
-Generate a comprehensive Product Discovery Report with the following structure:
+# 市场机会评估报告 (标准版)
 
-### 1. EXECUTIVE SUMMARY (200-300 words)
-- Overall market attractiveness score (1-10)
-- Key opportunity areas identified
-- Primary risks and barriers
-- Bottom-line recommendation (Enter/Wait/Avoid)
+## 一、市场综合评分 (Market Scorecard)
 
-### 2. MARKET OVERVIEW
-- Price Range Analysis: Min, Max, Average, Median prices
-- Rating Distribution: % of products at 4.5+, 4.0-4.4, 3.5-3.9, below 3.5
-- Review Volume: Average reviews per product, total market review velocity
-- Top Selling Features: Common attributes among top-rated products
+| 维度 | 评分(1-10) | 简要分析 |
+|---|---|---|
+| 需求热度 | [X] | [一句话分析] |
+| 竞争程度 | [X] | [一句话分析] |
+| 利润空间 | [X] | [一句话分析] |
+| **综合推荐** | **[决策]** | [200字核心理由] |
 
-### 3. CUSTOMER PAIN POINTS (Critical Section)
-Analyze negative reviews (1-3 stars) across all products:
-- Top 5 Recurring Complaints (with frequency %)
-- Unmet Needs: What customers wish the products had
-- Quality Issues: Common defects or durability problems
-- Service Gaps: Shipping, packaging, customer service issues
+## 二、价格与竞品概览
+- **价格区间**: 最低 $[Min] - 最高 $[Max] (平均 $[Avg])
+- **主流配置**: [描述当前市场主流产品的特征]
+- **竞品弱点**: 
+  1. [弱点1] (例如: "引用差评...")
+  2. [弱点2]
 
-### 4. OPPORTUNITY ANALYSIS
-- Gap Identification: Features customers want but no product fully delivers
-- Differentiation Ideas: 3-5 concrete product improvement suggestions
-- Target Customer Profile: Who is underserved by current offerings
+## 三、用户痛点深度分析
+*这里必须引用真实评论来证明痛点*
 
-### 5. ENTRY STRATEGY RECOMMENDATIONS
-- Suggested Price Point: Where to position a new product
-- Key Features to Prioritize: Based on pain point analysis
-- Potential Risks: 2-3 main challenges to prepare for
+| 排名 | 核心痛点 | 占比估算 | 用户原声 (精选) |
+|---|---|---|---|
+| 1 | [痛点名称] | [X]% | "[Review Quote]" |
+| 2 | [痛点名称] | [X]% | "[Review Quote]" |
+| 3 | [痛点名称] | [X]% | "[Review Quote]" |
 
-=== OUTPUT FORMAT ===
-- Use clear headers and bullet points
-- Include specific data points and percentages where possible
-- Be actionable and specific, avoid generic advice
-- Total report length: 1500-2000 words
+**痛点总结**: [300字分析，为什么这些问题一直没被解决？]
+
+## 四、主要机会点 (Opportunity Nuggets)
+1. **产品改良方向**: [具体建议，例如加装静音泵]
+2. **差异化切入点**: [具体建议，例如针对多猫家庭]
+3. **营销卖点建议**: [Listing关键词建议]
+
+## 五、下一步建议
+- **建议切入价格**: $[Price]
+- **风险提示**: [关键风险]
+
+---
+**[Upgrade to Pro for full Competitor Deep Dive, 10+ Tables, and Launch Strategy]**
 """
 
 def get_pro_tier_prompt(

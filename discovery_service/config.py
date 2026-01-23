@@ -18,7 +18,7 @@ RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")  # You'll need to set this
 
 # Model Configuration
-DEFAULT_MODEL_FREE = "openai/gpt-4o"  # Free users
+DEFAULT_MODEL_FREE = "anthropic/claude-3.5-sonnet"  # Free users - High quality magnet
 DEFAULT_MODEL_PRO = "anthropic/claude-sonnet-4"  # Pro users - Claude 4 Sonnet
 
 # Available Pro Models
