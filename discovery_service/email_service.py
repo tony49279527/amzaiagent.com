@@ -26,8 +26,9 @@ async def send_email_report(report: AnalysisReport, is_pro_flow: bool = False):
             # Extract preview (e.g., first 1500 chars or first section)
             preview_content = report.report_html[:2000] + "..." if report.report_html else report.report_markdown[:1000] + "..."
             
-            # Payment Link (Localhost for now, configurable in prod)
-            payment_link = f"http://localhost:8000/report.html?id={report.report_id}&payment_pending=true"
+            # Payment Link (Production)
+            payment_link = f"https://amzaiagent.com/report.html?id={report.report_id}&payment_pending=true"
+
 
             html_content = f"""
             <html>
