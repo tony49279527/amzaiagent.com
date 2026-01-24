@@ -125,4 +125,4 @@ async def send_email_report(report: AnalysisReport, is_pro_flow: bool = False):
         
     except Exception as e:
         print(f"❌ Failed to send email: {str(e)}")
-        # Don't raise, just log error so main process continues
+        raise e  # Allow caller to handle error
