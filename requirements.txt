@@ -10,3 +10,4 @@ python-dotenv
 requests
 duckduckgo_search
 googlesearch-python
+markdown

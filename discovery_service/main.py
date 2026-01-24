@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 import os
 
-from .models import DiscoveryRequest, DiscoveryResponse
+from .models import DiscoveryRequest, DiscoveryResponse, UserTier
 from .analyzer import ProductDiscoveryAnalyzer
 from .config import DEFAULT_MODEL_FREE, PRO_MODELS
 from .email_service import send_email_report
