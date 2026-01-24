@@ -19,7 +19,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")  # You'll need to set t
 
 # Model Configuration
 DEFAULT_MODEL_FREE = "anthropic/claude-3.5-sonnet"  # Free users - High quality magnet
-DEFAULT_MODEL_PRO = "anthropic/claude-sonnet-4"  # Pro users - Claude 4 Sonnet
+DEFAULT_MODEL_PRO = "anthropic/claude-3.5-sonnet"  # Pro users - Claude 3.5 Sonnet
 
 # Available Pro Models
 PRO_MODELS = [

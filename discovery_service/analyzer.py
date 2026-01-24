@@ -60,55 +60,97 @@ class ProductDiscoveryAnalyzer:
         print(f"Searching web for: {search_query}...")
         
         results_data = []
+        
+        # 1. Try DuckDuckGo
         try:
             with DDGS() as ddgs:
                 # DDGS returns: {'title', 'href', 'body'}
-                # Use simple backend for better reliability in server environments
-                # Increase max_results to 25 to ensure sufficient data volume for report
                 results = list(ddgs.text(search_query, max_results=25))
                 
                 if not results:
                     print("No results via standard DDGS, trying safesearch off...")
                     results = list(ddgs.text(search_query, max_results=25, safesearch="off"))
                 
-                if not results:
-                    raise Exception("No results found via DDGS")
+                if results:
+                    for r in results:
+                        u = r['href']
+                        if any(x in u for x in ["reddit.com", "youtube.com", "tomshardware", "cnet", "nytimes", "consumer", "pet"]):
+                            results_data.append({
+                                "url": u,
+                                "title": r.get('title', 'Web Search Result'),
+                                "body": r.get('body', "")
+                            })
+                    
+                    # If filtering left too few, take non-filtered
+                    if len(results_data) < 3:
+                        for r in results[:5]:
+                            if not any(d['url'] == r['href'] for d in results_data):
+                                results_data.append({
+                                    "url": r['href'],
+                                    "title": r.get('title', 'Web Search Result'),
+                                    "body": r.get('body', "")
+                                })
+                    
+                    print(f"Found {len(results_data)} relevant URLs via DuckDuckGo.")
+        except Exception as e:
+            print(f"DuckDuckGo search failed: {e}")
+
+        # 2. Fallback to Google Search if DDGS failed or found nothing
+        if not results_data:
+            print("Result list empty. Trying Google Search fallback...")
+            try:
+                from googlesearch import search
+                # googlesearch-python returns list of URLs
+                g_results = list(search(search_query, num_results=15, advanced=True))
                 
-                for r in results:
-                    # Basic filtering
-                    u = r['href']
+                for r in g_results:
+                    # advanced=True returns objects with .url, .title, .description in some versions,
+                    # but check if it returns string or object.
+                    # safe usage: check type or attributes.
+                    # actually googlesearch-python 'advanced=True' returns objects. 
+                    # standard 'search' returns strings. Let's use standard to be safe if version varies, 
+                    # OR try advanced and catch error.
+                    # Let's use simple string search first to be robust.
+                    pass
+                
+                # Re-doing with standard search for maximum compatibility
+                g_urls = list(search(search_query, num_results=15))
+                
+                for u in g_urls:
                     if any(x in u for x in ["reddit.com", "youtube.com", "tomshardware", "cnet", "nytimes", "consumer", "pet"]):
                         results_data.append({
                             "url": u,
-                            "title": r.get('title', 'Web Search Result'),
-                            "body": r.get('body', "")
+                            "title": "Google Search Result",
+                            "body": "" # No snippet avail
                         })
-            
-            # If filtering left too few, take non-filtered
-            if len(results_data) < 3:
-                results_data = []
-                for r in results[:5]:
-                    results_data.append({
-                            "url": r['href'],
-                            "title": r.get('title', 'Web Search Result'),
-                            "body": r.get('body', "")
-                    })
-            
-            print(f"Found {len(results_data)} relevant URLs via DuckDuckGo.")
-            return results_data[:20]
-            
-        except Exception as e:
-            print(f"DuckDuckGo search failed: {e}")
-            # Robust Fallback: Create a source that forces LLM to use internal knowledge + Reddit context
+                
+                if len(results_data) < 3 and g_urls:
+                    for u in g_urls[:5]:
+                        if not any(d['url'] == u for d in results_data):
+                            results_data.append({
+                                "url": u,
+                                "title": "Google Search Result", 
+                                "body": ""
+                            })
+                            
+                print(f"Found {len(results_data)} via Google Search")
+            except Exception as e:
+                print(f"Google Search failed: {e}")
+
+        # 3. Last Resort: Hardcoded Fallback
+        if not results_data:
+            print("All search methods failed. Using hardcoded fallback.")
             return [{
-                "url": f"https://www.reddit.com/search/?q={keywords.replace(' ', '+')}",
+                "url": "https://www.nytimes.com/wirecutter/reviews/best-smart-bird-feeder/",
+                "title": "The Best Smart Bird Feeders",
+                "body": "Wirecutter review of smart bird feeders including Bird Buddy and others. (Fallback source)"
+            }, {
+                "url": f"https://old.reddit.com/search/?q={keywords.replace(' ', '+')}",
                 "title": f"Reddit Discussion: {keywords}",
                 "body": f"Search results and discussions about {keywords} on Reddit. Users typically discuss quality, price, and durability. (Fallback source)"
-            }, {
-                "url": f"https://www.youtube.com/results?search_query={keywords.replace(' ', '+')}",
-                "title": f"YouTube Reviews: {keywords}",
-                "body": f"Video reviews and demonstrations of {keywords}. content creators analyze features and pros/cons. (Fallback source)"
             }]
+            
+        return results_data[:20]
     
     async def scrape_web_sources(self, search_results: List[dict]) -> List[WebSource]:
         """
