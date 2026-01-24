@@ -33,8 +33,9 @@ PRO_MODELS = [
 SCRAPINGBEE_BASE_URL = "https://app.scrapingbee.com/api/v1/"
 
 # Email Settings (for sending reports)
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 465
+# Support both SMTP_HOST and SMTP_SERVER env var names for compatibility
+SMTP_HOST = os.getenv("SMTP_HOST") or os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
 
