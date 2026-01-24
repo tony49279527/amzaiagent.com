@@ -132,8 +132,11 @@ async def run_analysis_task(request: DiscoveryRequest, task_id: str = None):
         report = await analyzer.analyze(request, task_id)
         reports_store[report.report_id] = report
         
-        # Send email with report
-        await send_email_report(report)
+        # Determine if this is a Pro flow that requires payment
+        is_pro_user = request.user_tier == UserTier.PRO
+        
+        # Send email with report (Full for Free, Preview+Link for Pro)
+        await send_email_report(report, is_pro_flow=is_pro_user)
         
         print(f"Report {report.report_id} completed and stored")
     except Exception as e:

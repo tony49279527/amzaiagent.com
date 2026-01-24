@@ -158,9 +158,65 @@
         </div>
     </footer>
 
-    <!-- Load Scripts with Cache Busting -->
+    <div id="balance-payment-modal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="modal-content"
+            style="background: white; padding: 2rem; border-radius: 1rem; max-width: 500px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+            <h2 style="margin-bottom: 0.5rem; color: #1e293b;">Unlock Full Report</h2>
+            <p style="color: #64748b; margin-bottom: 2rem;">Please complete your payment to view the detailed analysis.
+            </p>
+
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Remaining Balance</span>
+                    <span style="font-weight: 600; font-size: 1.25rem;">$25.00</span>
+                </div>
+            </div>
+
+            <button id="pay-balance-btn" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                Pay $25.00 & Unlock
+            </button>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 1rem;">Secure Payment via Stripe</p>
+        </div>
+    </div>
+
+    <script src="script_v2.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Check for payment pending state
+            const urlParams = new URLSearchParams(window.location.search);
+            const paymentPending = urlParams.get('payment_pending');
+
+            if (paymentPending === 'true') {
+                const modal = document.getElementById('balance-payment-modal');
+                const content = document.querySelector('.report-container');
+                const btn = document.getElementById('pay-balance-btn');
+
+                // Show modal and blur content
+                if (modal) modal.style.display = 'flex';
+                if (content) content.style.filter = 'blur(10px)';
+
+                // Payment handler
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        const originalText = btn.textContent;
+                        btn.textContent = "Processing...";
+                        btn.disabled = true;
+
+                        setTimeout(() => {
+                            alert('Payment Successful! Full report unlocked.');
+                            modal.style.display = 'none';
+                            if (content) content.style.filter = 'none';
+
+                            // Remove param from URL without reload
+                            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?id=" + urlParams.get('id');
+                            window.history.pushState({ path: newUrl }, '', newUrl);
+                        }, 1500);
+                    });
+                }
+            }
+
             const timestamp = new Date().getTime();
 
             // Function to load script with promise
@@ -180,7 +236,6 @@
                 .catch(err => console.error('Error loading scripts:', err));
         });
     </script>
-    <script src="script_v2.js"></script>
 </body>
 
 </html>

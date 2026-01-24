@@ -347,7 +347,7 @@
         </div>
     </div>
 
-    <!-- Payment Modal (Pro Tier) -->
+    <!-- Payment Deposit Modal (Pro Tier) -->
     <div id="payment-modal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <button type="button" class="modal-close" id="payment-modal-close">&times;</button>
@@ -372,6 +372,15 @@
                     <span>Deposit Due Now</span>
                     <span>$4.99</span>
                 </div>
+                <div style="margin-top: 1rem; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 1rem;">
+                    <p style="font-size: 0.9rem; color: #333; margin-bottom: 0.25rem;"><strong>Payment Terms:</strong>
+                    </p>
+                    <ul
+                        style="font-size: 0.85rem; color: var(--text-secondary); text-align: left; padding-left: 1.5rem; margin: 0;">
+                        <li>Pay <strong>$4.99</strong> now to start the comprehensive analysis.</li>
+                        <li>Pay the remaining <strong>$25.00</strong> only after you preview the report.</li>
+                    </ul>
+                </div>
             </div>
 
             <div style="margin-top: 1rem; margin-bottom: 1.5rem;">
@@ -386,6 +395,10 @@
             <button id="pay-deposit-btn" class="submit-btn"
                 style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); width: 100%;">
                 Pay $4.99 with Stripe (Sandbox)
+            </button>
+            <button class="submit-btn" disabled
+                style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none;">
+                Pay $4.99 with PayPal (Unavailable)
             </button>
             <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
                 Secure payment via Stripe • 100% Satisfaction Guarantee
@@ -766,7 +779,8 @@
                     marketplace: finalPayload.marketplace,
                     prompt: finalPayload.prompt,
                     analysis_focus: finalPayload.analysis_focus || [],
-                    is_pro: finalPayload.is_pro || false,
+                    // Map is_pro boolean to user_tier enum ('free' or 'pro')
+                    user_tier: (finalPayload.is_pro) ? 'pro' : 'free',
                     // User info path might differ in backend model, sending flat
                     user_email: finalPayload.user.email,
                     user_name: finalPayload.user.name,
