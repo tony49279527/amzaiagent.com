@@ -16,6 +16,7 @@ from .models import (
     UserTier
 )
 from .scrapers import ScrapingBeeClient, AmazonClient
+from .scrapers.youtube_client import YouTubeClient, YouTubeSource
 from .ai import (
     OpenRouterClient,
     get_source_finder_prompt,
@@ -23,7 +24,7 @@ from .ai import (
     get_pro_tier_prompt,
     get_quick_summary_prompt
 )
-from .config import DEFAULT_MODEL_FREE, DEFAULT_MODEL_PRO
+from .config import DEFAULT_MODEL_FREE, DEFAULT_MODEL_PRO, FREE_WEB_SOURCES_COUNT, FREE_YOUTUBE_SOURCES_COUNT
 
 
 class ProductDiscoveryAnalyzer:
@@ -33,6 +34,7 @@ class ProductDiscoveryAnalyzer:
         self.scraping_bee = ScrapingBeeClient()
         self.amazon_client = AmazonClient()
         self.ai_client = OpenRouterClient()
+        self.youtube_client = YouTubeClient()
     
     async def find_research_sources(
         self,
@@ -152,37 +154,76 @@ class ProductDiscoveryAnalyzer:
             
         return results_data[:20]
     
-    async def scrape_web_sources(self, search_results: List[dict]) -> List[WebSource]:
+    async def scrape_web_sources(
+        self, 
+        search_results: List[dict], 
+        required_count: int = FREE_WEB_SOURCES_COUNT
+    ) -> List[WebSource]:
         """
-        Scrape URLs, with fallback to search snippets
+        Scrape URLs until we have `required_count` successful sources with real content.
+        Uses fallback to snippets only if scraping fails completely.
         """
-        urls = [r["url"] for r in search_results]
-        print(f"Scraping {len(urls)} web sources...")
-        scraped_sources = await self.scraping_bee.scrape_multiple(urls)
+        print(f"[Web] Attempting to scrape {len(search_results)} URLs, need {required_count} with content...")
         
-        final_sources = []
-        scraped_map = {s.url: s for s in scraped_sources if s}
+        successful_sources = []
         
-        for result in search_results:
+        for i, result in enumerate(search_results):
+            if len(successful_sources) >= required_count:
+                print(f"[Web] Got {required_count} successful sources, stopping.")
+                break
+            
             url = result["url"]
-            if url in scraped_map and (scraped_map[url] and len(scraped_map[url].content) > 500):
-                # Use scraped content if it exists and is substantial
-                print(f"[Scraper] Successfully scraped content for {url}")
-                final_sources.append(scraped_map[url])
+            print(f"[Scraping] Starting {i+1}/{len(search_results)}: {url[:60]}...")
+            
+            # Try to scrape this single URL
+            scraped = await self.scraping_bee.scrape_url(url)
+            
+            if scraped and scraped.content and len(scraped.content) > 500:
+                print(f"[Web] ✓ Got content for: {url[:50]}... ({len(scraped.content)} chars)")
+                successful_sources.append(scraped)
             else:
-                # Fallback to snippet
-                print(f"[Scraper] Fallback to snippet for {url}")
+                # Try snippet as last resort for this URL
                 snippet = result.get("body", "")
-                if snippet:
-                     final_sources.append(WebSource(
+                if snippet and len(snippet) > 100:
+                    print(f"[Web] ~ Using snippet for: {url[:50]}...")
+                    successful_sources.append(WebSource(
                         url=url,
                         title=result.get("title", "Search Result"),
                         content=f"[SEARCH SNIPPET] {snippet}",
                         source_type="search_snippet"
                     ))
+                else:
+                    print(f"[Web] ✗ No content for: {url[:50]}...")
         
-        print(f"Finalized {len(final_sources)} sources (mixed scraped & snippets)")
-        return final_sources
+        print(f"[Web] Finalized {len(successful_sources)} sources with content")
+        return successful_sources
+    
+    async def fetch_youtube_sources(
+        self,
+        keywords: str,
+        required_count: int = FREE_YOUTUBE_SOURCES_COUNT
+    ) -> List[WebSource]:
+        """
+        Search YouTube and get captions for videos.
+        Returns WebSource objects for compatibility with existing logic.
+        """
+        print(f"[YouTube] Searching for videos about: {keywords}")
+        youtube_sources = await self.youtube_client.search_and_get_captions(
+            keywords, 
+            required_count=required_count
+        )
+        
+        # Convert YouTubeSource to WebSource for unified handling
+        web_sources = []
+        for yt in youtube_sources:
+            web_sources.append(WebSource(
+                url=yt.url,
+                title=f"[YouTube] {yt.title}",
+                content=yt.captions,
+                source_type="youtube"
+            ))
+        
+        return web_sources
     
     async def fetch_amazon_data(
         self,
@@ -279,7 +320,7 @@ class ProductDiscoveryAnalyzer:
         })
         
         # Step 1: Find research sources (Dicts with snippets)
-        print("\n[1/4] Finding research sources...")
+        print("\n[1/5] Finding research sources...")
         await emit("Web Research", "Searching DuckDuckGo for signals...", 10)
         
         search_results = await self.find_research_sources(
@@ -288,24 +329,38 @@ class ProductDiscoveryAnalyzer:
             request.marketplace.value
         )
         
-        await emit("Web Research", f"Found {len(search_results)} potential sources", 20, {
+        await emit("Web Research", f"Found {len(search_results)} potential sources", 15, {
             "log": f"Top Source: {search_results[0]['title'] if search_results else 'None'}",
             "sources_preview": [s['title'] for s in search_results[:5]]
         })
         
-        # Step 2: Scrape web sources (or use snippets)
-        print("\n[2/4] Scraping web sources...")
-        await emit("Web Research", "Scraping content from URL list...", 25)
+        # Step 2: Scrape web sources (get first 3 successful)
+        print("\n[2/5] Scraping web sources...")
+        await emit("Web Research", "Scraping content from URL list...", 20)
         
         web_sources = await self.scrape_web_sources(search_results)
         
-        await emit("Web Research", f"Analysis ready for {len(web_sources)} sources", 40, {
-            "log": f"Scraped {len(web_sources)} pages successfully."
+        await emit("Web Research", f"Scraped {len(web_sources)} pages successfully.", 30, {
+            "log": f"Got {len(web_sources)} web sources with content."
         })
         
-        # Step 3: Fetch Amazon data (if ASINs provided)
-        print("\n[3/4] Fetching Amazon product data...")
-        await emit("Amazon Data", "Fetching real-time product data...", 50)
+        # Step 3: Fetch YouTube sources (get first 3 with captions)
+        print("\n[3/5] Fetching YouTube sources...")
+        await emit("YouTube Research", "Searching YouTube for reviews...", 35)
+        
+        youtube_sources = await self.fetch_youtube_sources(request.keywords)
+        
+        await emit("YouTube Research", f"Got {len(youtube_sources)} video transcripts.", 45, {
+            "log": f"Scraped captions from {len(youtube_sources)} YouTube videos."
+        })
+        
+        # Combine web and YouTube sources
+        all_sources = web_sources + youtube_sources
+        print(f"Total sources for analysis: {len(all_sources)} ({len(web_sources)} web + {len(youtube_sources)} YouTube)")
+        
+        # Step 4: Fetch Amazon data (if ASINs provided)
+        print("\n[4/5] Fetching Amazon product data...")
+        await emit("Amazon Data", "Fetching real-time product data...", 55)
         
         amazon_products = []
         if request.reference_asins:
@@ -313,12 +368,12 @@ class ProductDiscoveryAnalyzer:
                 request.reference_asins,
                 request.marketplace.value
             )
-            await emit("Amazon Data", f"Retrieved {len(amazon_products)} products", 70, {
+            await emit("Amazon Data", f"Retrieved {len(amazon_products)} products", 65, {
                 "products": [{"title": p.title[:30]+"...", "rating": p.rating, "reviews": p.review_count} for p in amazon_products]
             })
         
-        # Step 4: Generate report
-        print("\n[4/4] Generating analysis report...")
+        # Step 5: Generate report
+        print("\n[5/5] Generating analysis report...")
         
         # Determine which model to use
         if request.user_tier == UserTier.PRO and request.selected_model:
@@ -328,15 +383,15 @@ class ProductDiscoveryAnalyzer:
         else:
             model = DEFAULT_MODEL_FREE
             
-        await emit("AI Analysis", f"Thinking with {model}...", 80, {
-             "log": f"Sending {len(web_sources)} sources + {len(amazon_products)} products to LLM."
+        await emit("AI Analysis", f"Thinking with {model}...", 75, {
+             "log": f"Sending {len(all_sources)} sources + {len(amazon_products)} products to LLM."
         })
         
         report_markdown = await self.generate_report(
             request.category,
             request.keywords,
             request.marketplace.value,
-            web_sources,
+            all_sources,  # Use combined web + YouTube sources
             amazon_products,
             model,
             request.user_tier,
@@ -363,7 +418,7 @@ class ProductDiscoveryAnalyzer:
             report_html=report_html,
             generated_at=datetime.utcnow().isoformat(),
             model_used=model,
-            sources_count=len(web_sources),
+            sources_count=len(all_sources),  # Count all sources
             asins_analyzed=len(amazon_products)
         )
         

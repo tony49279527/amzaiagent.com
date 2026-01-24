@@ -48,6 +48,7 @@ The goal is to provide **Actionable, Money-Making Insights** that serve as an ir
 2. **Data**: You MUST cite specific review examples (at least 5 key quotes).
 3. **Structure**: Professional Business English (US).
 4. **Tables**: Include at least 4 tables, including a Profitability Simulator.
+5. **WORD COUNT: 2000-3000 words minimum. If shorter, REWRITE.**
 
 === INPUT DATA ===
 Category: {category}

@@ -18,8 +18,12 @@ RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")  # You'll need to set this
 
 # Model Configuration
-DEFAULT_MODEL_FREE = "anthropic/claude-3.5-sonnet"  # Free users - High quality magnet
+DEFAULT_MODEL_FREE = "google/gemini-3.0-flash"  # Free users - Gemini 3 Flash
 DEFAULT_MODEL_PRO = "anthropic/claude-3.5-sonnet"  # Pro users - Claude 3.5 Sonnet
+
+# Free Tier Source Limits (must successfully scrape this many)
+FREE_WEB_SOURCES_COUNT = 3
+FREE_YOUTUBE_SOURCES_COUNT = 3
 
 # Available Pro Models
 PRO_MODELS = [
