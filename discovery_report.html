@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Discovery Report | Amz AI Agent</title>
+    <meta name="description"
+        content="AI-powered product discovery analysis report with market insights, competitor analysis, and entry strategy for Amazon sellers.">
+    <link rel="canonical" href="https://amzaiagent.com/discovery_report.html">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Product Discovery Report | Amz AI Agent">
+    <meta property="og:description"
+        content="Deep-dive product discovery analysis with actionable insights for Amazon sellers.">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://amzaiagent.com/assets/images/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Product Discovery Report | Amz AI Agent">
+
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* Discovery Report Specific Styles */
+        .discovery-report-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%);
+            padding: 3rem 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .discovery-report-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .discovery-report-header .report-meta {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .discovery-report-header .report-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .report-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+        }
+
+        @media (max-width: 900px) {
+            .report-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Sidebar TOC */
+        .report-toc {
+            position: sticky;
+            top: 100px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .report-toc h3 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .report-toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .report-toc li {
+            margin-bottom: 0.75rem;
+        }
+
+        .report-toc a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #334155;
+            text-decoration: none;
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .report-toc a:hover {
+            background: #f1f5f9;
+            color: #2563eb;
+        }
+
+        .report-toc a.locked {
+            color: #94a3b8;
+        }
+
+        .report-toc a.locked::after {
+            content: '🔒';
+            margin-left: auto;
+            font-size: 0.75rem;
+        }
+
+        /* Report Content Sections */
+        .report-content-area {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .report-section {
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .report-section:last-child {
+            border-bottom: none;
+        }
+
+        .report-section h2 {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .report-section.unlocked h2::before {
+            content: '✓';
+            background: #10b981;
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .report-section.locked {
+            position: relative;
+        }
+
+        .report-section.locked h2::before {
+            content: '🔒';
+            font-size: 1rem;
+        }
+
+        .report-section.locked .section-content {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .report-section.locked .lock-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .lock-overlay h3 {
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .lock-overlay p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Floating Payment CTA */
+        .floating-cta {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+        }
+
+        .floating-cta button {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .floating-cta button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.5);
+        }
+
+        /* Payment Modal */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .payment-modal.active {
+            display: flex;
+        }
+
+        .payment-modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            padding: 2.5rem;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .payment-modal-content .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .payment-modal-content h2 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-modal-content .subtitle {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .payment-breakdown {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .payment-breakdown .item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            color: #475569;
+        }
+
+        .payment-breakdown .total {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 0.75rem;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 1.125rem;
+        }
+
+        .pay-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pay-btn:hover {
+            opacity: 0.9;
+        }
+
+        .payment-modal-content .secure-note {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 1rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        /* Preview Badge */
+        .preview-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="20" height="20" rx="6" fill="#2563eb" />
+                    <path d="M7 12H17M7 8H17M7 16H13" stroke="white" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span class="logo-text">Amz AI Agent</span>
+            </a>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" aria-label="Toggle Menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-open">
+                    <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-close"
+                    style="display:none;">
+                    <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="create.html">Competitor Analysis</a>
+                <a href="discovery.html" class="active">Product Discovery</a>
+                <a href="cases.html">Cases</a>
+                <a href="blog.html">Blog</a>
+                <a href="pricing.html">Pricing</a>
+            </div>
+            <div class="nav-actions">
+                <a href="discovery.html" class="btn btn-primary">Start Analysis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Report Header -->
+    <header class="discovery-report-header">
+        <div class="preview-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Preview Mode - Payment Required for Full Report
+        </div>
+        <h1 id="report-title">Product Discovery Analysis Report</h1>
+        <div class="report-meta">
+            <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span id="report-date">Generated on 2026-01-25</span>
+            </span>
+            <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span id="report-email">user@example.com</span>
+            </span>
+            <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                Pro Analysis Report
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="report-layout">
+        <!-- Sidebar TOC -->
+        <aside class="report-toc">
+            <h3>Contents</h3>
+            <ul id="toc-list">
+                <li><a href="#executive-summary">Executive Summary</a></li>
+                <li><a href="#market-overview" class="locked">Market Overview</a></li>
+                <li><a href="#competitor-analysis" class="locked">Competitor Analysis</a></li>
+                <li><a href="#customer-insights" class="locked">Customer Insights</a></li>
+                <li><a href="#entry-strategy" class="locked">Entry Strategy</a></li>
+                <li><a href="#differentiation" class="locked">Differentiation</a></li>
+                <li><a href="#pricing-strategy" class="locked">Pricing Strategy</a></li>
+                <li><a href="#recommendations" class="locked">Recommendations</a></li>
+            </ul>
+        </aside>
+
+        <!-- Report Content -->
+        <div class="report-content-area">
+            <!-- Section 1: Executive Summary (UNLOCKED) -->
+            <section id="executive-summary" class="report-section unlocked">
+                <h2>Executive Summary</h2>
+                <div class="section-content" id="summary-content">
+                    <p>Loading report content...</p>
+                </div>
+            </section>
+
+            <!-- Section 2: Market Overview (LOCKED) -->
+            <section id="market-overview" class="report-section locked">
+                <h2>Market Overview</h2>
+                <div class="section-content">
+                    <p>The garden tools market on Amazon US shows strong growth potential with a compound annual growth
+                        rate of 8.3%. Key market drivers include the increasing interest in home gardening, sustainable
+                        living trends, and the rise of urban farming.</p>
+                    <p>Competition is moderate with established brands commanding 45% market share, leaving significant
+                        opportunity for differentiated new entrants.</p>
+                    <ul>
+                        <li>Total Addressable Market: $2.4B</li>
+                        <li>Average Product Price: $24.99</li>
+                        <li>Top 10 Products Monthly Revenue: $850K</li>
+                    </ul>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+
+            <!-- Section 3: Competitor Analysis (LOCKED) -->
+            <section id="competitor-analysis" class="report-section locked">
+                <h2>Competitor Analysis</h2>
+                <div class="section-content">
+                    <p>Analysis of the top 15 competing products reveals several common customer pain points and feature
+                        gaps that represent opportunities for differentiation.</p>
+                    <p>The leading competitors include Fiskars, Corona, and Gonicc, each with distinct positioning
+                        strategies.</p>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+
+            <!-- Section 4: Customer Insights (LOCKED) -->
+            <section id="customer-insights" class="report-section locked">
+                <h2>Customer Insights</h2>
+                <div class="section-content">
+                    <p>Based on analysis of 5,000+ customer reviews, we identified recurring themes around durability
+                        concerns, ergonomic preferences, and value expectations.</p>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+
+            <!-- Section 5: Entry Strategy (LOCKED) -->
+            <section id="entry-strategy" class="report-section locked">
+                <h2>Entry Strategy</h2>
+                <div class="section-content">
+                    <p>Our recommended market entry approach focuses on targeting the mid-premium segment with
+                        differentiated value propositions.</p>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+
+            <!-- Section 6: Differentiation (LOCKED) -->
+            <section id="differentiation" class="report-section locked">
+                <h2>Differentiation</h2>
+                <div class="section-content">
+                    <p>Key differentiation opportunities identified through competitive gap analysis and customer
+                        sentiment review.</p>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+
+            <!-- Section 7: Pricing Strategy (LOCKED) -->
+            <section id="pricing-strategy" class="report-section locked">
+                <h2>Pricing Strategy</h2>
+                <div class="section-content">
+                    <p>Optimal pricing analysis based on competitor positioning, perceived value, and market elasticity.
+                    </p>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+
+            <!-- Section 8: Recommendations (LOCKED) -->
+            <section id="recommendations" class="report-section locked">
+                <h2>Recommendations</h2>
+                <div class="section-content">
+                    <p>Actionable next steps and strategic recommendations for successful market entry.</p>
+                </div>
+                <div class="lock-overlay">
+                    <h3>🔒 Unlock Full Report</h3>
+                    <p>Complete payment to access all sections</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Floating CTA -->
+    <div class="floating-cta" id="floating-payment-btn">
+        <button onclick="openPaymentModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            Pay $25.00 to Unlock Full Report
+        </button>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="payment-modal" id="payment-modal">
+        <div class="payment-modal-content" style="position: relative;">
+            <button class="close-modal" onclick="closePaymentModal()">×</button>
+            <div class="icon">🔓</div>
+            <h2>Unlock Your Full Report</h2>
+            <p class="subtitle">Get instant access to all 8 sections with actionable insights</p>
+
+            <div class="payment-breakdown">
+                <div class="item">
+                    <span>Pro Analysis Report</span>
+                    <span>$29.99</span>
+                </div>
+                <div class="item">
+                    <span>Initial Deposit Paid</span>
+                    <span style="color: #10b981;">-$4.99</span>
+                </div>
+                <div class="item total">
+                    <span>Balance Due</span>
+                    <span>$25.00</span>
+                </div>
+            </div>
+
+            <button class="pay-btn" id="submit-payment-btn" onclick="processPayment()">
+                Pay $25.00 & Unlock Report
+            </button>
+            <p class="secure-note">🔒 Secure payment powered by Stripe</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <h3 class="footer-logo">Amz AI Agent</h3>
+                <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
+            </div>
+            <div class="footer-columns">
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="create.html">Competitor Analysis</a>
+                    <a href="discovery.html">Product Discovery</a>
+                    <a href="pricing.html">Pricing</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <a href="blog.html">Blog</a>
+                    <a href="cases.html">Case Studies</a>
+                    <a href="faq.html">FAQ</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a href="about.html">About Us</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 Amz AI Agent. All rights reserved.</p>
+                <a href="contact.html" class="footer-contact">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script_v2.js"></script>
+    <script>
+        // Payment Modal Functions
+        function openPaymentModal() {
+            document.getElementById('payment-modal').classList.add('active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.remove('active');
+        }
+
+        function processPayment() {
+            const btn = document.getElementById('submit-payment-btn');
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+
+            // Simulate Stripe payment
+            setTimeout(() => {
+                // Success - unlock all sections
+                document.querySelectorAll('.report-section.locked').forEach(section => {
+                    section.classList.remove('locked');
+                    section.classList.add('unlocked');
+                    const overlay = section.querySelector('.lock-overlay');
+                    if (overlay) overlay.remove();
+                });
+
+                document.querySelectorAll('.report-toc a.locked').forEach(a => {
+                    a.classList.remove('locked');
+                });
+
+                // Hide floating CTA and preview badge
+                document.getElementById('floating-payment-btn').style.display = 'none';
+                document.querySelector('.preview-badge').style.display = 'none';
+
+                closePaymentModal();
+                alert('🎉 Payment Successful! Your full report is now unlocked.');
+
+                // Update URL
+                const url = new URL(window.location.href);
+                url.searchParams.delete('payment_pending');
+                url.searchParams.set('unlocked', 'true');
+                window.history.pushState({}, '', url);
+            }, 2000);
+        }
+
+        // Load report data from URL params
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const reportId = urlParams.get('id');
+            const unlocked = urlParams.get('unlocked') === 'true';
+
+            if (unlocked) {
+                // Already unlocked - show full content
+                document.querySelectorAll('.report-section.locked').forEach(section => {
+                    section.classList.remove('locked');
+                    section.classList.add('unlocked');
+                    const overlay = section.querySelector('.lock-overlay');
+                    if (overlay) overlay.remove();
+                });
+                document.querySelectorAll('.report-toc a.locked').forEach(a => {
+                    a.classList.remove('locked');
+                });
+                document.getElementById('floating-payment-btn').style.display = 'none';
+                document.querySelector('.preview-badge').style.display = 'none';
+            }
+
+            if (reportId) {
+                try {
+                    // Fetch report data from API
+                    const response = await fetch(`https://amz-ai-replica-znaw4q4ldq-uc.a.run.app/api/discovery-report/${reportId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        // Update title
+                        if (data.keywords) {
+                            document.getElementById('report-title').textContent =
+                                `${data.keywords} - Product Discovery Report`;
+                        }
+
+                        // Update email
+                        if (data.user_email) {
+                            document.getElementById('report-email').textContent = data.user_email;
+                        }
+
+                        // Update executive summary
+                        if (data.executive_summary) {
+                            document.getElementById('summary-content').innerHTML =
+                                marked.parse(data.executive_summary);
+                        } else if (data.report_markdown) {
+                            // Extract first section as summary
+                            const sections = data.report_markdown.split(/^##\s+/m);
+                            if (sections.length > 1) {
+                                document.getElementById('summary-content').innerHTML =
+                                    marked.parse(sections[1].substring(0, 1500) + '...');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load report:', error);
+                }
+            }
+        });
+
+        // Close modal on background click
+        document.getElementById('payment-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('payment-modal')) {
+                closePaymentModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

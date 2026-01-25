@@ -144,6 +144,10 @@ async def run_analysis_task(request: DiscoveryRequest, task_id: str = None):
         # If task_id exists, emit error
         if task_id:
             await progress_manager.emit(task_id, "Error", "Analysis Failed", 0, {"error": str(e)})
+            
+        # Send failure notification email
+        from .email_service import send_failure_email
+        await send_failure_email(request.user_email, request.keywords, str(e))
 
 @app.post("/api/discovery/start-task", response_model=DiscoveryResponse)
 async def start_analysis_task(
@@ -176,7 +180,7 @@ async def start_analysis_task(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/test-email")
-async def test_email_endpoint(email: str):
+async def test_email_endpoint(email: str, type: str = "success"):
     """Immediate test endpoint to verify email delivery"""
     try:
         from .email_service import send_email_report
@@ -197,10 +201,72 @@ async def test_email_endpoint(email: str):
             report_html="<div style='font-family:sans-serif; padding:20px; border:1px solid #ddd; border-radius:8px;'><h1>✅ Connection Successful</h1><p>This email confirms that the <strong>Amz AI backend</strong> can successfully send emails via SMTP (SSL/465).</p><p>If you are seeing this, the deployment is correct.</p></div>"
         )
         
-        await send_email_report(mock_report, is_pro_flow=False)
+        if type == "failure":
+            from .email_service import send_failure_email
+            await send_failure_email(email, "Test Failure Scenario", "This is a simulated error message to test the failure notification system.")
+        else:
+            await send_email_report(mock_report, is_pro_flow=False)
         return {"status": "success", "message": f"Test email sent to {email}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/discovery-report/{report_id}")
+async def get_discovery_report(report_id: str):
+    """
+    Get discovery report data for the payment preview page.
+    Returns report metadata and executive summary for preview.
+    """
+    import re
+    
+    # Check if report exists in store
+    if report_id not in reports_store:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    report = reports_store[report_id]
+    
+    # Extract executive summary from markdown
+    executive_summary = ""
+    if report.report_markdown:
+        # Try to find Executive Summary or first major section
+        patterns = [
+            r'## Executive Summary\s*\n([\s\S]*?)(?=\n## |\Z)',
+            r'## Summary\s*\n([\s\S]*?)(?=\n## |\Z)',
+            r'## Market Entry Strategy\s*\n([\s\S]*?)(?=\n## |\Z)',
+            r'## Overview\s*\n([\s\S]*?)(?=\n## |\Z)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, report.report_markdown)
+            if match:
+                executive_summary = match.group(1).strip()[:2000]
+                break
+        
+        # Fallback: take first 1500 chars after first heading
+        if not executive_summary:
+            lines = report.report_markdown.split('\n')
+            content_start = False
+            content = []
+            for line in lines:
+                if line.startswith('#') and not content_start:
+                    content_start = True
+                    continue
+                if content_start:
+                    if line.startswith('## ') and len(content) > 100:
+                        break  # Stop at next major heading
+                    content.append(line)
+            executive_summary = '\n'.join(content)[:1500]
+    
+    return {
+        "report_id": report.report_id,
+        "keywords": report.keywords,
+        "category": report.category,
+        "user_email": report.user_email,
+        "generated_at": report.generated_at,
+        "executive_summary": executive_summary,
+        "sections_count": 8,  # Fixed for now
+        "is_paid": False  # Would check payment status in production
+    }
 
 if __name__ == "__main__":
     print("Starting Product Discovery Service...")
