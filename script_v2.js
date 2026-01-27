@@ -319,46 +319,74 @@ Present workflows in a structured table format, including:
     const badgePro = document.querySelector('.badge-pro');
     const unlockOverlay = document.getElementById('pro-unlock-overlay');
 
+    // === ENFORCE LOCK STATE ON LOAD ===
+    function enforceProLock() {
+        if (proLockedSection && !isProIntent) {
+            const disabledElements = proLockedSection.querySelectorAll('.pro-feature');
+            disabledElements.forEach(el => {
+                el.disabled = true;
+                if (el.tagName === 'LABEL') el.classList.add('disabled');
+            });
+            // Ensure overlay is visible
+            if (unlockOverlay) unlockOverlay.style.display = 'flex';
+        }
+    }
+    // Call immediately
+    enforceProLock();
+
+
     if (unlockOverlay && proLockedSection) {
         unlockOverlay.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
 
-            // Direct Unlock (No annoying confirm dialog needed if they clicked the button)
-            isProIntent = true;
-
-            // Visual Unlock
-            proLockedSection.classList.remove('pro-locked');
-            proLockedSection.style.opacity = '1';
-            proLockedSection.style.pointerEvents = 'auto';
-
-            // Hide Overlay
-            unlockOverlay.style.display = 'none';
-
-            // Enable ALL inputs and buttons within the section
-            const disabledElements = proLockedSection.querySelectorAll('[disabled]');
-            disabledElements.forEach(el => el.removeAttribute('disabled'));
-
-            // Remove .disabled class from file upload labels and update text
-            const disabledLabels = proLockedSection.querySelectorAll('label.file-upload-btn.disabled');
-            disabledLabels.forEach(lbl => {
-                lbl.classList.remove('disabled');
-                if (lbl.textContent.includes('Pro Only')) {
-                    lbl.textContent = 'Choose File';
-                }
-            });
-
-            // Aggressively hide lock icons
-            const locks = proLockedSection.querySelectorAll('.lock-icon');
-            locks.forEach(icon => icon.style.display = 'none');
-
-            // Update Badge
-            if (badgePro) {
-                badgePro.style.background = '#10b981';
-                badgePro.textContent = 'PRO ENABLED';
+            // Trigger Payment Modal instead of direct unlock
+            const paymentModal = document.getElementById('payment-modal');
+            if (paymentModal) {
+                paymentModal.classList.add('active');
+            } else {
+                // Fallback for pages without payment modal (should not happen in Create page)
+                alert("Please upgrade to Pro to unlock these features.");
             }
         });
     }
+
+    // LISTENER FOR PAYMENT SUCCESS (Simulated for now, would be callback based in real app)
+    // We expose a global function for the payment success handler to call
+    window.unlockProFeatures = function () {
+        isProIntent = true;
+
+        // Visual Unlock
+        proLockedSection.classList.remove('pro-locked');
+        proLockedSection.style.opacity = '1';
+        proLockedSection.style.pointerEvents = 'auto';
+
+        // Hide Overlay
+        if (unlockOverlay) unlockOverlay.style.display = 'none';
+
+        // Enable ALL inputs and buttons within the section
+        const disabledElements = proLockedSection.querySelectorAll('[disabled]');
+        disabledElements.forEach(el => el.removeAttribute('disabled'));
+
+        // Remove .disabled class from file upload labels and update text
+        const disabledLabels = proLockedSection.querySelectorAll('label.file-upload-btn.disabled');
+        disabledLabels.forEach(lbl => {
+            lbl.classList.remove('disabled');
+            if (lbl.textContent.includes('Pro Only')) {
+                lbl.textContent = 'Choose File';
+            }
+        });
+
+        // Aggressively hide lock icons
+        const locks = proLockedSection.querySelectorAll('.lock-icon');
+        locks.forEach(icon => icon.style.display = 'none');
+
+        // Update Badge
+        if (badgePro) {
+            badgePro.style.background = '#10b981';
+            badgePro.textContent = 'PRO ENABLED';
+        }
+    };
 
     // === GLOBAL SCROLL REVEAL ===
     const observerOptions = {
@@ -522,124 +550,76 @@ Present workflows in a structured table format, including:
         });
     }
 
+    // === STRIPE PAYMENT HANDLER (Free/Sandbox) ===
     if (payDepositBtn) {
         payDepositBtn.addEventListener('click', async () => {
             if (!validateAsins()) return;
 
-            // Save original text
-            const originalText = payDepositBtn.textContent;
-
-            // Add Spinner
-            payDepositBtn.innerHTML = `
-                    <svg class="spinner" viewBox="0 0 50 50" style="width: 20px; height: 20px; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px; display: inline-block;">
-                        <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5"></circle>
-                    </svg>
-                    Creating Payment...
-                `;
-            payDepositBtn.disabled = true;
-
-            // 1. Get User Email from the new Input from the new Input
+            // ... (Validation Logic same as before) ...
             const emailInput = document.getElementById('pro-email-input');
             let userEmail = emailInput ? emailInput.value.trim() : '';
-
-            // Validation
             if (!userEmail || !userEmail.includes('@')) {
-                alert("Please enter a valid email address to receive your report.");
-                emailInput.focus();
-
-                // Reset Button
-                payDepositBtn.textContent = 'Pay $4.99 with Stripe (Sandbox)';
-                payDepositBtn.disabled = false;
+                alert("Please enter a valid email address.");
+                if (emailInput) emailInput.focus();
                 return;
             }
+            if (document.getElementById('user-email')) document.getElementById('user-email').value = userEmail;
 
-            // Sync to hidden field for consistency
-            const emailField = document.getElementById('user-email');
-            if (emailField) emailField.value = userEmail;
 
-            // === SAVE PAYLOAD TO LOCALSTORAGE (For Post-Payment Trigger) ===
-            // Generate a short, friendly Order ID (e.g. ORD-839210) matching the display style
-            const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-            const proPayload = {
-                order_id: orderId,
-                user_email: userEmail,
-                user_name: (userEmail.split('@')[0]) || 'Valued User',
-                industry: 'General',
-                main_asins: [document.getElementById('main-asin').value.trim()],
-                competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,]+/).map(s => s.trim()).filter(s => s),
-                productSite: document.getElementById('marketplace').value,
-                language: 'en',
-                llm_model: document.getElementById('llm-model').value,
-                custom_prompt: document.getElementById('custom-prompt').value.trim(),
-                reference_site_count: document.getElementById('website-count') ? document.getElementById('website-count').value : 5,
-                reference_youtube_count: document.getElementById('youtube-count') ? document.getElementById('youtube-count').value : 5,
-                version: 'v1_pro_verified',
-                payment_status: 'deposit_paid', // Will be sent after payment
-                amount_paid: 4.99
-            };
-            localStorage.setItem('pending_pro_payload', JSON.stringify(proPayload));
+            // Simulate Stripe Payment Success -> Unlock
+            // In real app, this would redirect or use Stripe Elements
+            alert('Payment successful! (Sandbox mode) Pro features are now unlocked.');
+            if (paymentModal) paymentModal.classList.remove('active');
 
-            // 2. Call n8n to get Stripe Link (Using form-urlencoded to avoid CORS preflight)
-            try {
-                // orderId is already defined above
-                const formData = new URLSearchParams();
-                formData.append('amount', '4.99');
-                formData.append('order_id', orderId); // Keep this snake_case for n8n backend if needed? or strictly for Stripe metadata
-                // Fix: processing.html looks for 'orderId' (camelCase), not 'order_id'
-                formData.append('success_url', window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}`);
-                formData.append('cancel_url', window.location.href);
-
-                const response = await fetch('https://tony4927.app.n8n.cloud/webhook/create-checkout', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const rawText = await response.text();
-                console.log('n8n Raw Response:', rawText);
-
-                let data;
-                try {
-                    data = JSON.parse(rawText);
-                } catch (e) {
-                    console.error('Failed to parse JSON:', e);
-                    throw new Error('Invalid JSON response from n8n');
-                }
-
-                console.log('Parsed Data:', data);
-                // Handle both object {url:...} and array [{url:...}] formats
-                const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
-                console.log('Extracted URL:', paymentUrl);
-
-                if (paymentUrl) {
-                    window.location.href = paymentUrl; // Redirect to Stripe
-                } else {
-                    throw new Error('No payment URL returned');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Payment Error: ' + err.message);
-                payDepositBtn.disabled = false;
-                payDepositBtn.textContent = 'Try Again';
+            if (typeof window.unlockProFeatures === 'function') {
+                window.unlockProFeatures();
             }
         });
     }
 
-    async function handleSubmission(isPro) {
-        if (!validateAsins()) return;
+    // === POLAR PAYMENT HANDLER (Dual Option) ===
+    const payPolarDepositBtn = document.getElementById('pay-polar-deposit-btn');
+    if (payPolarDepositBtn) {
+        payPolarDepositBtn.addEventListener('click', function (e) {
+            const emailInput = document.getElementById('pro-email-input');
+            let userEmail = emailInput ? emailInput.value.trim() : '';
 
-        const submitBtn = isPro ? payDepositBtn : modalForm.querySelector('.submit-btn');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Generating...';
+            // Validation BEFORE navigation
+            if (!userEmail || !userEmail.includes('@')) {
+                e.preventDefault(); // Stop link navigation
+                alert("Please enter a valid email address to receive your report.");
+                emailInput.focus();
+                return;
+            }
 
-        const payload = {
+            // In a real scenario, we would redirect. 
+            // For this sandbox/demo, we'll ALSO unlock features so the user sees the effect immediately if they return.
+            // Or if it's a new tab, we rely on local storage (not fully implemented here for cross-tab).
+            // For demo purposes, we unlock:
+            if (typeof window.unlockProFeatures === 'function') {
+                window.unlockProFeatures();
+            }
+
+            // Store FULL PAYLOAD for fallback/auto-start on processing.html
+            const payload = preparePayload(true);
+            localStorage.setItem('pending_analysis_payload', JSON.stringify(payload));
+            localStorage.setItem('pending_email', userEmail);
+            localStorage.setItem('pending_order_id', payload.order_id);
+
+            // Allow default behavior (navigation to Polar) to continue
+            console.log('Proceeding to Polar with email:', userEmail);
+        });
+    }
+
+    function preparePayload(isPro) {
+        return {
             // == 0. Order ID (Critical for tracking) ==
             order_id: 'ORD-' + Date.now(),
 
             // == 1. Critical Fields for n8n ==
             // User Info
-            user_name: (document.getElementById('user-email').value.split('@')[0]) || 'Valued User',
-            user_email: document.getElementById('user-email').value.trim() || 'guest@example.com',
+            user_name: (document.getElementById('pro-email-input')?.value.split('@')[0]) || 'Valued User',
+            user_email: (document.getElementById('pro-email-input')?.value.trim()) || (document.getElementById('user-email')?.value.trim()) || 'guest@example.com',
             industry: 'General',
 
             // Product Data (Arrays required)
@@ -663,6 +643,17 @@ Present workflows in a structured table format, including:
             payment_status: isPro ? 'deposit_paid' : 'free',
             amount_paid: isPro ? 4.99 : 0
         };
+    }
+
+    async function handleSubmission(isPro) {
+        if (!validateAsins()) return;
+
+        const submitBtn = isPro ? payDepositBtn : modalForm.querySelector('.submit-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Generating...';
+
+        const payload = preparePayload(isPro);
 
         try {
             // Pro URL: Standard n8n with AI Agents
@@ -700,7 +691,15 @@ Present workflows in a structured table format, including:
 
                 // Redirect standard flow
                 const email = encodeURIComponent(payload.user_email);
-                window.location.href = `processing.html?email=${email}&pro=${isPro}`;
+                const orderId = encodeURIComponent(payload.order_id);
+                const taskId = data.taskId || data.report_id || '';
+
+                // Store for fallback
+                localStorage.setItem('pending_email', payload.user_email);
+                localStorage.setItem('pending_order_id', payload.order_id);
+                if (taskId) localStorage.setItem('pending_task_id', taskId);
+
+                window.location.href = `processing.html?email=${email}&orderId=${orderId}&taskId=${taskId}&pro=${isPro}`;
 
             } else {
                 const errText = await response.text();

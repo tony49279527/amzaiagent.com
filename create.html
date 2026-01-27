@@ -128,7 +128,7 @@
                                     <!-- Row 1: Report Language & LLM Model -->
                                     <div class="form-group">
                                         <label>Report Language <span class="lock-icon">🔒</span></label>
-                                        <select disabled class="pro-feature">
+                                        <select disabled class="pro-feature" id="report-language">
                                             <option value="English" selected>English (Default)</option>
                                             <option value="Français">Français</option>
                                             <option value="Deutsch">Deutsch</option>
@@ -327,12 +327,17 @@
                 style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); width: 100%;">
                 Pay $4.99 with Stripe (Sandbox)
             </button>
+            <a href="https://buy.polar.sh/polar_cl_3udFF79S8v3TpXhKL6CWnHCGLfiHqc3urNBGs0Ae4qk" class="submit-btn"
+                id="pay-polar-deposit-btn" target="_blank"
+                style="background: #000; color: #fff; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; border: none;">
+                Pay $4.99 with Polar.sh
+            </a>
             <button class="submit-btn" disabled
                 style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none;">
                 Pay $4.99 with PayPal (Unavailable)
             </button>
             <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
-                Secure payment via Stripe • 100% Satisfaction Guarantee
+                Secure payment via Stripe or Polar.sh • 100% Satisfaction Guarantee
             </p>
         </div>
     </div>

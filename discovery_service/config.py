@@ -14,11 +14,15 @@ SCRAPINGBEE_API_KEY = "FZRSC69J3MPE5OO5FYJKEZFGI2XWG65IQA2V86EFJWKF9ARVGV0AIPMTS
 RAPIDAPI_KEY = "35d443d327msh77164428609687ep1ee4b4jsn763b388ea69a"
 RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 
+# Google Custom Search API (Official)
+GOOGLE_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY", "AIzaSyAmGiYGIdcpKtwiOqnvVEd6Qdbu5LH-NCg")
+GOOGLE_CX = os.getenv("GOOGLE_SEARCH_CX", "655e35aac5de844c7")
+
 # OpenRouter API (for LLM)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")  # You'll need to set this
 
 # Model Configuration
-DEFAULT_MODEL_FREE = "google/gemini-3.0-flash"  # Free users - Gemini 3 Flash
+DEFAULT_MODEL_FREE = "google/gemini-3-flash-preview"  # Free users - Gemini 3 Flash
 DEFAULT_MODEL_PRO = "anthropic/claude-3.5-sonnet"  # Pro users - Claude 3.5 Sonnet
 
 # Free Tier Source Limits (must successfully scrape this many)
@@ -46,3 +50,9 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
 # Report Settings
 MAX_SEARCH_RESULTS = 10  # Max websites/videos to scrape
 MAX_REVIEWS_PER_ASIN = 100  # Max reviews to analyze per product (increased)
+
+# Polar.sh Payment Settings
+POLAR_ACCESS_TOKEN = os.getenv("POLAR_ACCESS_TOKEN", "")
+POLAR_ORGANIZATION_ID = os.getenv("POLAR_ORGANIZATION_ID", "")
+POLAR_PRODUCT_ID = os.getenv("POLAR_PRODUCT_ID", "dc5fea6e-0719-4bbd-9138-da29b495e242")
+POLAR_CHECKOUT_SUCCESS_URL = "https://amz-ai-replica-550177383294.us-central1.run.app/processing.html?taskId={CHECKOUT_ID}"

@@ -179,22 +179,71 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const email = params.get('email');
-            const taskId = params.get('taskId') || params.get('report_id'); // Support both
-            const orderId = params.get('orderId') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
+            const email = params.get('email') || localStorage.getItem('pending_email');
+            const taskId = params.get('taskId') || params.get('report_id') || localStorage.getItem('pending_task_id');
+            const orderId = params.get('orderId') || localStorage.getItem('pending_order_id') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
 
             // 1. Basic Info Populating
             document.getElementById('display-order-id').innerText = orderId;
             document.getElementById('display-email').innerText = email || 'user@example.com';
 
-            // 2. WebSocket Connection
+            // 2. WebSocket Connection / Auto-Trigger
             if (taskId) {
                 initWebSocket(taskId);
             } else {
-                // Fallback for demo without task ID
-                logToTerminal("System", "No Task ID found. Waiting for manual update...");
+                // Fallback: Check if we have a pending payload from Polar redirect
+                const pendingPayload = localStorage.getItem('pending_analysis_payload');
+                if (pendingPayload) {
+                    triggerPendingAnalysis(JSON.parse(pendingPayload));
+                } else {
+                    logToTerminal("System", "No Task ID found. Waiting for manual update...");
+                }
             }
         });
+
+        async function triggerPendingAnalysis(payload) {
+            logToTerminal("System", "Payment detected. Initiating AI Agent...", "#4ade80");
+            try {
+                // Determine endpoint based on payload
+                const isPro = payload.payment_status === 'deposit_paid';
+                const endpointUrl = isPro
+                    ? 'https://tony4927.app.n8n.cloud/webhook/3f76a439-5a54-4d08-97cd-6e98d7b6e034'
+                    : 'https://tony4927.app.n8n.cloud/webhook/c6b3034f-250a-433f-9017-c14c3f8c7f9f';
+
+                const formData = new URLSearchParams();
+                for (const key in payload) {
+                    if (typeof payload[key] === 'object') {
+                        formData.append(key, JSON.stringify(payload[key]));
+                    } else {
+                        formData.append(key, payload[key]);
+                    }
+                }
+
+                const response = await fetch(endpointUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    let data = {};
+                    try { data = await response.json(); } catch (e) { }
+
+                    const newTaskId = data.taskId || data.report_id;
+                    if (newTaskId) {
+                        logToTerminal("System", `Task ID generated: ${newTaskId}`, "#4ade80");
+                        // Clear payload so we don't re-trigger on refresh
+                        localStorage.removeItem('pending_analysis_payload');
+                        initWebSocket(newTaskId);
+                    } else {
+                        logToTerminal("System", "Agent started. Monitoring logs...", "#4ade80");
+                    }
+                } else {
+                    logToTerminal("Error", "Failed to start AI Agent. Please contact support.", "#f87171");
+                }
+            } catch (err) {
+                logToTerminal("Error", "Connection failed: " + err.message, "#f87171");
+            }
+        }
 
         function initWebSocket(taskId) {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';

@@ -396,12 +396,17 @@
                 style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); width: 100%;">
                 Pay $4.99 with Stripe (Sandbox)
             </button>
+            <a href="https://buy.polar.sh/polar_cl_3udFF79S8v3TpXhKL6CWnHCGLfiHqc3urNBGs0Ae4qk" class="submit-btn"
+                id="pay-polar-deposit-btn" target="_blank"
+                style="background: #000; color: #fff; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; border: none;">
+                Pay $4.99 with Polar.sh
+            </a>
             <button class="submit-btn" disabled
                 style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none;">
                 Pay $4.99 with PayPal (Unavailable)
             </button>
             <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
-                Secure payment via Stripe • 100% Satisfaction Guarantee
+                Secure payment via Stripe or Polar.sh • 100% Satisfaction Guarantee
             </p>
         </div>
     </div>
@@ -541,7 +546,7 @@
                 });
             });
 
-            // Payment success handler (simulated)
+            // Payment success handler (simulated for Stripe)
             const payDepositBtn = document.getElementById('pay-deposit-btn');
             if (payDepositBtn) {
                 payDepositBtn.addEventListener('click', function () {
@@ -552,44 +557,68 @@
                     }
 
                     // Simulate payment success
-                    alert('Payment successful! (Sandbox mode) Pro features are now unlocked.');
-                    paymentModal.style.display = 'none';
+                    unlockProFeatures();
+                });
+            }
 
-                    // Unlock Pro mode
-                    isProMode = true;
-
-                    // Make prompt editable
-                    promptTextarea.removeAttribute('readonly');
-                    promptTextarea.style.opacity = '1';
-                    promptTextarea.style.cursor = 'text';
-                    promptTextarea.style.background = 'var(--bg-primary)';
-                    promptTextarea.style.border = '2px solid var(--primary-color)';
-                    promptBadge.textContent = 'Pro: Editable';
-                    promptBadge.style.background = 'linear-gradient(135deg, #4f46e5, #2563eb)';
-                    promptBadge.style.color = 'white';
-
-                    // Unlock all focus cards
-                    focusCards.forEach(card => {
-                        card.classList.remove('locked');
-                        card.style.opacity = '1';
-                        card.style.cursor = 'pointer';
-                        const lockBadge = card.querySelector('.lock-badge');
-                        if (lockBadge) lockBadge.style.display = 'none';
-                    });
-
-                    // Update helper text
-                    const focusHelper = document.getElementById('focus-helper');
-                    if (focusHelper) {
-                        focusHelper.innerHTML = '✅ Pro Mode Active! Click cards to toggle selection.';
+            // Polar Payment Handler
+            const payPolarBtn = document.getElementById('pay-polar-deposit-btn');
+            if (payPolarBtn) {
+                payPolarBtn.addEventListener('click', function (e) {
+                    const proEmail = document.getElementById('pro-email-input').value.trim();
+                    if (!proEmail) {
+                        e.preventDefault();
+                        alert('Please enter your email address');
+                        return;
                     }
 
-                    // Unlock advanced options
-                    const proOverlay = document.getElementById('pro-unlock-overlay');
-                    if (proOverlay) proOverlay.style.display = 'none';
+                    // In a real scenario, we would redirect. 
+                    // For this sandbox/demo, we'll also unlock features to show the effect.
+                    unlockProFeatures();
 
-                    document.querySelectorAll('.pro-feature').forEach(el => {
-                        el.disabled = false;
-                    });
+                    // Optional: redirect to Polar after a short delay if real payment is intended
+                    // setTimeout(() => { window.location.href = this.href; }, 1000);
+                });
+            }
+
+            function unlockProFeatures() {
+                alert('Success! Pro features are now unlocked (Sandbox mode).');
+                paymentModal.style.display = 'none';
+
+                // Unlock Pro mode
+                isProMode = true;
+
+                // Make prompt editable
+                promptTextarea.removeAttribute('readonly');
+                promptTextarea.style.opacity = '1';
+                promptTextarea.style.cursor = 'text';
+                promptTextarea.style.background = 'var(--bg-primary)';
+                promptTextarea.style.border = '2px solid var(--primary-color)';
+                promptBadge.textContent = 'Pro: Editable';
+                promptBadge.style.background = 'linear-gradient(135deg, #4f46e5, #2563eb)';
+                promptBadge.style.color = 'white';
+
+                // Unlock all focus cards
+                focusCards.forEach(card => {
+                    card.classList.remove('locked');
+                    card.style.opacity = '1';
+                    card.style.cursor = 'pointer';
+                    const lockBadge = card.querySelector('.lock-badge');
+                    if (lockBadge) lockBadge.style.display = 'none';
+                });
+
+                // Update helper text
+                const focusHelper = document.getElementById('focus-helper');
+                if (focusHelper) {
+                    focusHelper.innerHTML = '✅ Pro Mode Active! Click cards to toggle selection.';
+                }
+
+                // Unlock advanced options
+                const proOverlay = document.getElementById('pro-unlock-overlay');
+                if (proOverlay) proOverlay.style.display = 'none';
+
+                document.querySelectorAll('.pro-feature').forEach(el => {
+                    el.disabled = false;
                 });
             }
 

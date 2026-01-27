@@ -6,6 +6,7 @@ import re
 from typing import List, Optional
 from dataclasses import dataclass
 import httpx
+from .scrapingbee_client import ScrapingBeeClient
 
 @dataclass
 class YouTubeSource:
@@ -19,7 +20,7 @@ class YouTubeClient:
     """Client for searching YouTube and extracting captions"""
     
     def __init__(self):
-        pass
+        self.scraping_bee = ScrapingBeeClient()
         
     async def search_and_get_captions(
         self, 
@@ -89,57 +90,43 @@ class YouTubeClient:
     async def _search_youtube_simple(self, keywords: str, max_results: int) -> List[tuple]:
         """
         Search YouTube and return list of (video_id, title) tuples.
-        Uses YouTube search page scraping as a simple approach.
+        Uses ScrapingBee to bypass YouTube search page scraping blocks.
         """
         search_query = f"{keywords} review"
         search_url = f"https://www.youtube.com/results?search_query={search_query.replace(' ', '+')}"
         
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    search_url,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                    }
-                )
+            # Use ScrapingBee to fetch the search results page
+            # YouTube search requires JS rendering often, or smart headers.
+            # ScrapingBee with premium_proxy handles this well.
+            html = await self.scraping_bee.scrape_url(search_url, render_js=True)
+            
+            if not html:
+                print(f"[YouTube] ScrapingBee search returned empty.")
+                return self._get_fallback_videos(keywords)
+            
+            # Extract video data
+            # Regex for videoId is fairly stable in the raw HTML / JS blob
+            video_pattern = r'"videoId":"([a-zA-Z0-9_-]{11})"'
+            video_ids = re.findall(video_pattern, html)
+            
+            # Basic deduplication
+            seen = set()
+            unique_ids = []
+            for vid in video_ids:
+                if vid not in seen:
+                    seen.add(vid)
+                    unique_ids.append(vid)
+            
+            results = []
+            for vid in unique_ids[:max_results]:
+                 results.append((vid, f"YouTube Video {vid}")) # Placeholder title
+                 
+            if not results:
+                print("[YouTube] No video IDs found in ScrapingBee output.")
+                return self._get_fallback_videos(keywords)
                 
-                if response.status_code != 200:
-                    print(f"[YouTube] Search failed: {response.status_code}")
-                    return self._get_fallback_videos(keywords)
-                    
-                html = response.text
-                
-                # Extract video data using a more robust pattern if possible, or just strict zip
-                # Primary Pattern: videoRenderer... videoId":"..."... title":{"runs":[{"text":"..."
-                
-                # Fallback to simple regex but filter out short titles/timestamps
-                video_pattern = r'"videoId":"([a-zA-Z0-9_-]{11})"'
-                # Title pattern often appears right after videoId in many contexts, but not always.
-                # A safer way is to find consistent blocks. 
-                # Simplification: Just capture IDs. We can fetch titles later or use placeholder.
-                # BUT we need titles for logs.
-                
-                # Let's try capturing IDs and just using "YouTube Video {id}" if title extraction is flaky.
-                # Or try to fix the title pattern to ignore "Intro" etc.
-                
-                video_ids = re.findall(video_pattern, html)
-                
-                # Deduplicate
-                seen = set()
-                unique_ids = []
-                for vid in video_ids:
-                    if vid not in seen:
-                        seen.add(vid)
-                        unique_ids.append(vid)
-                
-                results = []
-                for vid in unique_ids[:max_results]:
-                     results.append((vid, f"YouTube Video {vid}")) # Use generic title to avoid regex mismatch crashing/confusion
-                     
-                if not results:
-                    return self._get_fallback_videos(keywords)
-                    
-                return results
+            return results
                 
         except Exception as e:
             print(f"[YouTube] Search error: {e}")

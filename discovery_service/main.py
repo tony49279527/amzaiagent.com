@@ -179,6 +179,55 @@ async def start_analysis_task(
         print(f"Error starting analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+from .payment_service import payment_service
+from fastapi import Request
+
+# Store for paid reports
+paid_reports = set()
+
+@app.post("/api/payments/create-checkout")
+async def create_checkout(report_id: str, email: str):
+    """Create a Polar checkout for a specific report"""
+    try:
+        # Create checkout session
+        checkout = await payment_service.create_checkout_session(
+            user_email=email,
+            product_name=f"Pro Report: {report_id}"
+        )
+        return {
+            "checkout_url": checkout["url"],
+            "checkout_id": checkout["checkout_id"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/webhooks/polar")
+async def polar_webhook(request: Request):
+    """Handle Polar payment webhooks"""
+    payload = await request.body()
+    signature = request.headers.get("stripe-signature") # Polar uses Stripe-like signatures or their own
+    
+    # In a real app, verify signature here
+    # data = payment_service.verify_webhook(payload, signature)
+    
+    import json
+    data = json.loads(payload)
+    event_type = data.get("type")
+    
+    if event_type == "checkout.updated":
+        checkout_data = data.get("data", {})
+        status = checkout_data.get("status")
+        
+        if status == "succeeded":
+            # Extract our custom data or find by email
+            email = checkout_data.get("customer_email")
+            print(f"Payment succeeded for {email}")
+            # In a real app, mark the report as paid in DB
+            # For now, we'll use the email to match or a metadata field if supported
+            paid_reports.add(email) # Simplified for demo
+            
+    return {"status": "ok"}
+
 @app.get("/test-email")
 async def test_email_endpoint(email: str, type: str = "success"):
     """Immediate test endpoint to verify email delivery"""

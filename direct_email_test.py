@@ -7,14 +7,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 465
+SMTP_PORT = 587
+SMTP_USER = "leetony4927@gmail.com"
+SMTP_PASSWORD = "deaz lqro wons vcee".replace(" ", "")
+TARGET_EMAIL = "aurotony4927@gmail.com"
 # ...
 try:
-    print(f"1. Connecting to {SMTP_HOST}:{SMTP_PORT} (SSL)...")
-    server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT)
+    print(f"1. Connecting to {SMTP_HOST}:{SMTP_PORT} (STARTTLS)...")
+    server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+    server.starttls()
     server.set_debuglevel(1)
     
-    # SSL is implicit, no starttls needed
     
     print("3. Logging in...")
     # Try logging in

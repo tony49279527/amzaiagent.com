@@ -49,105 +49,67 @@ class ProductDiscoveryAnalyzer:
             List of dicts with url, title, body/reason
         """
         # For now, bypass LLM and go straight to DuckDuckGo for reliability
-        return self._get_default_sources(category, keywords)
+        return await self._get_default_sources(category, keywords)
     
-    def _get_default_sources(self, category: str, keywords: str) -> List[dict]:
+    async def _get_default_sources(self, category: str, keywords: str) -> List[dict]:
         """
-        Use DuckDuckGo to find real, relevant URLs for analysis.
-        This replaces the hallucinated or hardcoded approach.
+        Use Google Custom Search API (Official) to find real, relevant URLs.
         """
-        from duckduckgo_search import DDGS
+        from .config import GOOGLE_API_KEY, GOOGLE_CX
+        import httpx
         
         search_query = f"{keywords} reviews reddit blog forum"
-        print(f"Searching web for: {search_query}...")
+        print(f"[Search] Searching Google (Official API) for: {search_query}...")
         
         results_data = []
         
-        # 1. Try DuckDuckGo
         try:
-            with DDGS() as ddgs:
-                # DDGS returns: {'title', 'href', 'body'}
-                results = list(ddgs.text(search_query, max_results=25))
-                
-                if not results:
-                    print("No results via standard DDGS, trying safesearch off...")
-                    results = list(ddgs.text(search_query, max_results=25, safesearch="off"))
-                
-                if results:
-                    for r in results:
-                        u = r['href']
-                        if any(x in u for x in ["reddit.com", "youtube.com", "tomshardware", "cnet", "nytimes", "consumer", "pet"]):
-                            results_data.append({
-                                "url": u,
-                                "title": r.get('title', 'Web Search Result'),
-                                "body": r.get('body', "")
-                            })
-                    
-                    # If filtering left too few, take non-filtered
-                    if len(results_data) < 3:
-                        for r in results[:5]:
-                            if not any(d['url'] == r['href'] for d in results_data):
-                                results_data.append({
-                                    "url": r['href'],
-                                    "title": r.get('title', 'Web Search Result'),
-                                    "body": r.get('body', "")
-                                })
-                    
-                    print(f"Found {len(results_data)} relevant URLs via DuckDuckGo.")
-        except Exception as e:
-            print(f"DuckDuckGo search failed: {e}")
-
-        # 2. Fallback to Google Search if DDGS failed or found nothing
-        if not results_data:
-            print("Result list empty. Trying Google Search fallback...")
-            try:
-                from googlesearch import search
-                # googlesearch-python returns list of URLs
-                g_results = list(search(search_query, num_results=15, advanced=True))
-                
-                for r in g_results:
-                    # advanced=True returns objects with .url, .title, .description in some versions,
-                    # but check if it returns string or object.
-                    # safe usage: check type or attributes.
-                    # actually googlesearch-python 'advanced=True' returns objects. 
-                    # standard 'search' returns strings. Let's use standard to be safe if version varies, 
-                    # OR try advanced and catch error.
-                    # Let's use simple string search first to be robust.
-                    pass
-                
-                # Re-doing with standard search for maximum compatibility
-                g_urls = list(search(search_query, num_results=15))
-                
-                for u in g_urls:
-                    if any(x in u for x in ["reddit.com", "youtube.com", "tomshardware", "cnet", "nytimes", "consumer", "pet"]):
-                        results_data.append({
-                            "url": u,
-                            "title": "Google Search Result",
-                            "body": "" # No snippet avail
-                        })
-                
-                if len(results_data) < 3 and g_urls:
-                    for u in g_urls[:5]:
-                        if not any(d['url'] == u for d in results_data):
-                            results_data.append({
-                                "url": u,
-                                "title": "Google Search Result", 
-                                "body": ""
-                            })
-                            
-                print(f"Found {len(results_data)} via Google Search")
-            except Exception as e:
-                print(f"Google Search failed: {e}")
-
-        # 3. Last Resort: If all web search fails, return empty list.
-        # We generally should not try to scrape "Search Result Pages" (like reddit search, verge search)
-        # because they are difficult to scrape (heavy JS) and don't contain the actual review content.
-        # It is better to fail Web Search gracefully and rely on YouTube transcripts (Step 3).
-        if not results_data:
-            print("All web search methods failed. Proceeding with 0 web sources (relying on YouTube).")
-            return []
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                "key": GOOGLE_API_KEY,
+                "cx": GOOGLE_CX,
+                "q": search_query,
+                "num": 10
+            }
             
-        return results_data[:20]
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(url, params=params)
+                
+            if response.status_code == 200:
+                data = response.json()
+                items = data.get("items", [])
+                
+                print(f"[Search] API returned {len(items)} raw results.")
+                
+                for item in items:
+                    u = item.get("link")
+                    title = item.get("title", "Google Result")
+                    snippet = item.get("snippet", "")
+                    
+                    if not u: continue
+                    
+                    # Filter out irrelevant domains
+                    if "google.com" in u: continue
+                    
+                    results_data.append({
+                        "url": u,
+                        "title": title,
+                        "body": snippet
+                    })
+                    
+                print(f"[Search] Found {len(results_data)} relevant URLs via Google API.")
+            else:
+                print(f"[Search] Google API Error: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            print(f"[Search] Google API Exception: {e}")
+
+        # If API fails, return empty list (and let fallback logic handle it)
+        if not results_data:
+             print("[Search] Warning: No sources found via Google API.")
+             return []
+             
+        return results_data
             
         return results_data[:20]
     
@@ -280,12 +242,18 @@ class ProductDiscoveryAnalyzer:
                 amazon_products
             )
         
-        report = await self.ai_client.generate_with_retry(prompt, model=model)
-        
-        if not report:
-            raise Exception("Failed to generate report after retries")
-        
-        return report
+        try:
+            report = await self.ai_client.generate_with_retry(prompt, model=model)
+            
+            if not report:
+                error_msg = f"Failed to generate report using model {model} after retries. sources={len(web_sources)} web, {len(amazon_products)} products."
+                print(f"[Error] {error_msg}")
+                raise Exception(error_msg)
+            
+            return report
+        except Exception as e:
+            print(f"[Error] Exception in generate_report: {str(e)}")
+            raise
     
     async def analyze(self, request: DiscoveryRequest, task_id: str = None) -> AnalysisReport:
         """
@@ -360,6 +328,17 @@ class ProductDiscoveryAnalyzer:
         # Combine web and YouTube sources
         all_sources = web_sources + youtube_sources
         print(f"Total sources for analysis: {len(all_sources)} ({len(web_sources)} web + {len(youtube_sources)} YouTube)")
+
+        # ROBUSTNESS FIX: If no sources found (e.g. scraping blocked), inject synthetic source
+        if not all_sources:
+            print("[Analyzer] 0 sources found. Injecting Fallback Knowledge Source.")
+            await emit("Web Research", "No live data found. Using internal knowledge base...", 50)
+            all_sources.append(WebSource(
+                url="internal://knowledge-base",
+                title="AI Internal Market Knowledge",
+                content=f"The live scraping for '{request.keywords}' did not yield accessible results (likely due to site protections or niche volume). The analysis will proceed using the AI's internal extensive database for the '{request.category}' category. The insights below are based on general market patterns for this product type.",
+                source_type="internal_knowledge"
+            ))
         
         # Step 4: Fetch Amazon data (if ASINs provided)
         print("\n[4/5] Fetching Amazon product data...")

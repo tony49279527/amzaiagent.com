@@ -14,12 +14,29 @@ echo "========================================================"
 # Read .env file and format as comma-separated string
 if [ -f .env ]; then
   echo "Found .env file, preparing environment variables..."
-  # Export variables from .env for use in this script
-  export $(grep -v '^#' .env | xargs)
   
-  # Construct env var string, handling potential spaces in values if needed (simple version)
-  # But for safety, we simply pass them explicitly to avoid parsing issues
-  ENV_VARS="SMTP_USER=$SMTP_USER,SMTP_PASSWORD=${SMTP_PASSWORD// /},OPENROUTER_API_KEY=$OPENROUTER_API_KEY,SMTP_PORT=465,SMTP_SERVER=smtp.gmail.com"
+  # Read .env line by line to handle spaces correctly
+  while IFS='=' read -r key value; do
+    # Skip comments and empty lines
+    [[ $key =~ ^#.*$ ]] && continue
+    [[ -z $key ]] && continue
+    
+    # Export the variable
+    export "$key=$value"
+  done < .env
+  
+  # Manually construct the ENV_VARS string for gcloud
+  # We use the exported variables which now contain the full values
+  # Remove spaces from password for the actual API usage if needed, or keep them if the app handles it.
+  # Config.py handles removal, but let's ensure we pass the full string.
+  
+  # Note: logic in config.py is `.replace(" ", "")`. So we pass the full string here.
+  # We need to be careful with commas in gcloud --set-env-vars.
+  
+  # Let's clean the password for the deploy command string specifically to avoid quote hell
+  CLEAN_PWD="${SMTP_PASSWORD// /}"
+  
+  ENV_VARS="SMTP_USER=$SMTP_USER,SMTP_PASSWORD=$CLEAN_PWD,OPENROUTER_API_KEY=$OPENROUTER_API_KEY,SMTP_PORT=465,SMTP_SERVER=smtp.gmail.com"
 else
   echo "❌ Error: .env file not found! Deployment will lack credentials."
   exit 1
