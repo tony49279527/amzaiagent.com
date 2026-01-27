@@ -85,6 +85,10 @@ async def read_js():
 async def read_sitemap():
     return FileResponse('sitemap.xml')
 
+@app.get("/robots.txt")
+async def read_robots():
+    return FileResponse('robots.txt')
+
 
 # Global analyzer instance
 analyzer = ProductDiscoveryAnalyzer()
