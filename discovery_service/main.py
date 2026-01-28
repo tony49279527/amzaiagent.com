@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 import os
 
-from .models import DiscoveryRequest, DiscoveryResponse
+from .models import DiscoveryRequest, DiscoveryResponse, UserTier
 from .analyzer import ProductDiscoveryAnalyzer
 from .config import DEFAULT_MODEL_FREE, PRO_MODELS
 from .email_service import send_email_report
@@ -201,6 +201,101 @@ async def test_email_endpoint(email: str):
         return {"status": "success", "message": f"Test email sent to {email}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+# === Backend Proxy Endpoints ===
+# These proxy n8n webhook calls so that webhook URLs are not exposed in frontend code.
+import httpx
+from pydantic import BaseModel
+from typing import Optional
+
+N8N_CHECKOUT_URL = os.getenv("N8N_CHECKOUT_WEBHOOK_URL", "")
+N8N_PRO_ANALYSIS_URL = os.getenv("N8N_PRO_ANALYSIS_WEBHOOK_URL", "")
+N8N_SEND_REPORT_URL = os.getenv("N8N_SEND_REPORT_WEBHOOK_URL", "")
+
+class CheckoutRequest(BaseModel):
+    amount: str = "4.99"
+    order_id: str
+    success_url: str
+    cancel_url: str
+
+class SendReportRequest(BaseModel):
+    order_id: str
+    action: str = "send_full_report"
+    resume_url: Optional[str] = None
+
+@app.post("/api/proxy/create-checkout")
+async def proxy_create_checkout(req: CheckoutRequest):
+    """Proxy Stripe checkout creation to n8n (keeps webhook URL server-side)"""
+    if not N8N_CHECKOUT_URL:
+        raise HTTPException(status_code=503, detail="Payment service not configured")
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(N8N_CHECKOUT_URL, data={
+                "amount": req.amount,
+                "order_id": req.order_id,
+                "success_url": req.success_url,
+                "cancel_url": req.cancel_url,
+            })
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
+        print(f"Checkout proxy error: {e}")
+        raise HTTPException(status_code=502, detail="Payment service unavailable")
+
+@app.post("/api/proxy/pro-analysis")
+async def proxy_pro_analysis(payload: dict):
+    """Proxy Pro analysis submission to n8n"""
+    if not N8N_PRO_ANALYSIS_URL:
+        raise HTTPException(status_code=503, detail="Pro analysis service not configured")
+    try:
+        form_data = {}
+        for key, value in payload.items():
+            if isinstance(value, (list, dict)):
+                import json
+                form_data[key] = json.dumps(value)
+            else:
+                form_data[key] = str(value)
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(N8N_PRO_ANALYSIS_URL, data=form_data)
+            resp.raise_for_status()
+            try:
+                return resp.json()
+            except Exception:
+                return {"status": "ok"}
+    except Exception as e:
+        print(f"Pro analysis proxy error: {e}")
+        raise HTTPException(status_code=502, detail="Pro analysis service unavailable")
+
+@app.post("/api/proxy/send-full-report")
+async def proxy_send_full_report(req: SendReportRequest):
+    """Proxy full report trigger to n8n"""
+    if not N8N_SEND_REPORT_URL:
+        raise HTTPException(status_code=503, detail="Report service not configured")
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(N8N_SEND_REPORT_URL, data={
+                "order_id": req.order_id,
+                "action": req.action,
+            })
+            resp.raise_for_status()
+            return {"status": "ok"}
+    except Exception as e:
+        print(f"Send report proxy error: {e}")
+        raise HTTPException(status_code=502, detail="Report service unavailable")
+
+@app.get("/api/proxy/resume-workflow")
+async def proxy_resume_workflow(resume_url: str):
+    """Proxy n8n resume URL call so the actual URL stays server-side"""
+    if not resume_url:
+        raise HTTPException(status_code=400, detail="resume_url is required")
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(resume_url)
+            return {"status": "ok", "code": resp.status_code}
+    except Exception as e:
+        print(f"Resume workflow proxy error: {e}")
+        raise HTTPException(status_code=502, detail="Resume failed")
+
 
 if __name__ == "__main__":
     print("Starting Product Discovery Service...")

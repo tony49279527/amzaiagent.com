@@ -90,13 +90,11 @@
             const resumeUrl = params.get('resume_url');
 
             if (paid === 'true' && resumeUrl) {
-                console.log('Payment confirmed, triggering workflow resume...');
-                console.log('Resume URL:', decodeURIComponent(resumeUrl));
+                console.log('Payment confirmed, triggering workflow resume via backend proxy...');
 
                 try {
-                    // Call the Resume URL to wake up the n8n Wait node
-                    const response = await fetch(decodeURIComponent(resumeUrl), {
-                        method: 'GET'  // Wait node expects GET by default
+                    const response = await fetch('/api/proxy/resume-workflow?resume_url=' + encodeURIComponent(decodeURIComponent(resumeUrl)), {
+                        method: 'GET'
                     });
 
                     if (response.ok) {
@@ -108,15 +106,15 @@
                     console.error('❌ Failed to resume workflow:', err);
                 }
             } else if (paid === 'true' && !resumeUrl) {
-                console.log('⚠️ No resume_url found, falling back to direct webhook...');
-                // Fallback to old method if no resume_url
+                console.log('⚠️ No resume_url found, falling back to backend proxy...');
                 try {
-                    await fetch('https://tony4927.app.n8n.cloud/webhook/send-full-report', {
+                    await fetch('/api/proxy/send-full-report', {
                         method: 'POST',
-                        body: new URLSearchParams({ order_id: orderId, action: 'send_full_report' })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ order_id: orderId, action: 'send_full_report' })
                     });
                 } catch (err) {
-                    console.error('Fallback webhook failed:', err);
+                    console.error('Fallback send-report failed:', err);
                 }
             }
 

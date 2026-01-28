@@ -579,36 +579,29 @@ Present workflows in a structured table format, including:
             };
             localStorage.setItem('pending_pro_payload', JSON.stringify(proPayload));
 
-            // 2. Call n8n to get Stripe Link (Using form-urlencoded to avoid CORS preflight)
+            // 2. Call backend proxy to get Stripe Link (webhook URL stays server-side)
             try {
-                // orderId is already defined above
-                const formData = new URLSearchParams();
-                formData.append('amount', '4.99');
-                formData.append('order_id', orderId); // Keep this snake_case for n8n backend if needed? or strictly for Stripe metadata
-                // Fix: processing.html looks for 'orderId' (camelCase), not 'order_id'
-                formData.append('success_url', window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}`);
-                formData.append('cancel_url', window.location.href);
-
-                const response = await fetch('https://tony4927.app.n8n.cloud/webhook/create-checkout', {
+                const response = await fetch('/api/proxy/create-checkout', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: '4.99',
+                        order_id: orderId,
+                        success_url: window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}`,
+                        cancel_url: window.location.href
+                    })
                 });
 
-                const rawText = await response.text();
-                console.log('n8n Raw Response:', rawText);
-
-                let data;
-                try {
-                    data = JSON.parse(rawText);
-                } catch (e) {
-                    console.error('Failed to parse JSON:', e);
-                    throw new Error('Invalid JSON response from n8n');
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'Payment service error');
                 }
 
-                console.log('Parsed Data:', data);
+                const data = await response.json();
+                console.log('Checkout response:', data);
+
                 // Handle both object {url:...} and array [{url:...}] formats
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
-                console.log('Extracted URL:', paymentUrl);
 
                 if (paymentUrl) {
                     window.location.href = paymentUrl; // Redirect to Stripe
@@ -665,8 +658,8 @@ Present workflows in a structured table format, including:
         };
 
         try {
-            // Pro URL: Standard n8n with AI Agents
-            let endpointUrl = 'https://tony4927.app.n8n.cloud/webhook/3f76a439-5a54-4d08-97cd-6e98d7b6e034';
+            // Pro URL: routed through backend proxy (webhook URL stays server-side)
+            let endpointUrl = '/api/proxy/pro-analysis';
 
             if (!isPro) {
                 // === FREE TIER: USE LOCAL BACKEND FOR REAL-TIME TRACKING ===
@@ -696,22 +689,12 @@ Present workflows in a structured table format, including:
                 return;
             }
 
-            // === PRO TIER: KEEP n8n LOGIC (Payment Flow) ===
-            const formData = new URLSearchParams();
-            for (const key in payload) {
-                if (typeof payload[key] === 'object') {
-                    formData.append(key, JSON.stringify(payload[key]));
-                } else {
-                    formData.append(key, payload[key]);
-                }
-            }
-
-            let fetchOptions = {
+            // === PRO TIER: Submit via backend proxy ===
+            const response = await fetch(endpointUrl, {
                 method: 'POST',
-                body: formData
-            };
-
-            const response = await fetch(endpointUrl, fetchOptions);
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
             if (response.ok) {
                 let data = {};

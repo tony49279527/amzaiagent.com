@@ -192,15 +192,14 @@ async function handlePaymentComplete(orderId, amount) {
         successUrl += `&resume_url=${encodeURIComponent(resumeUrl)}`;
     }
 
-    // 2. Call n8n to get Stripe Link
+    // 2. Call backend proxy to get Stripe Link (webhook URL stays server-side)
     try {
-        const response = await fetch('https://tony4927.app.n8n.cloud/webhook/create-checkout', {
+        const response = await fetch('/api/proxy/create-checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                amount: 25.00,
+                amount: '25.00',
                 order_id: orderId,
-                // Success URL points to success page with resume_url
                 success_url: successUrl,
                 cancel_url: window.location.href
             })

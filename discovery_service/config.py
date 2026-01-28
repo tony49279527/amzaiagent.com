@@ -8,14 +8,13 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# API Keys
-SCRAPINGBEE_API_KEY = "FZRSC69J3MPE5OO5FYJKEZFGI2XWG65IQA2V86EFJWKF9ARVGV0AIPMTSJ74XL0FV3EZIL95B7ZQI1XR"
-
-RAPIDAPI_KEY = "35d443d327msh77164428609687ep1ee4b4jsn763b388ea69a"
+# API Keys (all loaded from environment variables)
+SCRAPINGBEE_API_KEY = os.getenv("SCRAPINGBEE_API_KEY", "")
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
 RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 
 # OpenRouter API (for LLM)
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")  # You'll need to set this
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
 # Model Configuration
 DEFAULT_MODEL_FREE = "anthropic/claude-3.5-sonnet"  # Free users - High quality magnet
