@@ -134,8 +134,8 @@ class ProductDiscoveryAnalyzer:
             url = result["url"]
             print(f"[Scraping] Starting {i+1}/{len(search_results)}: {url[:60]}...")
             
-            # Try to scrape this single URL
-            scraped = await self.scraping_bee.scrape_url(url)
+            # Try to scrape this single URL (returns WebSource or None)
+            scraped = await self.scraping_bee.scrape_generic_page(url)
             
             if scraped and scraped.content and len(scraped.content) > 500:
                 print(f"[Web] ✓ Got content for: {url[:50]}... ({len(scraped.content)} chars)")

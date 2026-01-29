@@ -97,7 +97,7 @@ async def read_robots():
 analyzer = ProductDiscoveryAnalyzer()
 
 # Store for completed reports (in production, use database)
-reports_store = {}
+reports_store = {}  # TODO: Replace with Supabase — lost on container restart
 
 
 @app.get("/")
@@ -194,7 +194,21 @@ from .payment_service import payment_service
 from fastapi import Request
 
 # Store for paid reports
-paid_reports = set()
+# TODO: Replace with database persistence — in-memory stores are lost on container restart
+paid_reports = set()  # tracks paid emails
+verified_sessions = set()  # tracks verified checkout session IDs
+
+@app.get("/api/payments/verify-session")
+async def verify_payment_session(session_id: str):
+    """Verify a checkout session status. In production, query Stripe/Polar API."""
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id required")
+    # TODO: In production, verify with Stripe API:
+    # stripe.checkout.Session.retrieve(session_id)
+    # For now, check if this session was confirmed via webhook
+    if session_id in verified_sessions:
+        return {"status": "paid", "session_id": session_id}
+    return {"status": "pending", "session_id": session_id}
 
 @app.post("/api/payments/create-checkout")
 async def create_checkout(report_id: str, email: str):
@@ -243,8 +257,12 @@ async def polar_webhook(request: Request):
             print(f"Payment succeeded for {email}")
             # In a real app, mark the report as paid in DB
             # For now, we'll use the email to match or a metadata field if supported
-            paid_reports.add(email) # Simplified for demo
-            
+            paid_reports.add(email)
+            # Also track checkout session ID if available
+            checkout_id = checkout_data.get("id") or checkout_data.get("checkout_id")
+            if checkout_id:
+                verified_sessions.add(checkout_id)
+
     return {"status": "ok"}
 
 @app.get("/test-email")
@@ -341,14 +359,9 @@ async def handle_contact_form(req: ContactFormRequest, request: Request):
         """
         msg.attach(MIMEText(html_body, "html"))
 
-        if int(SMTP_PORT) == 465:
-            server = smtplib.SMTP_SSL(SMTP_HOST, int(SMTP_PORT))
-        else:
-            server = smtplib.SMTP(SMTP_HOST, int(SMTP_PORT))
-            server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_USER, SMTP_USER, msg.as_string())
-        server.quit()
+        import asyncio
+        from .email_service import _smtp_send
+        await asyncio.to_thread(_smtp_send, SMTP_USER, msg)
 
         return {"status": "success", "message": "Your message has been sent. We'll get back to you soon."}
     except HTTPException:

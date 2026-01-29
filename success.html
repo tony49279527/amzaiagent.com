@@ -102,12 +102,28 @@
             }
 
             // ==========================================
-            // Trigger report delivery via backend proxy.
-            // TODO: For production reliability, move this to a Stripe Webhook
-            // handler on the backend (e.g. POST /api/stripe-webhook) so report
-            // delivery does not depend on the user's browser staying open.
+            // Verify payment with backend before triggering report delivery.
+            // WARNING: Do NOT rely solely on URL params (paid=true) — they can be forged.
+            // In production, this should be handled entirely via Stripe Webhook on the backend.
             // ==========================================
+            const sessionId = params.get('session_id');
             const resumeUrl = params.get('resume_url');
+
+            // If session_id present, verify with backend first
+            if (sessionId) {
+                try {
+                    const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
+                    const verifyData = await verifyResp.json();
+                    if (!verifyResp.ok || verifyData.status !== 'paid') {
+                        console.warn('Payment not verified by server, skipping report trigger');
+                        document.querySelector('.status-box').innerHTML = '<p style="color:#dc2626;font-weight:500;">⚠ Payment verification pending. If you completed payment, your report will arrive by email shortly.</p>';
+                        return; // Do not trigger report delivery
+                    }
+                } catch (e) {
+                    console.warn('Could not verify payment session:', e);
+                    // Fall through — backend webhook will handle delivery
+                }
+            }
 
             if (paid === 'true' && resumeUrl) {
                 console.log('Payment confirmed, triggering workflow resume via backend proxy...');

@@ -1,5 +1,6 @@
 
 import smtplib
+import asyncio
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from .config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
@@ -7,6 +8,19 @@ from .models import AnalysisReport
 import sys
 import io
 from contextlib import redirect_stderr, redirect_stdout
+
+
+def _smtp_send(to_email: str, msg: MIMEMultipart):
+    """Synchronous SMTP send — meant to be called via asyncio.to_thread"""
+    port = int(SMTP_PORT)
+    if port == 465:
+        server = smtplib.SMTP_SSL(SMTP_HOST, port)
+    else:
+        server = smtplib.SMTP(SMTP_HOST, port)
+        server.starttls()
+    server.login(SMTP_USER, SMTP_PASSWORD)
+    server.sendmail(SMTP_USER, to_email, msg.as_string())
+    server.quit()
 
 async def send_email_report(report: AnalysisReport, is_pro_flow: bool = False):
     """
@@ -143,28 +157,9 @@ async def send_email_report(report: AnalysisReport, is_pro_flow: bool = False):
         part = MIMEText(html_content, "html")
         msg.attach(part)
 
-        # Connect to server
+        # Send email in a thread to avoid blocking the async event loop
         print(f"Connecting to SMTP server {SMTP_HOST}:{SMTP_PORT}...")
-        
-        server = None
-        port = int(SMTP_PORT)
-        
-        if port == 465:
-            # SSL Connection (Implicit)
-            print("Using SMTP_SSL (Implicit SSL)")
-            server = smtplib.SMTP_SSL(SMTP_HOST, port)
-            # server.starttls() is NOT needed for SMTP_SSL
-        else:
-            # TLS Connection (Explicit)
-            print("Using SMTP (StartTLS)")
-            server = smtplib.SMTP(SMTP_HOST, port)
-            server.starttls()  # Secure the connection
-            
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        
-        # Send email
-        server.sendmail(SMTP_USER, report.user_email, msg.as_string())
-        server.quit()
+        await asyncio.to_thread(_smtp_send, report.user_email, msg)
         
         print(f"✅ Email sent successfully to {report.user_email}")
         
@@ -232,17 +227,8 @@ async def send_failure_email(user_email: str, keywords: str, error_details: str)
         part = MIMEText(html_content, "html")
         msg.attach(part)
 
-        # Connect to server (reuse connection logic potentially, but keep simple for now)
-        port = int(SMTP_PORT)
-        if port == 465:
-            server = smtplib.SMTP_SSL(SMTP_HOST, port)
-        else:
-            server = smtplib.SMTP(SMTP_HOST, port)
-            server.starttls()
-            
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_USER, user_email, msg.as_string())
-        server.quit()
+        # Send email in a thread to avoid blocking the async event loop
+        await asyncio.to_thread(_smtp_send, user_email, msg)
         
         print(f"✅ Failure notification sent successfully to {user_email}")
         

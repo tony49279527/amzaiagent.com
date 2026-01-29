@@ -560,42 +560,47 @@
                 });
             });
 
-            // Payment success handler (simulated for Stripe)
+            // Payment handler (Stripe via backend proxy)
             const payDepositBtn = document.getElementById('pay-deposit-btn');
             if (payDepositBtn) {
-                payDepositBtn.addEventListener('click', function () {
+                payDepositBtn.addEventListener('click', async function () {
                     const proEmail = document.getElementById('pro-email-input').value.trim();
                     if (!proEmail) {
                         alert('Please enter your email address');
                         return;
                     }
 
-                    // Simulate payment success
-                    alert('Payment successful! Pro features are now unlocked.');
-                    paymentModal.style.display = 'none';
+                    payDepositBtn.disabled = true;
+                    payDepositBtn.textContent = 'Processing...';
 
-            // Polar Payment Handler
-            const payPolarBtn = document.getElementById('pay-polar-deposit-btn');
-            if (payPolarBtn) {
-                payPolarBtn.addEventListener('click', function (e) {
-                    const proEmail = document.getElementById('pro-email-input').value.trim();
-                    if (!proEmail) {
-                        e.preventDefault();
-                        alert('Please enter your email address');
-                        return;
+                    try {
+                        const resp = await fetch('/api/proxy/create-checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                amount: '4.99',
+                                order_id: 'disc-' + Date.now(),
+                                success_url: window.location.origin + '/success.html?session_id={CHECKOUT_SESSION_ID}',
+                                cancel_url: window.location.href
+                            })
+                        });
+                        const data = await resp.json();
+                        if (data.checkout_url) {
+                            window.location.href = data.checkout_url;
+                        } else {
+                            throw new Error('No checkout URL returned');
+                        }
+                    } catch (e) {
+                        alert('Payment service unavailable. Please try again later.');
+                        payDepositBtn.disabled = false;
+                        payDepositBtn.textContent = 'Pay $4.99 Deposit with Stripe';
                     }
-
-                    // In a real scenario, we would redirect. 
-                    // For this sandbox/demo, we'll also unlock features to show the effect.
-                    unlockProFeatures();
-
-                    // Optional: redirect to Polar after a short delay if real payment is intended
-                    // setTimeout(() => { window.location.href = this.href; }, 1000);
                 });
-            }
 
             function unlockProFeatures() {
-                alert('Success! Pro features are now unlocked (Sandbox mode).');
+                // WARNING: This is client-side only. A user could call unlockProFeatures()
+                // from the console to bypass payment. In production, Pro status must be
+                // verified server-side before generating Pro-tier reports.
                 paymentModal.style.display = 'none';
 
                 // Unlock Pro mode
