@@ -84,6 +84,14 @@ async def read_css():
 async def read_js():
     return FileResponse('script_v2.js')
 
+@app.get("/sitemap.xml")
+async def read_sitemap():
+    return FileResponse('sitemap.xml')
+
+@app.get("/robots.txt")
+async def read_robots():
+    return FileResponse('robots.txt')
+
 
 # Global analyzer instance
 analyzer = ProductDiscoveryAnalyzer()
@@ -147,6 +155,10 @@ async def run_analysis_task(request: DiscoveryRequest, task_id: str = None):
         # If task_id exists, emit error
         if task_id:
             await progress_manager.emit(task_id, "Error", "Analysis Failed", 0, {"error": str(e)})
+            
+        # Send failure notification email
+        from .email_service import send_failure_email
+        await send_failure_email(request.user_email, request.keywords, str(e))
 
 @app.post("/api/discovery/start-task", response_model=DiscoveryResponse)
 async def start_analysis_task(
@@ -178,8 +190,57 @@ async def start_analysis_task(
         print(f"Error starting analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+from .payment_service import payment_service
+from fastapi import Request
+
+# Store for paid reports
+paid_reports = set()
+
+@app.post("/api/payments/create-checkout")
+async def create_checkout(report_id: str, email: str):
+    """Create a Polar checkout for a specific report"""
+    try:
+        # Create checkout session
+        checkout = await payment_service.create_checkout_session(
+            user_email=email,
+            product_name=f"Pro Report: {report_id}"
+        )
+        return {
+            "checkout_url": checkout["url"],
+            "checkout_id": checkout["checkout_id"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/webhooks/polar")
+async def polar_webhook(request: Request):
+    """Handle Polar payment webhooks"""
+    payload = await request.body()
+    signature = request.headers.get("stripe-signature") # Polar uses Stripe-like signatures or their own
+    
+    # In a real app, verify signature here
+    # data = payment_service.verify_webhook(payload, signature)
+    
+    import json
+    data = json.loads(payload)
+    event_type = data.get("type")
+    
+    if event_type == "checkout.updated":
+        checkout_data = data.get("data", {})
+        status = checkout_data.get("status")
+        
+        if status == "succeeded":
+            # Extract our custom data or find by email
+            email = checkout_data.get("customer_email")
+            print(f"Payment succeeded for {email}")
+            # In a real app, mark the report as paid in DB
+            # For now, we'll use the email to match or a metadata field if supported
+            paid_reports.add(email) # Simplified for demo
+            
+    return {"status": "ok"}
+
 @app.get("/test-email")
-async def test_email_endpoint(email: str):
+async def test_email_endpoint(email: str, type: str = "success"):
     """Immediate test endpoint to verify email delivery"""
     try:
         from .email_service import send_email_report
@@ -200,7 +261,11 @@ async def test_email_endpoint(email: str):
             report_html="<div style='font-family:sans-serif; padding:20px; border:1px solid #ddd; border-radius:8px;'><h1>✅ Connection Successful</h1><p>This email confirms that the <strong>Amz AI backend</strong> can successfully send emails via SMTP (SSL/465).</p><p>If you are seeing this, the deployment is correct.</p></div>"
         )
         
-        await send_email_report(mock_report, is_pro_flow=False)
+        if type == "failure":
+            from .email_service import send_failure_email
+            await send_failure_email(email, "Test Failure Scenario", "This is a simulated error message to test the failure notification system.")
+        else:
+            await send_email_report(mock_report, is_pro_flow=False)
         return {"status": "success", "message": f"Test email sent to {email}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -348,7 +413,6 @@ async def proxy_resume_workflow(resume_url: str):
     except Exception as e:
         print(f"Resume workflow proxy error: {e}")
         raise HTTPException(status_code=502, detail="Resume failed")
-
 
 if __name__ == "__main__":
     print("Starting Product Discovery Service...")

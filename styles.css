@@ -96,8 +96,26 @@ body {
 
 /* Mobile: show menu button, hide nav-links by default */
 @media (max-width: 767px) {
+    .nav-container {
+        position: relative;
+        justify-content: center;
+        /* Center the logo */
+    }
+
+    .logo {
+        margin: 0;
+        z-index: 1002;
+        /* Ensure logo is clickable */
+    }
+
     .mobile-menu-btn {
         display: flex;
+        position: absolute;
+        left: 1rem;
+        z-index: 1003;
+        /* Ensure button is on top */
+        top: 50%;
+        transform: translateY(-50%);
     }
 
     .nav-links {
@@ -113,6 +131,9 @@ body {
         border-bottom: 1px solid var(--border-color);
         box-shadow: var(--shadow-lg);
         z-index: 999;
+        max-height: calc(100vh - 64px);
+        /* Prevent overflow */
+        overflow-y: auto;
     }
 
     .nav-links.active {
@@ -120,8 +141,11 @@ body {
     }
 
     .nav-links a {
-        padding: 0.75rem 1rem;
+        padding: 1rem;
+        /* Larger touch target */
         border-bottom: 1px solid var(--border-color);
+        font-size: 1rem;
+        /* Larger text */
     }
 
     .nav-links a:last-child {
@@ -132,19 +156,7 @@ body {
         display: none;
     }
 
-    .nav-actions.active {
-        display: flex;
-        position: fixed;
-        top: calc(64px + 200px);
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 1rem;
-        justify-content: center;
-        border-bottom: 1px solid var(--border-color);
-        box-shadow: var(--shadow);
-        z-index: 998;
-    }
+    /* Ensure footer nav items (if any in nav-actions) are handled or hidden */
 }
 
 .nav-links a {
@@ -3648,4 +3660,77 @@ textarea:invalid:not(:placeholder-shown) {
 /* 10. Hide redundant CTA on create page */
 body.create-page .nav-actions .btn-primary {
     display: none;
+}
+
+/* Discovery Page Mobile Fixes */
+.analysis-focus-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .analysis-focus-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile Bug Fixes */
+@media (max-width: 768px) {
+
+    /* Fix Pricing Page Visibility: Force fade-up elements to show */
+    .fade-up {
+        opacity: 1 !important;
+        transform: none !important;
+        visibility: visible !important;
+    }
+
+    /* Fix Discovery Page Category Select Squeeze */
+    .category-select-container {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+
+    .category-select-container select {
+        width: 100% !important;
+        margin-right: 0 !important;
+    }
+
+    /* Additional Nav Fix for Index */
+    .nav-container {
+        justify-content: center !important;
+    }
+
+    .mobile-menu-btn {
+        left: 1rem !important;
+        right: auto !important;
+    }
+
+    .logo {
+        margin: 0 !important;
+        position: absolute !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 1002;
+    }
+}
+
+/* Desktop Layout for Category Selects */
+@media (min-width: 768px) {
+    .category-select-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Mobile Layout for Category Selects */
+@media (max-width: 767px) {
+    .category-select-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 }

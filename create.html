@@ -128,7 +128,7 @@
                                     <!-- Row 1: Report Language & LLM Model -->
                                     <div class="form-group">
                                         <label>Report Language <span class="lock-icon">🔒</span></label>
-                                        <select disabled class="pro-feature">
+                                        <select disabled class="pro-feature" id="report-language">
                                             <option value="English" selected>English (Default)</option>
                                             <option value="Français">Français</option>
                                             <option value="Deutsch">Deutsch</option>
@@ -355,12 +355,28 @@
                 style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); width: 100%;">
                 Pay $4.99 Deposit with Stripe
             </button>
+            <a href="https://buy.polar.sh/polar_cl_3udFF79S8v3TpXhKL6CWnHCGLfiHqc3urNBGs0Ae4qk" class="submit-btn"
+                id="pay-polar-deposit-btn" target="_blank"
+                style="background: #000; color: #fff; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; border: none; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 19H22L12 2Z" fill="white" />
+                    <path d="M12 6L6 17H18L12 6Z" fill="#111" />
+                </svg>
+                <span>Pay $4.99 with Polar.sh</span>
+            </a>
             <button class="submit-btn" disabled
-                style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none;">
+                style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M17.5 5H6.5C5.11929 5 4 6.11929 4 7.5V16.5C4 17.8807 5.11929 19 6.5 19H17.5C18.8807 19 20 17.8807 20 16.5V7.5C20 6.11929 18.8807 5 17.5 5Z"
+                        stroke="#9CA3AF" stroke-width="2" />
+                    <path d="M13 14L10 14L8.5 17" stroke="#9CA3AF" stroke-width="2" />
+                    <path d="M15.5 8L10 8L8.5 14" stroke="#9CA3AF" stroke-width="2" />
+                </svg>
                 Pay $4.99 with PayPal (Unavailable)
             </button>
             <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
-                Secure payment via Stripe • 100% Satisfaction Guarantee
+                Secure payment via Stripe or Polar.sh • 100% Satisfaction Guarantee
             </p>
         </div>
     </div>
@@ -406,7 +422,7 @@
             </div>
         </div>
     </footer>
-    <script src="script_v2.js?v=2"></script>
+    <script src="script_v2.js?v=4"></script>
 </body>
 
 </html>

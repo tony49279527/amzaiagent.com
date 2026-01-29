@@ -1,0 +1,14 @@
+.gcloudignore
+.git
+.gitignore
+.DS_Store
+*.zip
+temp_win_merge/
+brain/
+venv/
+env/
+__pycache__/
+*.pyc
+gcp_key.json
+amzaiagent_deploy_v2_2026_01_20.zip
+windows_latest_version.zip

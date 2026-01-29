@@ -43,12 +43,19 @@ class ScrapingBeeClient:
                 async with httpx.AsyncClient(timeout=90.0) as client:
                     response = await client.get(self.base_url, params=params)
                     
-                    if response.status_code == 200:
-                        return response.text
-                    else:
-                        print(f"[ScrapingBee] Attempt {attempt+1}/{retry_count} failed for {url}: {response.status_code}")
-                        if attempt < retry_count - 1:
-                            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                if response.status_code == 200:
+                    return response.text
+                elif response.status_code == 400:
+                    print(f"[ScrapingBee] Bad Request (400) for {url}. Skipping.")
+                    return None
+                else:
+                    print(f"[ScrapingBee] Attempt {attempt+1}/{retry_count} failed for {url}: {response.status_code}")
+                    if attempt < retry_count - 1:
+                        await asyncio.sleep(2 ** attempt)
+                        
+                        # Fallback: Try disabling premium proxy for subsequent attempts if it's a 500/timeout
+                        if attempt == 1:
+                            params["premium_proxy"] = "false"
                         
             except Exception as e:
                 print(f"[ScrapingBee] Attempt {attempt+1}/{retry_count} exception for {url}: {str(e)}")

@@ -12,7 +12,7 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="canonical" href="https://amzaiagent.com/processing.html">
+    <meta name="robots" content="noindex">
 </head>
 
 <body>
@@ -191,20 +191,25 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const email = params.get('email');
-            const taskId = params.get('taskId') || params.get('report_id'); // Support both
-            const orderId = params.get('orderId') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
+            const email = params.get('email') || localStorage.getItem('pending_email');
+            const taskId = params.get('taskId') || params.get('report_id') || localStorage.getItem('pending_task_id');
+            const orderId = params.get('orderId') || localStorage.getItem('pending_order_id') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
 
             // 1. Basic Info Populating
             document.getElementById('display-order-id').innerText = orderId;
             document.getElementById('display-email').innerText = email || 'user@example.com';
 
-            // 2. WebSocket Connection
+            // 2. WebSocket Connection / Auto-Trigger
             if (taskId) {
                 initWebSocket(taskId);
             } else {
-                // Fallback for demo without task ID
-                logToTerminal("System", "No Task ID found. Waiting for manual update...");
+                // Fallback: Check if we have a pending payload from Polar redirect
+                const pendingPayload = localStorage.getItem('pending_analysis_payload');
+                if (pendingPayload) {
+                    triggerPendingAnalysis(JSON.parse(pendingPayload));
+                } else {
+                    logToTerminal("System", "No Task ID found. Waiting for manual update...");
+                }
             }
         });
 

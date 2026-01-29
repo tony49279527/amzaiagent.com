@@ -2,21 +2,10 @@
 Prompt templates for Product Discovery analysis
 """
 
-def get_source_finder_prompt(category: str, keywords: str, marketplace: str) -> str:
+def get_source_finder_prompt(category: str, keywords: str, marketplace: str, web_sources: list = None) -> str:
     """
     Prompt to find relevant web sources for product research
     
-    Returns a prompt that asks LLM to suggest URLs to scrape
-    """
-    return f"""You are a product research expert. I need to find the best online sources to research products in the following category:
-
-Category: {category}
-Keywords: {keywords}
-Target Market: Amazon {marketplace}
-
-Please suggest 5 specific URLs that would provide valuable insights. 
-PRIORITIZE: Reddit threads, YouTube search results, and specific industry blogs.
-AVOID: Generic Google search pages (`google.com/search`), as these are hard to scrape.
 
 Format your response as a JSON array:
 [
@@ -48,6 +37,7 @@ The goal is to provide **Actionable, Money-Making Insights** that serve as an ir
 2. **Data**: You MUST cite specific review examples (at least 5 key quotes).
 3. **Structure**: Professional Business English (US).
 4. **Tables**: Include at least 4 tables, including a Profitability Simulator.
+5. **WORD COUNT: 2000-3000 words minimum. If shorter, REWRITE.**
 
 === INPUT DATA ===
 Category: {category}
@@ -330,13 +320,30 @@ If any checkbox is NO, REWRITE until all are YES.
 """
 
 def _format_sources(web_sources: list) -> str:
-    return "\n\n".join([
-        f"### Source {i+1}: {source.title}\n"
-        f"Type: {source.source_type}\n"
-        f"URL: {source.url}\n"
-        f"Content:\n{source.content[:2000]}..."
-        for i, source in enumerate(web_sources)
-    ])
+    if not web_sources:
+        return "No external web sources gathered."
+        
+    formatted = []
+    for i, source in enumerate(web_sources):
+        # Handle dictionary vs object (Web sources are dicts, YouTube are objects)
+        if isinstance(source, dict):
+            title = source.get('title', 'Unknown Source')
+            url = source.get('url', 'N/A')
+            content = source.get('body', '') or source.get('content', '')
+            sType = "web"
+        else:
+            title = getattr(source, 'title', 'Unknown Source')
+            url = getattr(source, 'url', 'N/A')
+            content = getattr(source, 'captions', '') or getattr(source, 'content', '')
+            sType = getattr(source, 'source_type', 'unknown')
+            
+        formatted.append(
+            f"### Source {i+1}: {title}\n"
+            f"Type: {sType}\n"
+            f"URL: {url}\n"
+            f"Content:\n{content[:2000]}..."
+        )
+    return "\n\n".join(formatted)
 
 def _format_products(amazon_products: list) -> str:
     if not amazon_products:

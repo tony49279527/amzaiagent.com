@@ -1,0 +1,5 @@
+From: leetony4927@gmail.com
+To: aurotony4927@gmail.com
+Subject: Curl Debug Test
+
+This is a test email sent via Curl to verify SMTP connectivity.

@@ -13,6 +13,10 @@ SCRAPINGBEE_API_KEY = os.getenv("SCRAPINGBEE_API_KEY", "")
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
 RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 
+# Google Custom Search API (Official)
+GOOGLE_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY", "AIzaSyAmGiYGIdcpKtwiOqnvVEd6Qdbu5LH-NCg")
+GOOGLE_CX = os.getenv("GOOGLE_SEARCH_CX", "655e35aac5de844c7")
+
 # OpenRouter API (for LLM)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
@@ -34,11 +38,18 @@ PRO_MODELS = [
 SCRAPINGBEE_BASE_URL = "https://app.scrapingbee.com/api/v1/"
 
 # Email Settings (for sending reports)
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 465
+# Support both SMTP_HOST and SMTP_SERVER env var names for compatibility
+SMTP_HOST = os.getenv("SMTP_HOST") or os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
 
 # Report Settings
 MAX_SEARCH_RESULTS = 10  # Max websites/videos to scrape
 MAX_REVIEWS_PER_ASIN = 100  # Max reviews to analyze per product (increased)
+
+# Polar.sh Payment Settings
+POLAR_ACCESS_TOKEN = os.getenv("POLAR_ACCESS_TOKEN", "")
+POLAR_ORGANIZATION_ID = os.getenv("POLAR_ORGANIZATION_ID", "")
+POLAR_PRODUCT_ID = os.getenv("POLAR_PRODUCT_ID", "dc5fea6e-0719-4bbd-9138-da29b495e242")
+POLAR_CHECKOUT_SUCCESS_URL = "https://amz-ai-replica-550177383294.us-central1.run.app/processing.html?taskId={CHECKOUT_ID}"

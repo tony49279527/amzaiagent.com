@@ -10,3 +10,6 @@ python-dotenv
 requests
 duckduckgo_search
 googlesearch-python
+markdown
+youtube-transcript-api
+polar-sdk

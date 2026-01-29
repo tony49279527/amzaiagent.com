@@ -70,8 +70,7 @@
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Product Category *</label>
                             <p class="helper-text">Select the category hierarchy for your product research</p>
-                            <div
-                                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 0.5rem;">
+                            <div class="category-select-container">
                                 <select id="category-level-1" required>
                                     <option value="">-- Select Main Category --</option>
                                 </select>
@@ -116,8 +115,7 @@
                                     style="color: var(--primary-color); font-weight: 600;">Upgrade to Pro</a> to select
                                 multiple focus areas.
                             </p>
-                            <div class="analysis-focus-cards"
-                                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 0.75rem;">
+                            <div class="analysis-focus-cards">
                                 <!-- Market Entry - Default for Free -->
                                 <div class="focus-card active" id="focus-market-entry" data-value="market-entry"
                                     style="padding: 1rem; border: 2px solid var(--primary-color); border-radius: 0.75rem; background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.05)); cursor: pointer; transition: all 0.2s;">
@@ -401,12 +399,28 @@
                 style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); width: 100%;">
                 Pay $4.99 Deposit with Stripe
             </button>
+            <a href="https://buy.polar.sh/polar_cl_3udFF79S8v3TpXhKL6CWnHCGLfiHqc3urNBGs0Ae4qk" class="submit-btn"
+                id="pay-polar-deposit-btn" target="_blank"
+                style="background: #000; color: #fff; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; border: none; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 19H22L12 2Z" fill="white" />
+                    <path d="M12 6L6 17H18L12 6Z" fill="#111" />
+                </svg>
+                <span>Pay $4.99 with Polar.sh</span>
+            </a>
             <button class="submit-btn" disabled
-                style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none;">
+                style="background: #e5e7eb; color: #9ca3af; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; cursor: not-allowed; border: none; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M17.5 5H6.5C5.11929 5 4 6.11929 4 7.5V16.5C4 17.8807 5.11929 19 6.5 19H17.5C18.8807 19 20 17.8807 20 16.5V7.5C20 6.11929 18.8807 5 17.5 5Z"
+                        stroke="#9CA3AF" stroke-width="2" />
+                    <path d="M13 14L10 14L8.5 17" stroke="#9CA3AF" stroke-width="2" />
+                    <path d="M15.5 8L10 8L8.5 14" stroke="#9CA3AF" stroke-width="2" />
+                </svg>
                 Pay $4.99 with PayPal (Unavailable)
             </button>
             <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
-                Secure payment via Stripe • 100% Satisfaction Guarantee
+                Secure payment via Stripe or Polar.sh • 100% Satisfaction Guarantee
             </p>
         </div>
     </div>
@@ -446,7 +460,7 @@
             </div>
         </div>
     </footer>
-    <script src="script_v2.js"></script>
+    <script src="script_v2.js?v=4"></script>
     <script src="data/amazon_categories.js"></script>
     <script>
         // Product Discovery specific form handling
@@ -546,7 +560,7 @@
                 });
             });
 
-            // Payment success handler (simulated)
+            // Payment success handler (simulated for Stripe)
             const payDepositBtn = document.getElementById('pay-deposit-btn');
             if (payDepositBtn) {
                 payDepositBtn.addEventListener('click', function () {
@@ -560,41 +574,64 @@
                     alert('Payment successful! Pro features are now unlocked.');
                     paymentModal.style.display = 'none';
 
-                    // Unlock Pro mode
-                    isProMode = true;
-
-                    // Make prompt editable
-                    promptTextarea.removeAttribute('readonly');
-                    promptTextarea.style.opacity = '1';
-                    promptTextarea.style.cursor = 'text';
-                    promptTextarea.style.background = 'var(--bg-primary)';
-                    promptTextarea.style.border = '2px solid var(--primary-color)';
-                    promptBadge.textContent = 'Pro: Editable';
-                    promptBadge.style.background = 'linear-gradient(135deg, #4f46e5, #2563eb)';
-                    promptBadge.style.color = 'white';
-
-                    // Unlock all focus cards
-                    focusCards.forEach(card => {
-                        card.classList.remove('locked');
-                        card.style.opacity = '1';
-                        card.style.cursor = 'pointer';
-                        const lockBadge = card.querySelector('.lock-badge');
-                        if (lockBadge) lockBadge.style.display = 'none';
-                    });
-
-                    // Update helper text
-                    const focusHelper = document.getElementById('focus-helper');
-                    if (focusHelper) {
-                        focusHelper.innerHTML = '✅ Pro Mode Active! Click cards to toggle selection.';
+            // Polar Payment Handler
+            const payPolarBtn = document.getElementById('pay-polar-deposit-btn');
+            if (payPolarBtn) {
+                payPolarBtn.addEventListener('click', function (e) {
+                    const proEmail = document.getElementById('pro-email-input').value.trim();
+                    if (!proEmail) {
+                        e.preventDefault();
+                        alert('Please enter your email address');
+                        return;
                     }
 
-                    // Unlock advanced options
-                    const proOverlay = document.getElementById('pro-unlock-overlay');
-                    if (proOverlay) proOverlay.style.display = 'none';
+                    // In a real scenario, we would redirect. 
+                    // For this sandbox/demo, we'll also unlock features to show the effect.
+                    unlockProFeatures();
 
-                    document.querySelectorAll('.pro-feature').forEach(el => {
-                        el.disabled = false;
-                    });
+                    // Optional: redirect to Polar after a short delay if real payment is intended
+                    // setTimeout(() => { window.location.href = this.href; }, 1000);
+                });
+            }
+
+            function unlockProFeatures() {
+                alert('Success! Pro features are now unlocked (Sandbox mode).');
+                paymentModal.style.display = 'none';
+
+                // Unlock Pro mode
+                isProMode = true;
+
+                // Make prompt editable
+                promptTextarea.removeAttribute('readonly');
+                promptTextarea.style.opacity = '1';
+                promptTextarea.style.cursor = 'text';
+                promptTextarea.style.background = 'var(--bg-primary)';
+                promptTextarea.style.border = '2px solid var(--primary-color)';
+                promptBadge.textContent = 'Pro: Editable';
+                promptBadge.style.background = 'linear-gradient(135deg, #4f46e5, #2563eb)';
+                promptBadge.style.color = 'white';
+
+                // Unlock all focus cards
+                focusCards.forEach(card => {
+                    card.classList.remove('locked');
+                    card.style.opacity = '1';
+                    card.style.cursor = 'pointer';
+                    const lockBadge = card.querySelector('.lock-badge');
+                    if (lockBadge) lockBadge.style.display = 'none';
+                });
+
+                // Update helper text
+                const focusHelper = document.getElementById('focus-helper');
+                if (focusHelper) {
+                    focusHelper.innerHTML = '✅ Pro Mode Active! Click cards to toggle selection.';
+                }
+
+                // Unlock advanced options
+                const proOverlay = document.getElementById('pro-unlock-overlay');
+                if (proOverlay) proOverlay.style.display = 'none';
+
+                document.querySelectorAll('.pro-feature').forEach(el => {
+                    el.disabled = false;
                 });
             }
 
