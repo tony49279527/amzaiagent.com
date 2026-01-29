@@ -14,8 +14,8 @@ RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
 RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 
 # Google Custom Search API (Official)
-GOOGLE_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY", "AIzaSyAmGiYGIdcpKtwiOqnvVEd6Qdbu5LH-NCg")
-GOOGLE_CX = os.getenv("GOOGLE_SEARCH_CX", "655e35aac5de844c7")
+GOOGLE_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY", "")
+GOOGLE_CX = os.getenv("GOOGLE_SEARCH_CX", "")
 
 # OpenRouter API (for LLM)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")

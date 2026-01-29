@@ -284,7 +284,8 @@
             const time = new Date().toLocaleTimeString('en-US', { hour12: false });
             const line = document.createElement('div');
             line.style.cssText = `margin-bottom: 4px; border-left: 2px solid ${color}; padding-left: 8px;`;
-            line.innerHTML = `<span style="opacity: 0.5; font-size: 0.8em;">[${time}]</span> <span style="color: ${color}; font-weight: bold;">${source}</span> <span>${message}</span>`;
+            const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            line.innerHTML = `<span style="opacity: 0.5; font-size: 0.8em;">[${time}]</span> <span style="color: ${color}; font-weight: bold;">${esc(source)}</span> <span>${esc(message)}</span>`;
             term.appendChild(line);
             term.scrollTop = term.scrollHeight;
         }
