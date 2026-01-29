@@ -233,53 +233,49 @@ def generate_cover_image(title, slug):
     - Minimalist design suitable for a tech/business blog
     """
     
+    
+    # Try Pollinations.ai (Free, fast, URL-based)
+    # Try Pollinations.ai (Free, fast, URL-based)
     try:
-        # Use gpt-5-image for image generation
-        response = client.chat.completions.create(
-            model="openai/gpt-5-image",
-            messages=[
-                {
-                    "role": "user",
-                    "content": image_prompt
-                }
-            ]
-        )
+        # 1. FIXED STYLE PROMPT (The "System" Prompt)
+        # Defines the consistent look and feel
+        style_prompt = "isometric 3d illustration, soft studio lighting, amazon aws brand colors (dark blue and orange), clean minimalist background, high quality 3d render, unreal engine 5, 4k"
         
-        # Extract the image URL or base64 from response
-        content = response.choices[0].message.content
+        # 2. CONTENT PROMPT (The "User" Prompt)
+        # Extracts the core subject from the title
+        subject = title.lower()
+        subject = subject.replace("amazon", "").replace("fba", "").replace("2026", "").replace("update", "")
+        # Remove non-alphanumeric chars
+        import re
+        subject = re.sub(r'[^\w\s]', '', subject).strip()
         
-        # Check if it's a base64 image
-        if content and "data:image" in content:
-            # Extract base64 data
-            import base64
-            base64_data = content.split(",")[1] if "," in content else content
-            image_data = base64.b64decode(base64_data)
-            
-            # Save to file
-            image_filename = f"{slug}.png"
-            image_path = f"assets/images/blog_thumbs/{image_filename}"
-            
-            os.makedirs("assets/images/blog_thumbs", exist_ok=True)
+        # Combine them
+        final_prompt = f"{subject}, {style_prompt}"
+        
+        import urllib.parse
+        encoded_prompt = urllib.parse.quote(final_prompt)
+        # Add random seed and no-logo param
+        import random
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?seed={random.randint(0, 10000)}&width=800&height=450&nologo=true"
+        
+        print(f"Generating image via Pollinations.ai: {image_url}")
+        
+        image_filename = f"{slug}.png"
+        image_path = f"assets/images/blog_thumbs/{image_filename}"
+        
+        os.makedirs("assets/images/blog_thumbs", exist_ok=True)
+        
+        # Download with a timeout
+        import requests
+        resp = requests.get(image_url, timeout=60)
+        if resp.status_code == 200:
             with open(image_path, 'wb') as f:
-                f.write(image_data)
-            
-            print(f"AI image saved to: {image_path}")
-            return image_path
-        
-        # If response contains a URL
-        elif content and content.startswith("http"):
-            import urllib.request
-            image_filename = f"{slug}.png"
-            image_path = f"assets/images/blog_thumbs/{image_filename}"
-            
-            os.makedirs("assets/images/blog_thumbs", exist_ok=True)
-            urllib.request.urlretrieve(content, image_path)
-            
-            print(f"AI image downloaded to: {image_path}")
+                f.write(resp.content)
+            print(f"Pollinations Image saved to: {image_path}")
             return image_path
             
     except Exception as e:
-        print(f"AI Image generation failed: {e}")
+        print(f"Pollinations generation failed: {e}")
     
     # Fallback to existing images if AI generation fails
     print("Falling back to default images...")
