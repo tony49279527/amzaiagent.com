@@ -8,6 +8,7 @@ uvicorn
 pydantic
 python-dotenv
 requests
+httpx
 duckduckgo_search
 googlesearch-python
 markdown
