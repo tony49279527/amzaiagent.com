@@ -85,7 +85,10 @@
             }
 
             // ==========================================
-            // 🔥 Trigger n8n to send full report via Resume URL
+            // Trigger report delivery via backend proxy.
+            // TODO: For production reliability, move this to a Stripe Webhook
+            // handler on the backend (e.g. POST /api/stripe-webhook) so report
+            // delivery does not depend on the user's browser staying open.
             // ==========================================
             const resumeUrl = params.get('resume_url');
 

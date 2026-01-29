@@ -114,7 +114,7 @@
                     <div class="contact-method">
                         <h3>📧 Email Support</h3>
                         <p>For general inquiries and support:</p>
-                        <a href="mailto:leetony4927@gmail.com">leetony4927@gmail.com</a>
+                        <a href="mailto:support@amzaiagent.com">support@amzaiagent.com</a>
                     </div>
 
                     <div class="contact-method">
@@ -130,7 +130,7 @@
 
                 <!-- Form -->
                 <div class="form-card fade-up fade-up-delay-2">
-                    <form id="contact-form" action="mailto:leetony4927@gmail.com" method="post" enctype="text/plain">
+                    <form id="contact-form">
                         <div class="form-group">
                             <label for="name">Name</label>
                             <input type="text" id="name" name="name" placeholder="Your Name" required>
@@ -152,12 +152,47 @@
                                 required></textarea>
                         </div>
 
-                        <button type="submit" class="submit-btn" style="width: 100%;">Send Message</button>
-                        <p
-                            style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem; text-align: center;">
-                            This will open your default email client.
+                        <button type="submit" class="submit-btn" id="contact-submit-btn" style="width: 100%;">Send Message</button>
+                        <p id="contact-status"
+                            style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem; text-align: center;">
+                            We'll respond within 24 hours.
                         </p>
                     </form>
+                    <script>
+                        document.getElementById('contact-form').addEventListener('submit', async function(e) {
+                            e.preventDefault();
+                            const btn = document.getElementById('contact-submit-btn');
+                            const status = document.getElementById('contact-status');
+                            btn.disabled = true;
+                            btn.textContent = 'Sending...';
+                            try {
+                                const res = await fetch('/api/contact', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        name: document.getElementById('name').value.trim(),
+                                        email: document.getElementById('email').value.trim(),
+                                        subject: document.getElementById('subject').value.trim(),
+                                        message: document.getElementById('message').value.trim()
+                                    })
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                    status.style.color = '#10b981';
+                                    status.textContent = data.message || 'Message sent successfully!';
+                                    this.reset();
+                                } else {
+                                    throw new Error(data.detail || 'Failed to send');
+                                }
+                            } catch (err) {
+                                status.style.color = '#ef4444';
+                                status.textContent = 'Failed to send. Please email support@amzaiagent.com directly.';
+                            } finally {
+                                btn.disabled = false;
+                                btn.textContent = 'Send Message';
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </div>

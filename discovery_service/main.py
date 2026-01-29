@@ -7,6 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import uvicorn
 import os
+import httpx
+from pydantic import BaseModel as PydanticBaseModel
+from typing import Optional
 
 from .models import DiscoveryRequest, DiscoveryResponse, UserTier
 from .analyzer import ProductDiscoveryAnalyzer
@@ -202,23 +205,73 @@ async def test_email_endpoint(email: str):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+# === Contact Form Endpoint ===
+class ContactFormRequest(PydanticBaseModel):
+    name: str
+    email: str
+    subject: str
+    message: str
+
+@app.post("/api/contact")
+async def handle_contact_form(req: ContactFormRequest):
+    """Handle contact form submission via SMTP email"""
+    try:
+        from .config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        if not SMTP_USER or not SMTP_PASSWORD:
+            raise HTTPException(status_code=503, detail="Email service not configured")
+
+        msg = MIMEMultipart("alternative")
+        msg["From"] = SMTP_USER
+        msg["To"] = SMTP_USER  # Send to ourselves
+        msg["Subject"] = f"[Contact Form] {req.subject}"
+        msg["Reply-To"] = req.email
+
+        html_body = f"""
+        <div style="font-family: sans-serif; padding: 20px;">
+            <h2>New Contact Form Submission</h2>
+            <p><strong>Name:</strong> {req.name}</p>
+            <p><strong>Email:</strong> {req.email}</p>
+            <p><strong>Subject:</strong> {req.subject}</p>
+            <hr>
+            <p><strong>Message:</strong></p>
+            <p>{req.message}</p>
+        </div>
+        """
+        msg.attach(MIMEText(html_body, "html"))
+
+        if int(SMTP_PORT) == 465:
+            server = smtplib.SMTP_SSL(SMTP_HOST, int(SMTP_PORT))
+        else:
+            server = smtplib.SMTP(SMTP_HOST, int(SMTP_PORT))
+            server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(SMTP_USER, SMTP_USER, msg.as_string())
+        server.quit()
+
+        return {"status": "success", "message": "Your message has been sent. We'll get back to you soon."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Contact form error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send message. Please try again later.")
+
 # === Backend Proxy Endpoints ===
 # These proxy n8n webhook calls so that webhook URLs are not exposed in frontend code.
-import httpx
-from pydantic import BaseModel
-from typing import Optional
-
 N8N_CHECKOUT_URL = os.getenv("N8N_CHECKOUT_WEBHOOK_URL", "")
 N8N_PRO_ANALYSIS_URL = os.getenv("N8N_PRO_ANALYSIS_WEBHOOK_URL", "")
 N8N_SEND_REPORT_URL = os.getenv("N8N_SEND_REPORT_WEBHOOK_URL", "")
 
-class CheckoutRequest(BaseModel):
+class CheckoutRequest(PydanticBaseModel):
     amount: str = "4.99"
     order_id: str
     success_url: str
     cancel_url: str
 
-class SendReportRequest(BaseModel):
+class SendReportRequest(PydanticBaseModel):
     order_id: str
     action: str = "send_full_report"
     resume_url: Optional[str] = None
