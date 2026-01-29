@@ -12,6 +12,18 @@ env/
 # We WANT to commit the JSON data to trigger SSG
 # data/blog/posts_en.json (Do not ignore this)
 
+# Test & debug files (may contain API keys)
+discovery_service/test_*.py
+discovery_service/debug_*.py
+discovery_service/buffing_wheel_test_*/
+discovery_service/*_SUMMARY.md
+discovery_service/*_REPORT.md
+
+# Temp / backup files
+temp_win_merge/
+*_backup.*
+*_old.*
+
 # Large backups
 *.zip
 gcp_key.json

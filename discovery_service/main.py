@@ -25,10 +25,10 @@ app = FastAPI(
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your domain
+    allow_origins=os.getenv("CORS_ALLOWED_ORIGINS", "https://amzaiagent.com,https://www.amzaiagent.com").split(","),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Serve static files (CSS, JS, Images)
@@ -212,15 +212,23 @@ async def create_checkout(report_id: str, email: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+WEBHOOK_SECRET = os.getenv("POLAR_WEBHOOK_SECRET", "")
+
 @app.post("/api/webhooks/polar")
 async def polar_webhook(request: Request):
     """Handle Polar payment webhooks"""
     payload = await request.body()
-    signature = request.headers.get("stripe-signature") # Polar uses Stripe-like signatures or their own
-    
-    # In a real app, verify signature here
-    # data = payment_service.verify_webhook(payload, signature)
-    
+    signature = request.headers.get("webhook-signature") or request.headers.get("stripe-signature")
+
+    # Verify webhook signature
+    if WEBHOOK_SECRET:
+        import hmac, hashlib
+        expected = hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
+        if not signature or not hmac.compare_digest(signature, expected):
+            raise HTTPException(status_code=403, detail="Invalid webhook signature")
+    else:
+        print("WARNING: POLAR_WEBHOOK_SECRET not set — webhook signature verification disabled")
+
     import json
     data = json.loads(payload)
     event_type = data.get("type")
@@ -277,12 +285,37 @@ class ContactFormRequest(PydanticBaseModel):
     subject: str
     message: str
 
+import re
+from datetime import datetime as _dt
+_contact_rate_limit: dict = {}  # IP -> (count, window_start)
+
 @app.post("/api/contact")
-async def handle_contact_form(req: ContactFormRequest):
+async def handle_contact_form(req: ContactFormRequest, request: Request):
     """Handle contact form submission via SMTP email"""
     try:
+        # Input validation
+        if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', req.email):
+            raise HTTPException(status_code=400, detail="Invalid email address")
+        if len(req.name) > 100 or len(req.subject) > 200 or len(req.message) > 5000:
+            raise HTTPException(status_code=400, detail="Input too long")
+
+        # Simple rate limiting (5 per hour per IP)
+        client_ip = request.client.host if request.client else "unknown"
+        now = _dt.now()
+        if client_ip in _contact_rate_limit:
+            count, window_start = _contact_rate_limit[client_ip]
+            if (now - window_start).seconds < 3600:
+                if count >= 5:
+                    raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+                _contact_rate_limit[client_ip] = (count + 1, window_start)
+            else:
+                _contact_rate_limit[client_ip] = (1, now)
+        else:
+            _contact_rate_limit[client_ip] = (1, now)
+
         from .config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
         import smtplib
+        from html import escape as html_escape
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
 
@@ -292,18 +325,18 @@ async def handle_contact_form(req: ContactFormRequest):
         msg = MIMEMultipart("alternative")
         msg["From"] = SMTP_USER
         msg["To"] = SMTP_USER  # Send to ourselves
-        msg["Subject"] = f"[Contact Form] {req.subject}"
+        msg["Subject"] = f"[Contact Form] {html_escape(req.subject)}"
         msg["Reply-To"] = req.email
 
         html_body = f"""
         <div style="font-family: sans-serif; padding: 20px;">
             <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> {req.name}</p>
-            <p><strong>Email:</strong> {req.email}</p>
-            <p><strong>Subject:</strong> {req.subject}</p>
+            <p><strong>Name:</strong> {html_escape(req.name)}</p>
+            <p><strong>Email:</strong> {html_escape(req.email)}</p>
+            <p><strong>Subject:</strong> {html_escape(req.subject)}</p>
             <hr>
             <p><strong>Message:</strong></p>
-            <p>{req.message}</p>
+            <p>{html_escape(req.message)}</p>
         </div>
         """
         msg.attach(MIMEText(html_body, "html"))
@@ -401,11 +434,21 @@ async def proxy_send_full_report(req: SendReportRequest):
         print(f"Send report proxy error: {e}")
         raise HTTPException(status_code=502, detail="Report service unavailable")
 
+N8N_ALLOWED_HOSTS = os.getenv("N8N_ALLOWED_HOSTS", "").split(",")
+
 @app.get("/api/proxy/resume-workflow")
 async def proxy_resume_workflow(resume_url: str):
     """Proxy n8n resume URL call so the actual URL stays server-side"""
     if not resume_url:
         raise HTTPException(status_code=400, detail="resume_url is required")
+    # SSRF protection: only allow requests to known n8n hosts
+    from urllib.parse import urlparse
+    parsed = urlparse(resume_url)
+    if not parsed.hostname or not any(
+        parsed.hostname == h.strip() or parsed.hostname.endswith("." + h.strip())
+        for h in N8N_ALLOWED_HOSTS if h.strip()
+    ):
+        raise HTTPException(status_code=403, detail="URL not allowed")
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.get(resume_url)

@@ -170,10 +170,12 @@ Recommend adding the following long-tail keywords to the Listing:
             return;
         }
 
-        // 配置 marked（启用 GitHub Flavored Markdown）
+        // 配置 marked（启用 GitHub Flavored Markdown, 禁止原生 HTML）
+        const renderer = new marked.Renderer();
         marked.use({
             gfm: true,
-            breaks: true
+            breaks: true,
+            renderer: renderer
         });
 
         // 渲染 Markdown 到页面
