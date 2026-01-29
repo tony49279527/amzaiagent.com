@@ -313,6 +313,10 @@ Present workflows in a structured table format, including:
     });
 
     // === PRO FEATURE INTERACTION ===
+    // TODO: Pro unlock state is currently client-side only. For production,
+    // validate Pro status via a backend API (e.g. check payment record in
+    // Supabase) before enabling premium features. Users can currently bypass
+    // this via browser DevTools.
     let isProIntent = false;
 
     const proLockedSection = document.querySelector('.pro-locked');

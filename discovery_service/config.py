@@ -17,15 +17,17 @@ RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
 # Model Configuration
-DEFAULT_MODEL_FREE = "anthropic/claude-3.5-sonnet"  # Free users - High quality magnet
-DEFAULT_MODEL_PRO = "anthropic/claude-sonnet-4"  # Pro users - Claude 4 Sonnet
+DEFAULT_MODEL_FREE = "anthropic/claude-3.5-sonnet"  # Free users
+DEFAULT_MODEL_PRO = "anthropic/claude-sonnet-4.5"  # Pro users default
 
-# Available Pro Models
+# Available Pro Models (must match frontend select options)
 PRO_MODELS = [
-    "anthropic/claude-3.5-sonnet",
-    "openai/gpt-4-turbo",
-    "google/gemini-pro-1.5",
-    "meta-llama/llama-3.1-405b"
+    "anthropic/claude-sonnet-4.5",
+    "google/gemini-3-pro-preview",
+    "openai/gpt-5.2-pro",
+    "openai/gpt-5.2-chat",
+    "qwen/qwen3-v1-235b-a22b-thinking",
+    "deepseek/deepseek-v3.2-speciale",
 ]
 
 # ScrapingBee Settings
