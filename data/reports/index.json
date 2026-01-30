@@ -8,7 +8,7 @@
     "summary": "In-depth analysis of the high-end coffee maker market, identifying key user pain points around temperature control and brewing speed. Optimization strategy led to a 15% increase in conversion rate.",
     "category": "Home & Kitchen",
     "markdown_path": "data/reports/report_001.md",
-    "cover_image": "assets/images/thumbnails/coffee_maker.png"
+    "cover_image": "assets/images/thumbnails/coffee_maker.webp"
   },
   {
     "id": "report_002",
@@ -19,7 +19,7 @@
     "summary": "Comprehensive analysis of the Collapsible Wagon market. Identified 'All-Terrain Wheels' and 'Tailgate' as critical features. Strategies for differentiation in a saturated market.",
     "category": "Patio, Lawn & Garden",
     "markdown_path": "data/reports/report_002.md",
-    "cover_image": "assets/images/thumbnails/wagon.png"
+    "cover_image": "assets/images/thumbnails/wagon.webp"
   },
   {
     "id": "report_003",
@@ -30,7 +30,7 @@
     "summary": "Analysis of the sub-$50 cordless drill market. Highlighted the 'Lightweight for Women/Seniors' angle and mapped out a listing optimization plan for Black+Decker.",
     "category": "Tools & Home Improvement",
     "markdown_path": "data/reports/report_003.md",
-    "cover_image": "assets/images/thumbnails/drill.png"
+    "cover_image": "assets/images/thumbnails/drill.webp"
   },
   {
     "id": "report_004",
@@ -41,7 +41,7 @@
     "summary": "Deep dive into the 'Open Top' automatic litter box niche. Key findings on 'Scooping Fatigue' and safety concerns. Proposed a 7-sensor safety messaging strategy.",
     "category": "Pet Supplies",
     "markdown_path": "data/reports/report_004.md",
-    "cover_image": "assets/images/thumbnails/litter_box.png"
+    "cover_image": "assets/images/thumbnails/litter_box.webp"
   },
   {
     "id": "report_005",
@@ -52,7 +52,7 @@
     "summary": "Comparison of Red vs. Green beam laser levels. Addressed the 'Visibility in Sunlight' pain point and proposed a 'Trust & Accuracy' brand positioning for Bosch.",
     "category": "Tools & Home Improvement",
     "markdown_path": "data/reports/report_005.md",
-    "cover_image": "assets/images/thumbnails/laser_level.png"
+    "cover_image": "assets/images/thumbnails/laser_level.webp"
   },
   {
     "id": "report_006",
@@ -63,7 +63,7 @@
     "summary": "Mechanical vs. Digital torque wrench analysis. Identified 'Reliability' as the key driver for DIY automotive users. Strategy focuses on 'No Batteries Required'.",
     "category": "Tools & Home Improvement",
     "markdown_path": "data/reports/report_006.md",
-    "cover_image": "assets/images/thumbnails/torque_wrench.png"
+    "cover_image": "assets/images/thumbnails/torque_wrench.webp"
   },
   {
     "id": "report_007",
@@ -74,7 +74,7 @@
     "summary": "Analysis of the DA Polisher market for beginners. Highlighted the fear of 'Burning Paint' and positioned the TORQX kit as the 'Safe Starter Choice'.",
     "category": "Automotive",
     "markdown_path": "data/reports/report_007.md",
-    "cover_image": "assets/images/thumbnails/polisher.png"
+    "cover_image": "assets/images/thumbnails/polisher.webp"
   },
   {
     "id": "report_008",
@@ -85,7 +85,7 @@
     "summary": "Investigation into the high-spec electric pressure washer market. Strategies to compete with established brands via 'Spec/Price Ratio' and accessory bundling.",
     "category": "Patio, Lawn & Garden",
     "markdown_path": "data/reports/report_008.md",
-    "cover_image": "assets/images/thumbnails/pressure_washer.png"
+    "cover_image": "assets/images/thumbnails/pressure_washer.webp"
   },
   {
     "id": "report_009",
@@ -96,7 +96,7 @@
     "summary": "Analysis of the Dual 4K Dash Cam market. Differentiation strategy based on 'True 4K Rear Camera' and '5.8GHz WiFi' speed against 1080p competitors.",
     "category": "Electronics",
     "markdown_path": "data/reports/report_009.md",
-    "cover_image": "assets/images/thumbnails/dash_cam.png"
+    "cover_image": "assets/images/thumbnails/dash_cam.webp"
   },
   {
     "id": "report_010",
@@ -107,7 +107,7 @@
     "summary": "Comp. analysis of Westinghouse 1.7\" Chipper. Strength in portability/value; pain points in blade quality & jamming. Strategic listing & product recommendations.",
     "category": "Patio, Lawn & Garden",
     "markdown_path": "data/reports/report_010.md",
-    "cover_image": "assets/images/thumbnails/pressure_washer.png"
+    "cover_image": "assets/images/thumbnails/pressure_washer.webp"
   },
   {
     "id": "report_011",
@@ -118,7 +118,7 @@
     "summary": "Competitor analysis of Automatic Cat Feeder (B0DF7H6SGZ). Analysis highlights affordability strengths vs. premium wifi competitors. Recommendations include offering shallow bowl accessories.",
     "category": "Pet Supplies",
     "markdown_path": "data/reports/report_011.md",
-    "cover_image": "assets/images/thumbnails/pet_feeder.png"
+    "cover_image": "assets/images/thumbnails/pet_feeder.webp"
   },
   {
     "id": "report_012",
@@ -129,7 +129,7 @@
     "summary": "Competitor analysis of EKO Deluxe Mirage-T 50L. Highlights space-saving design and true motion sensor. Key recommendations include adding a removable inner bin and adjustable sensor sensitivity.",
     "category": "Home & Kitchen",
     "markdown_path": "data/reports/report_012.md",
-    "cover_image": "assets/images/thumbnails/trash_can.png"
+    "cover_image": "assets/images/thumbnails/trash_can.webp"
   },
   {
     "id": "report_013",
@@ -140,7 +140,7 @@
     "summary": "Detailed analysis of PETLIBRO Dockstream 2 Smart Fountain. Key insights: App features drive premium positioning but setup friction exists. Recommendations include XL models and improved onboarding.",
     "category": "Pet Supplies",
     "markdown_path": "data/reports/report_013.md",
-    "cover_image": "assets/images/thumbnails/pet_feeder.png"
+    "cover_image": "assets/images/thumbnails/pet_feeder.webp"
   },
   {
     "id": "report_014",
@@ -151,7 +151,7 @@
     "summary": "Competitor analysis of Black+Decker String Trimmer (BESTA510). Highlights power advantage of corded model vs battery competitors for small yards. Key issues: cord management and spool costs.",
     "category": "Garden & Outdoor",
     "markdown_path": "data/reports/report_014.md",
-    "cover_image": "assets/images/thumbnails/pressure_washer.png"
+    "cover_image": "assets/images/thumbnails/pressure_washer.webp"
   },
   {
     "id": "report_015",
@@ -162,7 +162,7 @@
     "summary": "Analysis of Rachio 3 Smart Sprinkler Controller. Dominant 'Apple-like' premium positioning with superior app/software, but faces pressure from cheaper hardware-focused competitors (Orbit).",
     "category": "Garden & Outdoor",
     "markdown_path": "data/reports/report_015.md",
-    "cover_image": "assets/images/thumbnails/wagon.png"
+    "cover_image": "assets/images/thumbnails/wagon.webp"
   },
   {
     "id": "report_016",
@@ -173,7 +173,7 @@
     "summary": "Market analysis of SHW 48-inch Electric Standing Desk. Dominates budget segment with value and stability, but challenged by dual-motor competitors.",
     "category": "Office Products",
     "markdown_path": "data/reports/report_016.md",
-    "cover_image": "assets/images/thumbnails/standing_desk.png"
+    "cover_image": "assets/images/thumbnails/standing_desk.webp"
   },
   {
     "id": "report_017",
@@ -184,7 +184,7 @@
     "summary": "Strategic analysis of HelloBaby HB6550. Strong niche in non-WiFi security segment (#2 category rank), but faces pressure from HD/smart monitors. Key recommendation: upgrade to 720p/1080p.",
     "category": "Baby Products",
     "markdown_path": "data/reports/report_017.md",
-    "cover_image": "assets/images/thumbnails/dash_cam.png"
+    "cover_image": "assets/images/thumbnails/dash_cam.webp"
   },
   {
     "id": "report_018",
@@ -195,7 +195,7 @@
     "summary": "Analysis of Under Desk Treadmill category focusing on WFH professionals. Key strengths: portability and price. Key weaknesses: short cord and motor reliability issues at high speeds.",
     "category": "Sports & Outdoors",
     "markdown_path": "data/reports/report_018.md",
-    "cover_image": "assets/images/thumbnails/treadmill.png"
+    "cover_image": "assets/images/thumbnails/treadmill.webp"
   },
   {
     "id": "report_019",
@@ -206,7 +206,7 @@
     "summary": "Benchmarking of Worx Pegasus. Leader in versatility and setup speed, but faces competition from adjustable-height models. Recommendation: emphasize 'system' expandability.",
     "category": "Tools & Home Improvement",
     "markdown_path": "data/reports/report_019.md",
-    "cover_image": "assets/images/thumbnails/torque_wrench.png"
+    "cover_image": "assets/images/thumbnails/torque_wrench.webp"
   },
   {
     "id": "report_020",
@@ -217,7 +217,7 @@
     "summary": "Strategic analysis of ELAFROS Heavy Duty Cart. Dominates value segment but plagued by assembly issues. Key opportunity: fix assembly process and clearer instructions.",
     "category": "Tools & Home Improvement",
     "markdown_path": "data/reports/report_020.md",
-    "cover_image": "assets/images/thumbnails/wagon.png"
+    "cover_image": "assets/images/thumbnails/wagon.webp"
   },
   {
     "id": "report_021",
@@ -228,6 +228,6 @@
     "summary": "Strategic analysis of Inflatable Camping Tent market. Main product excels in setup speed and air retention but suffers from critical door gap flaw. Urgent redesign recommended.",
     "category": "Sports & Outdoors",
     "markdown_path": "data/reports/report_021.md",
-    "cover_image": "assets/images/thumbnails/inflatable_tent.png"
+    "cover_image": "assets/images/thumbnails/inflatable_tent.webp"
   }
 ]

@@ -14,3 +14,4 @@ googlesearch-python
 markdown
 youtube-transcript-api
 polar-sdk
+Pillow

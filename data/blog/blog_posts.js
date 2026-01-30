@@ -21,7 +21,7 @@ window.blogPostsEN = [
     "title": "Amazon SAFE-T Claims Window Reduced to 30 Days: Critical 2026 Update for FBA Sellers",
     "date": "January 29, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-2026-update-fba-sellers.png",
+    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-2026-update-fba-sellers.webp",
     "tags": [
       "Amazon SAFE-T Claims",
       "FBA Updates 2026",
@@ -36,7 +36,7 @@ window.blogPostsEN = [
     "title": "Amazon SAFE-T Claims Window Reduced to 30 Days: What Sellers Must Know in 2026",
     "date": "January 28, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/agentic.png",
+    "cover_image": "assets/images/blog_thumbs/agentic.webp",
     "tags": [
       "Amazon SAFE-T Claims",
       "Amazon Seller Policy",
@@ -51,7 +51,7 @@ window.blogPostsEN = [
     "title": "Amazon SAFE-T Claims Window Changes 2026: 30-Day Limit Impact on Sellers",
     "date": "January 27, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-changes-2026.png",
+    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-changes-2026.webp",
     "tags": [
       "Amazon SAFE-T",
       "Amazon Seller Updates",
@@ -66,7 +66,7 @@ window.blogPostsEN = [
     "title": "Amazon SAFE-T Claims Window Reduction 2026: What Sellers Must Know",
     "date": "January 26, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-reduction-2026.png",
+    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-reduction-2026.webp",
     "tags": [
       "Amazon SAFE-T Claims",
       "Amazon Seller Updates",
@@ -81,7 +81,7 @@ window.blogPostsEN = [
     "title": "Amazon SAFE-T Claims Window Change 2026: 30-Day Limit Impact on Sellers",
     "date": "January 25, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-change-2026.png",
+    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-change-2026.webp",
     "tags": [
       "Amazon SAFE-T",
       "Amazon Seller Protection",
@@ -96,7 +96,7 @@ window.blogPostsEN = [
     "title": "USPS Last Mile Delivery Changes: Impact on Amazon FBA Sellers 2026",
     "date": "January 24, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/efficiency.png",
+    "cover_image": "assets/images/blog_thumbs/efficiency.webp",
     "tags": [
       "USPS Last Mile Delivery",
       "Amazon FBA",
@@ -111,7 +111,7 @@ window.blogPostsEN = [
     "title": "Amazon AI Price Drop Alerts: Executive Reveals Game-Changing Shopping Hack",
     "date": "January 23, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/agentic.png",
+    "cover_image": "assets/images/blog_thumbs/agentic.webp",
     "tags": [
       "Amazon AI",
       "Price Drop Alerts",
@@ -126,7 +126,7 @@ window.blogPostsEN = [
     "title": "Amazon Seller Registration Drop 2025: What This Means for FBA Business",
     "date": "January 22, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/seller_registration.png",
+    "cover_image": "assets/images/blog_thumbs/seller_registration.webp",
     "tags": [
       "Amazon FBA",
       "Seller Registration",
@@ -141,7 +141,7 @@ window.blogPostsEN = [
     "title": "Amazon Seller Registrations Drop 44% in 2025: What FBA Sellers Need to Know",
     "date": "January 21, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/market_barrier.png",
+    "cover_image": "assets/images/blog_thumbs/market_barrier.webp",
     "tags": [
       "Amazon FBA",
       "Seller Registration",
@@ -157,7 +157,7 @@ window.blogPostsEN = [
     "title": "Amazon FBA Return Policy Change 2026: High-Value Item Protection Removed",
     "date": "January 20, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/sop.png",
+    "cover_image": "assets/images/blog_thumbs/sop.webp",
     "tags": [
       "Amazon FBA",
       "FBA Policy Change",
@@ -174,7 +174,7 @@ window.blogPostsEN = [
     "title": "Amazon APRL Program 2026: Major Changes for High-Value FBA Sellers",
     "date": "January 20, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/return_policy.png",
+    "cover_image": "assets/images/blog_thumbs/return_policy.webp",
     "tags": [
       "Amazon FBA",
       "APRL Program",
@@ -190,7 +190,7 @@ window.blogPostsEN = [
     "title": "Stop \"Self-Indulgent\" Photography: How to Use AI to Generate \"Visual Scripts\" That Direct Photographers to Create High-Converting Images",
     "date": "September 1, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/visual_opt.png",
+    "cover_image": "assets/images/blog_thumbs/visual_opt.webp",
     "tags": [
       "Featured",
       "Visual Optimization"
@@ -202,7 +202,7 @@ window.blogPostsEN = [
     "title": "Is Your Operations Team Still \"Hand-Rolling\" Competitor Analysis? Calculate the ¥5,000/Week \"Hidden Tax\" Being Wasted",
     "date": "August 30, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/efficiency.png",
+    "cover_image": "assets/images/blog_thumbs/efficiency.webp",
     "tags": [
       "Efficiency Tool",
       "Hidden Tax"
@@ -214,7 +214,7 @@ window.blogPostsEN = [
     "title": "The SOP Automation Revolution: How to Use AI to Solve Cross-Border E-Commerce Team \"Talent Gaps\" and \"Service Standardization\" Challenges",
     "date": "August 28, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/sop.png",
+    "cover_image": "assets/images/blog_thumbs/sop.webp",
     "tags": [
       "Team Management",
       "SOP Automation"
@@ -226,7 +226,7 @@ window.blogPostsEN = [
     "title": "FBA Profit Killer: How to Use AI to Mine Million-Dollar \"Packaging Improvement\" Solutions from Negative Reviews",
     "date": "August 26, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/packaging.png",
+    "cover_image": "assets/images/blog_thumbs/packaging.webp",
     "tags": [
       "Return Rate Optimization",
       "Negative Review Analysis"
@@ -238,7 +238,7 @@ window.blogPostsEN = [
     "title": "Case Study: How an Ordinary \"Polishing Wheel\" Used AI to Discover Blue Oceans Overlooked by Giants",
     "date": "August 24, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/blue_ocean.png",
+    "cover_image": "assets/images/blog_thumbs/blue_ocean.webp",
     "tags": [
       "Case Study",
       "Blue Ocean Discovery"
@@ -250,7 +250,7 @@ window.blogPostsEN = [
     "title": "Decoding COSMO and Rufus Algorithms: How to Use \"Intent Graphs\" to Help Your Listing Survive in the AI Search Era",
     "date": "August 22, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/algo.png",
+    "cover_image": "assets/images/blog_thumbs/algo.webp",
     "tags": [
       "Algorithm Decoded",
       "SEO Strategy"
@@ -262,7 +262,7 @@ window.blogPostsEN = [
     "title": "Goodbye \"Data Movers\": Why Agentic AI—Not More SaaS Tools—Is the 2025 Amazon Operations Decider",
     "date": "August 20, 2025",
     "author": "Amz AI Agent Team",
-    "cover_image": "assets/images/blog_thumbs/agentic.png",
+    "cover_image": "assets/images/blog_thumbs/agentic.webp",
     "tags": [
       "Industry Trends",
       "Agentic AI"

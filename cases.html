@@ -93,7 +93,7 @@
                         <article class="card fade-up">
                             <div class="card-image-wrapper">
                                 ${report.cover_image
-                            ? `<img src="${report.cover_image}" alt="${report.title}" class="card-image">`
+                            ? `<img src="${report.cover_image.replace('.png','.webp')}" alt="${report.title}" class="card-image" loading="lazy">`
                             : `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 100%); display:flex; align-items:center; justify-content:center; color: #6366f1; font-weight:700;">
                                         ${report.category || 'Analysis Report'}
                                     </div>`

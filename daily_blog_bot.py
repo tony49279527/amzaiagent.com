@@ -260,18 +260,24 @@ def generate_cover_image(title, slug):
         
         print(f"Generating image via Pollinations.ai: {image_url}")
         
-        image_filename = f"{slug}.png"
+        image_filename = f"{slug}.webp"
         image_path = f"assets/images/blog_thumbs/{image_filename}"
-        
+
         os.makedirs("assets/images/blog_thumbs", exist_ok=True)
-        
+
         # Download with a timeout
         import requests
         resp = requests.get(image_url, timeout=60)
         if resp.status_code == 200:
-            with open(image_path, 'wb') as f:
-                f.write(resp.content)
-            print(f"Pollinations Image saved to: {image_path}")
+            # Convert to WebP and resize for optimal web performance
+            from PIL import Image as PILImage
+            import io
+            img = PILImage.open(io.BytesIO(resp.content))
+            if img.width > 800:
+                ratio = 800 / img.width
+                img = img.resize((800, int(img.height * ratio)), PILImage.LANCZOS)
+            img.save(image_path, "WEBP", quality=80)
+            print(f"Optimized WebP image saved to: {image_path}")
             return image_path
             
     except Exception as e:

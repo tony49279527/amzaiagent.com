@@ -314,7 +314,7 @@
                                 </div>
                             </header>
 
-                            ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${post.cover_image}" alt="${post.title}" class="article-cover" onerror="this.style.display='none'"></div>` : ''}
+                            ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${post.cover_image.replace('.png','.webp')}" alt="${post.title}" class="article-cover" loading="lazy" onerror="this.style.display='none'"></div>` : ''}
 
                             <div class="article-content">
                                 ${post.content || post.content_html}
@@ -357,7 +357,7 @@
                 if (relatedContainer && related.length > 0) {
                     relatedContainer.innerHTML = related.map(p => `
                         <a href="blog-post.html?id=${p.id}" class="related-post-card">
-                            <img src="${p.cover_image || 'assets/images/blog_thumbs/default.png'}" alt="${p.title}" loading="lazy">
+                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png','.webp')}" alt="${p.title}" loading="lazy">
                             <div class="content">
                                 <div class="title">${p.title}</div>
                                 <div class="date">${p.date || ''}</div>
