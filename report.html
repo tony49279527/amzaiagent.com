@@ -230,10 +230,28 @@
                 });
             }
 
-            // Load data first, then logic
+            // Load data first, then logic. 
+            // We catch reports.js errors so report.js still loads (it has its own fallback).
             loadScript('data/reports/reports.js')
+                .catch(err => {
+                    console.warn('Offline reports data failed to load, falling back to fetch:', err);
+                    // Return resolved promise to continue chain
+                    return Promise.resolve();
+                })
                 .then(() => loadScript('report.js'))
-                .catch(err => console.error('Error loading scripts:', err));
+                .catch(err => {
+                    console.error('Critical: Failed to load report logic:', err);
+                    const container = document.querySelector('.report-container');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="error-state" style="text-align: center; padding: 4rem; color: #dc2626;">
+                                <p style="font-size: 1.25rem; margin-bottom: 1rem;">⚠️ Application Error: Failed to load report script.</p>
+                                <p>Please check your internet connection and refresh the page.</p>
+                                <a href="cases.html" style="color: #2563eb; text-decoration: underline;">Back to Case List</a>
+                            </div>
+                        `;
+                    }
+                });
         });
     </script>
 </body>

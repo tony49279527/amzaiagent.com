@@ -6,7 +6,7 @@ window.blogPostsEN = [
     "title": "Amazon SAFE-T Claims Window Reduced to 30 Days: Critical 2026 Update for FBA Sellers",
     "date": "January 30, 2026",
     "author": "Amz AI Agent",
-    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-30-days-2026-update.png",
+    "cover_image": "assets/images/blog_thumbs/amazon-safe-t-claims-window-30-days-2026-update.webp",
     "tags": [
       "Amazon SAFE-T Claims",
       "FBA Updates 2026",
