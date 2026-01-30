@@ -521,7 +521,8 @@
             if (proUnlockOverlay) {
                 proUnlockOverlay.addEventListener('click', function (e) {
                     e.preventDefault();
-                    showPaymentModal();
+                    // Unlock fields first, payment on submit
+                    unlockProFeatures();
                 });
             }
 
@@ -801,25 +802,24 @@
                 };
 
                 // Update Modal UI based on Pro status
-                const modalTitle = document.querySelector('#modal h2');
-                const modalDesc = document.querySelector('#modal .modal-desc');
-                const upsellLink = document.getElementById('switch-to-pro-link');
-                const submitBtn = document.getElementById('confirm-submission-btn');
-
                 if (isProMode) {
-                    if (modalTitle) modalTitle.textContent = "Start Premium Discovery";
-                    if (modalDesc) modalDesc.textContent = "Please confirm your email to receive the comprehensive Pro analysis report.";
-                    if (upsellLink) upsellLink.parentElement.parentElement.style.display = 'none'; // Hide upsell container
-                    if (submitBtn) submitBtn.textContent = "Confirm & Start Pro Discovery";
+                    // Pro Flow: Show Payment Modal directly
+                    paymentModal.style.display = 'flex';
                 } else {
+                    // Free Flow: Update and show standard email modal
+                    const modalTitle = document.querySelector('#modal h2');
+                    const modalDesc = document.querySelector('#modal .modal-desc');
+                    const upsellLink = document.getElementById('switch-to-pro-link');
+                    const submitBtn = document.getElementById('confirm-submission-btn');
+
                     if (modalTitle) modalTitle.textContent = "Your Free Analysis Report";
                     if (modalDesc) modalDesc.textContent = "Please complete the info below. Your free report will be sent to your email.";
                     if (upsellLink) upsellLink.parentElement.parentElement.style.display = 'block';
                     if (submitBtn) submitBtn.textContent = "Confirm & Start Free Discovery";
-                }
 
-                // Show modal
-                modal.style.display = 'flex';
+                    // Show modal
+                    modal.style.display = 'flex';
+                }
             });
 
             modalClose.addEventListener('click', function () {

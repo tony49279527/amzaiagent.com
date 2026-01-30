@@ -348,13 +348,9 @@ Present workflows in a structured table format, including:
             e.preventDefault();
             e.stopPropagation();
 
-            // Trigger Payment Modal instead of direct unlock
-            const paymentModal = document.getElementById('payment-modal');
-            if (paymentModal) {
-                paymentModal.classList.add('active');
-            } else {
-                // Fallback for pages without payment modal (should not happen in Create page)
-                alert("Please upgrade to Pro to unlock these features.");
+            // Unlock features for configuration (Payment happens on submit)
+            if (typeof window.unlockProFeatures === 'function') {
+                window.unlockProFeatures();
             }
         });
     }
@@ -392,7 +388,7 @@ Present workflows in a structured table format, including:
         // Update Badge
         if (badgePro) {
             badgePro.style.background = '#10b981';
-            badgePro.textContent = 'PRO ENABLED';
+            badgePro.textContent = 'PRO UNLOCKED';
         }
     };
 
