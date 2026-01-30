@@ -444,7 +444,9 @@
             </div>
 
             <div class="footer-bottom">
-                <p class="footer-copyright">© <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.</p>
+                <p class="footer-copyright">©
+                    <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.
+                </p>
                 <a href="contact.html" class="footer-contact">Contact Us</a>
             </div>
         </div>
@@ -585,6 +587,7 @@
                         payDepositBtn.textContent = 'Pay $4.99 Deposit with Stripe';
                     }
                 });
+            }
 
             function unlockProFeatures() {
                 // WARNING: This is client-side only. A user could call unlockProFeatures()
@@ -631,13 +634,27 @@
 
 
             // Initialize category dropdowns
-            function initCategories() {
+            function initCategories(retryCount = 0) {
                 if (typeof amazonCategories === 'undefined') {
-                    console.error('Amazon categories data not loaded');
+                    console.warn(`Amazon categories data not loaded (Attempt ${retryCount + 1})`);
+                    if (retryCount < 5) {
+                        setTimeout(() => initCategories(retryCount + 1), 500);
+                        return;
+                    }
+                    console.error('Amazon categories data failed to load after retries');
+                    // Fallback visual feedback
+                    if (level1) {
+                        const option = document.createElement('option');
+                        option.text = "Error loading categories. Please refresh.";
+                        level1.appendChild(option);
+                    }
                     return;
                 }
 
+                console.log('Amazon categories loaded, populating dropdowns...');
+
                 // Populate Level 1 (Main Categories)
+                level1.innerHTML = '<option value="">-- Select Main Category --</option>';
                 Object.keys(amazonCategories).forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat;
