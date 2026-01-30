@@ -120,40 +120,7 @@
                                 style="min-height: 80px;"></textarea>
                         </div>
 
-                        <!-- Analysis Prompt (Moved to BOTTOM) -->
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label>Analysis Prompt
-                                    <span id="prompt-mode-badge"
-                                        style="font-size: 0.7rem; background: #e5e7eb; color: #6b7280; padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: 0.5rem;">Free:
-                                        Read-only</span>
-                                </label>
-                            </div>
-                            <p class="helper-text" id="prompt-helper">This is the analysis framework that guides the AI
-                                report generation.</p>
-                            <textarea id="default-prompt" readonly
-                                style="min-height: 200px; max-height: 400px; overflow-y: auto; background: var(--bg-secondary); opacity: 0.85; cursor: not-allowed; font-family: 'Inter', monospace; font-size: 0.9rem; line-height: 1.6; padding: 1rem;">Analyze the market opportunity in the selected category:
 
-1. MARKET OVERVIEW
-   - Price range distribution (budget/mid/premium)
-   - Review volume and rating patterns
-   - Competitive landscape and market concentration
-
-2. CUSTOMER PAIN POINTS
-   - Top 5 recurring complaints from negative reviews
-   - Unmet needs and feature requests
-   - Quality and durability issues
-
-3. OPPORTUNITY ANALYSIS
-   - Market gaps and underserved segments
-   - Differentiation opportunities
-   - Target customer profile
-
-4. ENTRY STRATEGY RECOMMENDATIONS
-   - Suggested price positioning
-   - Key features to prioritize
-   - Potential risks and mitigation</textarea>
-                        </div>
                     </div>
 
                     <!-- Advanced Configuration (Locked for Free Users) -->
@@ -276,6 +243,43 @@
                                             <option value="20">20 Videos</option>
                                             <option value="30">30 Videos</option>
                                         </select>
+                                    </div>
+                                    <!-- Analysis Prompt (Moved Here) -->
+                                    <div class="form-group" style="grid-column: 1 / -1; margin-top: 1.5rem;">
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center;">
+                                            <label>Analysis Prompt
+                                                <span id="prompt-mode-badge"
+                                                    style="font-size: 0.7rem; background: #e5e7eb; color: #6b7280; padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: 0.5rem;">Free:
+                                                    Read-only</span>
+                                            </label>
+                                        </div>
+                                        <p class="helper-text" id="prompt-helper">This is the analysis framework that
+                                            guides the AI
+                                            report generation. <span style="color: var(--primary-color);">Editable in
+                                                Pro Mode.</span></p>
+                                        <textarea id="default-prompt" readonly
+                                            style="min-height: 200px; max-height: 400px; overflow-y: auto; background: var(--bg-secondary); opacity: 0.85; cursor: not-allowed; font-family: 'Inter', monospace; font-size: 0.9rem; line-height: 1.6; padding: 1rem;">Analyze the market opportunity in the selected category:
+
+1. MARKET OVERVIEW
+   - Price range distribution (budget/mid/premium)
+   - Review volume and rating patterns
+   - Competitive landscape and market concentration
+
+2. CUSTOMER PAIN POINTS
+   - Top 5 recurring complaints from negative reviews
+   - Unmet needs and feature requests
+   - Quality and durability issues
+
+3. OPPORTUNITY ANALYSIS
+   - Market gaps and underserved segments
+   - Differentiation opportunities
+   - Target customer profile
+
+4. ENTRY STRATEGY RECOMMENDATIONS
+   - Suggested price positioning
+   - Key features to prioritize
+   - Potential risks and mitigation</textarea>
                                     </div>
                                 </div>
                             </div>
