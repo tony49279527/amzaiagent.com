@@ -63,6 +63,24 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 async def read_index():
     return FileResponse('index.html')
 
+@app.get("/{filename}.css")
+async def read_css(filename: str):
+    if ".." in filename or "/" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    file_path = f"{filename}.css"
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="text/css")
+    raise HTTPException(status_code=404, detail="File not found")
+
+@app.get("/{filename}.js")
+async def read_js(filename: str):
+    if ".." in filename or "/" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    file_path = f"{filename}.js"
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="File not found")
+
 @app.get("/{filename}.html")
 async def read_html(filename: str):
     # Security check: prevent directory traversal
