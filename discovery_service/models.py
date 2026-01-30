@@ -35,13 +35,18 @@ class DiscoveryRequest(BaseModel):
     reference_asins: Optional[List[str]] = Field(default=None, description="Reference ASINs for analysis")
     
     # User info
-    user_name: str = Field(..., description="User's name")
+    user_name: Optional[str] = Field(default="Valued Customer", description="User's name")
     user_email: str = Field(..., description="User's email for report delivery")
     user_industry: Optional[str] = Field(default=None, description="User's industry/business type")
     
     # Subscription tier
     user_tier: UserTier = Field(default=UserTier.FREE, description="User subscription level")
     selected_model: Optional[str] = Field(default=None, description="Pro users can select model")
+    
+    # Advanced Pro Config
+    analysis_focus: Optional[List[str]] = Field(default=None, description="Specific focus areas")
+    analysis_prompt: Optional[str] = Field(default=None, description="Custom analysis prompt")
+    report_language: Optional[str] = Field(default="English", description="Target language for report")
 
 
 class WebSource(BaseModel):

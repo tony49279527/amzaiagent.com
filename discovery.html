@@ -601,7 +601,13 @@
                         marketplace: document.getElementById('marketplace').value,
                         reference_asins: document.getElementById('product-asins').value.split('\n').map(a => a.trim()).filter(a => a),
                         user_email: proEmail,
-                        user_tier: 'pro'
+                        user_tier: 'pro',
+                        // Pro Fields
+                        user_name: 'Pro User', // Default for Pro flow to satisfy schema
+                        analysis_focus: focusAreas,
+                        analysis_prompt: document.getElementById('default-prompt').value,
+                        report_language: document.querySelector('.pro-feature[disabled] option:checked, .pro-feature option:checked').parentElement.value, // Get language
+                        selected_model: document.getElementById('llm-model').value
                     };
 
                     // Generate Order ID
