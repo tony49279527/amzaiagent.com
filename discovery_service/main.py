@@ -16,6 +16,7 @@ from .models import DiscoveryRequest, DiscoveryResponse, UserTier
 from .analyzer import ProductDiscoveryAnalyzer
 from .config import DEFAULT_MODEL_FREE, PRO_MODELS
 from .email_service import send_email_report
+from supabase_client import save_contact_inquiry
 
 app = FastAPI(
     title="Product Discovery API",
@@ -371,6 +372,9 @@ async def handle_contact_form(req: ContactFormRequest, request: Request):
         from html import escape as html_escape
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
+
+        # Save to Supabase (added for backend unification)
+        save_contact_inquiry(req.name, req.email, req.subject, req.message)
 
         if not SMTP_USER or not SMTP_PASSWORD:
             raise HTTPException(status_code=503, detail="Email service not configured")
