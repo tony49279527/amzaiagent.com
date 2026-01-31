@@ -62,12 +62,12 @@ def main():
                 errors.append(f"{filepath}: {message}")
     
     if errors:
-        print("❌ Encoding validation failed!")
+        print("[ERROR] Encoding validation failed!")
         print("\n".join(errors))
-        print("\n💡 Run 'python fix_all_mojibake.py' to fix these issues")
+        print("\n[TIP] Run 'python fix_all_mojibake.py' to fix these issues")
         return 1
     
-    print("✅ All files passed UTF-8 validation")
+    print("[OK] All files passed UTF-8 validation")
     return 0
 
 if __name__ == '__main__':
