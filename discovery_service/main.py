@@ -228,20 +228,23 @@ async def start_analysis_task(
 from .payment_service import payment_service
 from fastapi import Request
 
-# Store for paid reports
-# TODO: Replace with database persistence — in-memory stores are lost on container restart
-paid_reports = set()  # tracks paid emails
-verified_sessions = set()  # tracks verified checkout session IDs
+# Import persistent storage functions from supabase_client
+import sys
+sys.path.insert(0, '.')
+from supabase_client import mark_email_paid, is_email_paid, mark_session_verified, is_session_verified
+
+# In-memory fallback (used only when Supabase is unavailable)
+_paid_reports_fallback = set()
+_verified_sessions_fallback = set()
 
 @app.get("/api/payments/verify-session")
 async def verify_payment_session(session_id: str):
-    """Verify a checkout session status. In production, query Stripe/Polar API."""
+    """Verify a checkout session status using persistent storage."""
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    # TODO: In production, verify with Stripe API:
-    # stripe.checkout.Session.retrieve(session_id)
-    # For now, check if this session was confirmed via webhook
-    if session_id in verified_sessions:
+
+    # Check persistent storage first, fallback to memory
+    if is_session_verified(session_id) or session_id in _verified_sessions_fallback:
         return {"status": "paid", "session_id": session_id}
     return {"status": "pending", "session_id": session_id}
 
@@ -269,14 +272,15 @@ async def polar_webhook(request: Request):
     payload = await request.body()
     signature = request.headers.get("webhook-signature") or request.headers.get("stripe-signature")
 
-    # Verify webhook signature
-    if WEBHOOK_SECRET:
-        import hmac, hashlib
-        expected = hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
-        if not signature or not hmac.compare_digest(signature, expected):
-            raise HTTPException(status_code=403, detail="Invalid webhook signature")
-    else:
-        print("WARNING: POLAR_WEBHOOK_SECRET not set — webhook signature verification disabled")
+    # Verify webhook signature - REQUIRED in production
+    if not WEBHOOK_SECRET:
+        print("ERROR: POLAR_WEBHOOK_SECRET not set — rejecting webhook for security")
+        raise HTTPException(status_code=503, detail="Webhook verification not configured")
+
+    import hmac, hashlib
+    expected = hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
+    if not signature or not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
     import json
     data = json.loads(payload)
@@ -285,24 +289,35 @@ async def polar_webhook(request: Request):
     if event_type == "checkout.updated":
         checkout_data = data.get("data", {})
         status = checkout_data.get("status")
-        
+
         if status == "succeeded":
             # Extract our custom data or find by email
             email = checkout_data.get("customer_email")
-            print(f"Payment succeeded for {email}")
-            # In a real app, mark the report as paid in DB
-            # For now, we'll use the email to match or a metadata field if supported
-            paid_reports.add(email)
-            # Also track checkout session ID if available
             checkout_id = checkout_data.get("id") or checkout_data.get("checkout_id")
+            print(f"Payment succeeded for {email}, checkout_id: {checkout_id}")
+
+            # Persist to database (with in-memory fallback)
+            if email:
+                if not mark_email_paid(email, checkout_id):
+                    _paid_reports_fallback.add(email)  # Fallback to memory
+
             if checkout_id:
-                verified_sessions.add(checkout_id)
+                if not mark_session_verified(checkout_id, email):
+                    _verified_sessions_fallback.add(checkout_id)  # Fallback to memory
 
     return {"status": "ok"}
 
+# Test endpoint - protected by secret token (disabled in production if not set)
+TEST_ENDPOINT_SECRET = os.getenv("TEST_ENDPOINT_SECRET", "")
+
 @app.get("/test-email")
-async def test_email_endpoint(email: str, type: str = "success"):
-    """Immediate test endpoint to verify email delivery"""
+async def test_email_endpoint(email: str, type: str = "success", token: str = ""):
+    """Immediate test endpoint to verify email delivery - PROTECTED"""
+    # Security: Require secret token to prevent abuse
+    if not TEST_ENDPOINT_SECRET:
+        raise HTTPException(status_code=404, detail="Not found")  # Hide endpoint in production
+    if token != TEST_ENDPOINT_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
     try:
         from .email_service import send_email_report
         from .models import AnalysisReport

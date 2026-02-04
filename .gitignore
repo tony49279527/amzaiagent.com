@@ -19,6 +19,14 @@ discovery_service/buffing_wheel_test_*/
 discovery_service/*_SUMMARY.md
 discovery_service/*_REPORT.md
 
+# Root level debug/test files (NEVER commit - may contain secrets)
+debug_*.py
+debug_*.txt
+*_test.py
+direct_email_test.py
+trigger_email_test.py
+local_*_debug.py
+
 # Temp / backup files
 temp_win_merge/
 *_backup.*

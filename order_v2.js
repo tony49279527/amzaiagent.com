@@ -141,11 +141,14 @@ function renderOrderPage(order) {
         const reportTitle = document.getElementById('report-title');
         if (reportTitle) reportTitle.textContent = `Analysis # ${order.order_id}`;
 
-        // Render Preview HTML
+        // Render Preview HTML (sanitized to prevent XSS)
         const container = document.getElementById('report-preview-content');
         if (container) {
-            container.innerHTML = order.preview_htm;
-            console.log('Preview Content Injected');
+            // Use DOMPurify to sanitize HTML content
+            const sanitizedHTML = typeof DOMPurify !== 'undefined'
+                ? DOMPurify.sanitize(order.preview_htm, { USE_PROFILES: { html: true } })
+                : order.preview_htm.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+            container.innerHTML = sanitizedHTML;
         } else {
             console.error('Container #report-preview-content NOT FOUND');
         }

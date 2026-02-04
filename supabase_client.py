@@ -104,3 +104,80 @@ def get_system_prompt(slug):
     except Exception as e:
         print(f"Supabase select failed: {e}")
     return None
+
+
+# === Payment Status Functions (Persistent Storage) ===
+
+def mark_email_paid(email: str, checkout_id: str = None) -> bool:
+    """
+    Marks an email as having completed payment.
+    Uses PaidReports table for persistence across container restarts.
+    """
+    if not supabase:
+        print(f"Supabase not initialized. Cannot persist payment for {email}")
+        return False
+
+    data = {
+        "email": email,
+        "checkout_id": checkout_id,
+        "paid_at": "now()"
+    }
+    try:
+        # Upsert to handle duplicate payments gracefully
+        supabase.table("PaidReports").upsert(data, on_conflict="email").execute()
+        return True
+    except Exception as e:
+        print(f"Supabase payment insert failed: {e}")
+        return False
+
+
+def is_email_paid(email: str) -> bool:
+    """
+    Checks if an email has completed payment.
+    """
+    if not supabase:
+        return False
+
+    try:
+        response = supabase.table("PaidReports").select("email").eq("email", email).execute()
+        return len(response.data) > 0
+    except Exception as e:
+        print(f"Supabase payment check failed: {e}")
+        return False
+
+
+def mark_session_verified(session_id: str, email: str = None) -> bool:
+    """
+    Marks a checkout session as verified.
+    Uses VerifiedSessions table for persistence.
+    """
+    if not supabase:
+        print(f"Supabase not initialized. Cannot persist session {session_id}")
+        return False
+
+    data = {
+        "session_id": session_id,
+        "email": email,
+        "verified_at": "now()"
+    }
+    try:
+        supabase.table("VerifiedSessions").upsert(data, on_conflict="session_id").execute()
+        return True
+    except Exception as e:
+        print(f"Supabase session insert failed: {e}")
+        return False
+
+
+def is_session_verified(session_id: str) -> bool:
+    """
+    Checks if a checkout session has been verified.
+    """
+    if not supabase:
+        return False
+
+    try:
+        response = supabase.table("VerifiedSessions").select("session_id").eq("session_id", session_id).execute()
+        return len(response.data) > 0
+    except Exception as e:
+        print(f"Supabase session check failed: {e}")
+        return False

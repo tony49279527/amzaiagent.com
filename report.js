@@ -82,12 +82,16 @@ const initReport = async () => {
     }
 
     /**
-     * 显示错误信息
+     * 显示错误信息 (sanitized to prevent XSS)
      */
     function showError(message) {
+        // Sanitize message to prevent XSS
+        const safeMessage = typeof DOMPurify !== 'undefined'
+            ? DOMPurify.sanitize(message)
+            : message.replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
         contentContainer.innerHTML = `
             <div class="error-state" style="text-align: center; padding: 4rem; color: #dc2626;">
-                <p style="font-size: 1.25rem; margin-bottom: 1rem;">⚠️ ${message}</p>
+                <p style="font-size: 1.25rem; margin-bottom: 1rem;">⚠️ ${safeMessage}</p>
                 <a href="cases.html" style="color: #2563eb; text-decoration: underline;">Back to Case List</a>
             </div>
         `;
@@ -178,8 +182,11 @@ Recommend adding the following long-tail keywords to the Listing:
             renderer: renderer
         });
 
-        // 渲染 Markdown 到页面
-        contentContainer.innerHTML = marked.parse(markdownContent);
+        // 渲染 Markdown 到页面 (sanitized to prevent XSS)
+        const rawHtml = marked.parse(markdownContent);
+        contentContainer.innerHTML = typeof DOMPurify !== 'undefined'
+            ? DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true } })
+            : rawHtml;
 
         // 移除加载状态（如果存在）
         const loadingState = contentContainer.querySelector('.loading-state');
