@@ -2,6 +2,22 @@
 window.blogPostsCN = [];
 window.blogPostsEN = [
   {
+    "id": "amazon-pay-by-bank-guide-card-free-payment-solution",
+    "title": "Amazon Pay by Bank: Complete Guide to the New Card-Free Payment Solution (2024)",
+    "date": "February 11, 2026",
+    "author": "Amz AI Agent",
+    "cover_image": "assets/images/blog_thumbs/amazon-pay-by-bank-guide-card-free-payment-solution.webp",
+    "tags": [
+      "Amazon Pay by Bank",
+      "E-commerce Payments",
+      "Amazon UK",
+      "Card-Free Payments",
+      "Amazon Seller Updates",
+      "Payment Solutions"
+    ],
+    "content": "<div>        <h1>Amazon Pay by Bank: Complete Guide to the New Card-Free Payment Solution (2024)</h1>        <p>Amazon has just revolutionized online payments in the UK with the launch of Pay by Bank, a groundbreaking card-free payment solution that enables direct purchases through customers' bank accounts. This significant development marks Amazon's commitment to providing secure and convenient payment options for both shoppers and <a href='/about.html'>Amazon marketplace sellers</a>.</p>        <img src='assets/images/blog_thumbs/amazon-pay-by-bank-guide-card-free-payment-solution.webp' alt='Amazon Pay by Bank - New Card-Free Payment Solution Interface' class='rounded-lg my-4 w-full object-cover'>        <h2>Understanding Amazon Pay by Bank: What You Need to Know</h2>        <p>Pay by Bank represents a significant shift in Amazon's payment ecosystem, allowing customers to make purchases directly from their UK bank accounts without using credit or debit cards. The system will soon extend to Prime membership payments, demonstrating Amazon's commitment to expanding this payment option. For sellers using our <a href='/index.html'>Amz AI Agent platform</a>, this development opens new opportunities for increased conversion rates.</p>        <h2>Impact on Amazon Sellers and Shoppers</h2>        <ul>            <li>Enhanced Security: Direct bank integration reduces fraud risks</li>            <li>Lower Transaction Costs: Potential reduction in payment processing fees</li>            <li>Improved Conversion: Streamlined checkout process for customers</li>            <li>Broader Customer Base: Appeals to card-averse shoppers</li>        </ul>        <h2>3 Action Steps for Sellers to Prepare</h2>        <ul>            <li>Update your payment acceptance settings in Seller Central</li>            <li>Review and adjust your pricing strategy considering potentially lower fees</li>            <li>Communicate the new payment option to your customers through product listings</li>        </ul>        <h2>Frequently Asked Questions About Amazon Pay by Bank</h2>        <h3>Which banks are compatible with Amazon Pay by Bank?</h3>        <p>Currently, the service is available for most major UK banks and building societies that support Open Banking protocols.</p>        <h3>Is Amazon Pay by Bank secure?</h3>        <p>Yes, the service uses bank-level security and encryption, requiring authentication through your bank's own security measures.</p>        <h3>Will this payment method be available outside the UK?</h3>        <p>While currently limited to the UK market, Amazon may expand this service to other regions based on success and regulatory frameworks.</p>        <h2>Conclusion</h2>        <p>Amazon Pay by Bank represents a significant evolution in e-commerce payments, offering enhanced security and convenience for both sellers and buyers. Stay informed about these developments by regularly checking our <a href='/faq.html'>FBA FAQ section</a>.</p>        <p>What's your take on this new payment solution? Will you be implementing it in your Amazon business? Share your thoughts in the comments below!</p>    </div>"
+  },
+  {
     "id": "amazon-gmv-growth-2025-milestone",
     "title": "Amazon GMV Growth 2025: $830 Billion Milestone Transforms E-commerce Landscape",
     "date": "February 10, 2026",
