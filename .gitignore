@@ -27,3 +27,4 @@ temp_win_merge/
 # Large backups
 *.zip
 gcp_key.json
+.cursor/

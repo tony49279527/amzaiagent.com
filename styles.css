@@ -153,10 +153,18 @@ body {
     }
 
     .nav-actions {
-        display: none;
+        display: flex;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1002;
     }
 
-    /* Ensure footer nav items (if any in nav-actions) are handled or hidden */
+    .nav-actions .btn {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
 }
 
 .nav-links a {

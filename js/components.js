@@ -25,14 +25,6 @@ function renderNavbar() {
     const navHTML = `
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="2" width="20" height="20" rx="6" fill="#2563eb" />
-                    <path d="M7 12H17M7 8H17M7 16H13" stroke="white" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <span class="logo-text">Amz AI Agent</span>
-            </a>
-            
             <!-- Mobile Menu Button -->
             <button class="mobile-menu-btn" aria-label="Toggle Menu">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-open">
@@ -42,6 +34,15 @@ function renderNavbar() {
                     <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
             </button>
+
+            <a href="index.html" class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="20" height="20" rx="6" fill="#2563eb" />
+                    <path d="M12 5L6 19H9L10.5 15H13.5L15 19H18L12 5ZM11.25 12.5L12 10L12.75 12.5H11.25Z"
+                        fill="white" />
+                </svg>
+                <span class="logo-text">Amz AI Agent</span>
+            </a>
 
             <div class="nav-links">
                 <a href="index.html" class="${currentPath === 'index.html' ? 'active' : ''}">Home</a>
