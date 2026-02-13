@@ -28,7 +28,12 @@ jobs:
         env_vars: |-
           SMTP_USER=leetony4927@gmail.com
           SMTP_PASSWORD=deazlqrowonsvcee
-          N8N_CHECKOUT_WEBHOOK_URL=https://tony4927.app.n8n.cloud/webhook/create-checkout
-          OPENROUTER_API_KEY=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
           SMTP_PORT=465
           SMTP_SERVER=smtp.gmail.com
+          N8N_CHECKOUT_WEBHOOK_URL=https://tony4927.app.n8n.cloud/webhook/create-checkout
+          N8N_PRO_ANALYSIS_URL=${{ secrets.N8N_PRO_ANALYSIS_URL }}
+          N8N_SEND_REPORT_URL=${{ secrets.N8N_SEND_REPORT_URL }}
+          N8N_ALLOWED_HOSTS=tony4927.app.n8n.cloud
+          OPENROUTER_API_KEY=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
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

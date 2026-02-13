@@ -4,7 +4,7 @@ FastAPI Main Application for Product Discovery Service
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
@@ -16,13 +16,24 @@ from .models import DiscoveryRequest, DiscoveryResponse, UserTier
 from .analyzer import ProductDiscoveryAnalyzer
 from .config import DEFAULT_MODEL_FREE, PRO_MODELS
 from .email_service import send_email_report
-from supabase_client import save_contact_inquiry
 
 app = FastAPI(
     title="Product Discovery API",
     description="AI-powered Amazon product discovery and analysis service",
     version="1.0.0"
 )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Return 404.html with proper 404 status for page-not-found errors (fixes Soft 404)"""
+    if exc.status_code == 404 and os.path.exists("404.html"):
+        with open("404.html", "r", encoding="utf-8") as f:
+            html = f.read()
+        return HTMLResponse(content=html, status_code=404)
+    # Re-raise for other HTTP exceptions (FastAPI will handle normally)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 # Cache control middleware
@@ -64,6 +75,17 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 async def read_index():
     return FileResponse('index.html')
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint (avoids conflicting with /)"""
+    return {"service": "Product Discovery API", "status": "running", "version": "1.0.0"}
+
+@app.get("/index.html")
+async def redirect_index():
+    """Redirect /index.html to / for canonical URL"""
+    from starlette.responses import RedirectResponse
+    return RedirectResponse(url="/", status_code=301)
+
 @app.get("/{filename}.css")
 async def read_css(filename: str):
     if ".." in filename or "/" in filename:
@@ -97,6 +119,26 @@ async def read_html(filename: str):
     
     raise HTTPException(status_code=404, detail="Page not found")
 
+def _get_blog_slug_to_id() -> dict:
+    """Map URL slug -> canonical post id from posts_en.json (for redirect)"""
+    mapping = {}
+    path = "data/blog/posts_en.json"
+    if not os.path.exists(path):
+        return mapping
+    try:
+        import json
+        with open(path, "r", encoding="utf-8") as f:
+            posts = json.load(f)
+        for p in posts:
+            pid = p.get("id") or p.get("slug", "")
+            if pid:
+                mapping[pid] = pid
+                mapping[pid.replace(".html", "")] = pid
+    except Exception:
+        pass
+    return mapping
+
+
 # Handle blog post paths if they are like /blog/some-post.html
 @app.get("/blog/{post_slug}.html")
 async def read_blog_post(post_slug: str):
@@ -104,12 +146,17 @@ async def read_blog_post(post_slug: str):
     path1 = f"data/blog/{post_slug}.html"
     if os.path.exists(path1):
         return FileResponse(path1)
-        
-    # Strategy 2: If we use a template (blog-post.html) and client-side rendering
-    # This is likely how it works if no static HTMLs exist.
+
+    slug_to_id = _get_blog_slug_to_id()
+    canonical_id = slug_to_id.get(post_slug)
+    if not canonical_id:
+        raise HTTPException(status_code=404, detail="Blog post not found")
+
+    # Valid slug - redirect to canonical blog-post.html?id=xxx for proper indexing
     if os.path.exists("blog-post.html"):
-        return FileResponse("blog-post.html")
-        
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(url=f"/blog-post.html?id={canonical_id}", status_code=301)
+
     raise HTTPException(status_code=404, detail="Blog post not found")
 
 @app.get("/styles.css")
@@ -132,18 +179,8 @@ async def read_robots():
 # Global analyzer instance
 analyzer = ProductDiscoveryAnalyzer()
 
-# Store for completed reports (in production, use database)
-reports_store = {}  # TODO: Replace with Supabase — lost on container restart
-
-
-@app.get("/")
-async def root():
-    """Health check endpoint"""
-    return {
-        "service": "Product Discovery API",
-        "status": "running",
-        "version": "1.0.0"
-    }
+# Store for completed reports (fallback when Supabase not configured)
+reports_store = {}
 
 
 @app.get("/models")
@@ -153,6 +190,43 @@ async def get_available_models():
         "free_model": DEFAULT_MODEL_FREE,
         "pro_models": PRO_MODELS,
         "default_pro_model": PRO_MODELS[0]
+    }
+
+
+@app.get("/api/discovery-report/{report_id}")
+async def get_discovery_report(report_id: str):
+    """Fetch a completed discovery report by ID (for discovery_report.html)"""
+    report = reports_store.get(report_id)
+    if not report:
+        try:
+            from .report_store import get_report
+            report = get_report(report_id)
+        except Exception:
+            pass
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found or not yet ready")
+    # Extract executive summary from first ## section if no dedicated field
+    executive_summary = None
+    if report.report_markdown:
+        import re
+        match = re.search(r'^##\s+(?:Executive Summary|Summary|Overview)\s*\n([\s\S]*?)(?=\n##\s|\Z)', report.report_markdown, re.IGNORECASE)
+        if match:
+            executive_summary = match.group(1).strip()
+        elif report.report_markdown:
+            sections = report.report_markdown.split('\n## ')
+            if len(sections) > 1:
+                executive_summary = sections[1].strip()[:2000]
+    return {
+        "report_id": report.report_id,
+        "keywords": report.keywords,
+        "category": report.category,
+        "user_email": report.user_email,
+        "marketplace": report.marketplace,
+        "executive_summary": executive_summary,
+        "report_markdown": report.report_markdown,
+        "report_html": report.report_html,
+        "generated_at": report.generated_at,
+        "model_used": report.model_used,
     }
 
 
@@ -178,7 +252,13 @@ async def run_analysis_task(request: DiscoveryRequest, task_id: str = None):
     try:
         report = await analyzer.analyze(request, task_id)
         reports_store[report.report_id] = report
-        
+        # Persist to Supabase when configured
+        try:
+            from .report_store import save_report
+            save_report(report)
+        except Exception as e:
+            print(f"Report persistence failed: {e}")
+
         # Determine if this is a Pro flow that requires payment
         is_pro_user = request.user_tier == UserTier.PRO
         
@@ -209,7 +289,15 @@ async def start_analysis_task(
         # Validate request
         if not request.category or not request.keywords:
             raise HTTPException(status_code=400, detail="Category and keywords are required")
-        
+
+        # Pro tier: verify payment before starting (Polar webhook populates paid_reports)
+        if request.user_tier == UserTier.PRO:
+            if request.user_email not in paid_reports:
+                raise HTTPException(
+                    status_code=402,
+                    detail="Payment required. Please complete your Pro payment before starting analysis. If you just paid, wait a moment and try again."
+                )
+
         task_id = str(uuid.uuid4())
         
         # Start analysis in background with task_id
@@ -236,15 +324,30 @@ verified_sessions = set()  # tracks verified checkout session IDs
 
 @app.get("/api/payments/verify-session")
 async def verify_payment_session(session_id: str):
-    """Verify a checkout session status. In production, query Stripe/Polar API."""
+    """Verify a checkout session status. Populated by Polar webhook or /api/payments/confirm-session (n8n)."""
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    # TODO: In production, verify with Stripe API:
-    # stripe.checkout.Session.retrieve(session_id)
-    # For now, check if this session was confirmed via webhook
     if session_id in verified_sessions:
         return {"status": "paid", "session_id": session_id}
     return {"status": "pending", "session_id": session_id}
+
+
+class ConfirmSessionRequest(PydanticBaseModel):
+    session_id: str
+    customer_email: Optional[str] = None  # When provided, also add to paid_reports for Pro verification
+
+@app.post("/api/payments/confirm-session")
+async def confirm_payment_session(req: ConfirmSessionRequest):
+    """
+    Called by n8n when Stripe payment succeeds. Adds session to verified_sessions.
+    If customer_email provided, also adds to paid_reports for Discovery Pro verification.
+    """
+    if not req.session_id:
+        raise HTTPException(status_code=400, detail="session_id required")
+    verified_sessions.add(req.session_id)
+    if req.customer_email:
+        paid_reports.add(req.customer_email)
+    return {"status": "ok", "session_id": req.session_id}
 
 @app.post("/api/payments/create-checkout")
 async def create_checkout(report_id: str, email: str):
@@ -372,9 +475,6 @@ async def handle_contact_form(req: ContactFormRequest, request: Request):
         from html import escape as html_escape
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
-
-        # Save to Supabase (added for backend unification)
-        save_contact_inquiry(req.name, req.email, req.subject, req.message)
 
         if not SMTP_USER or not SMTP_PASSWORD:
             raise HTTPException(status_code=503, detail="Email service not configured")

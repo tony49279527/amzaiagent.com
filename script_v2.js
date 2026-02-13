@@ -437,14 +437,21 @@ Present workflows in a structured table format, including:
         mainAsin.setCustomValidity("");
         compAsin.setCustomValidity("");
 
-        // Check Main ASIN - not empty AND valid format
-        const mainAsinValue = mainAsin.value.trim().toUpperCase();
-        if (!mainAsinValue) {
+        // Check Main ASIN - 1-5 ASINs, split by comma/newline/space, each valid format
+        const mainAsinRaw = mainAsin.value.trim();
+        const mainAsins = mainAsinRaw ? mainAsinRaw.split(/[\n,\s]+/).map(s => s.trim().toUpperCase()).filter(s => s) : [];
+        if (mainAsins.length === 0) {
             isMainValid = false;
-            mainAsin.setCustomValidity("Please enter the Core Product ASIN.");
-        } else if (!asinRegex.test(mainAsinValue)) {
+            mainAsin.setCustomValidity("Please enter at least one Core Product ASIN (1-5 recommended).");
+        } else if (mainAsins.length > 5) {
             isMainValid = false;
-            mainAsin.setCustomValidity("Invalid ASIN format. Must start with 'B' followed by 9 alphanumeric characters (e.g. B08CVS825S).");
+            mainAsin.setCustomValidity("Please enter at most 5 Core Product ASINs (same product variants).");
+        } else {
+            const invalidMain = mainAsins.filter(a => !asinRegex.test(a));
+            if (invalidMain.length > 0) {
+                isMainValid = false;
+                mainAsin.setCustomValidity(`Invalid ASIN format: ${invalidMain.join(', ')}. Each ASIN must start with 'B' followed by 9 alphanumeric characters (e.g. B08CVS825S).`);
+            }
         }
 
         if (!isMainValid) {
@@ -554,12 +561,11 @@ Present workflows in a structured table format, including:
         });
     }
 
-    // === STRIPE PAYMENT HANDLER (Free/Sandbox) ===
+    // === STRIPE PAYMENT HANDLER ===
     if (payDepositBtn) {
         payDepositBtn.addEventListener('click', async () => {
             if (!validateAsins()) return;
 
-            // ... (Validation Logic same as before) ...
             const emailInput = document.getElementById('pro-email-input');
             let userEmail = emailInput ? emailInput.value.trim() : '';
             if (!userEmail || !userEmail.includes('@')) {
@@ -569,13 +575,20 @@ Present workflows in a structured table format, including:
             }
             if (document.getElementById('user-email')) document.getElementById('user-email').value = userEmail;
 
+            // Prepare payload and orderId (required for checkout)
+            const payload = preparePayload(true);
+            const orderId = payload.order_id;
 
-            // Simulate Stripe Payment Success -> Unlock
-            // In real app, this would redirect or use Stripe Elements
-            alert('Payment successful! (Sandbox mode) Pro features are now unlocked.');
-            if (paymentModal) paymentModal.classList.remove('active');
+            // Store for fallback/auto-start on processing.html when user returns from Stripe
+            localStorage.setItem('pending_analysis_payload', JSON.stringify(payload));
+            localStorage.setItem('pending_email', userEmail);
+            localStorage.setItem('pending_order_id', orderId);
 
-            // 2. Call backend proxy to get Stripe Link (webhook URL stays server-side)
+            // Loading state
+            payDepositBtn.disabled = true;
+            const originalText = payDepositBtn.textContent;
+            payDepositBtn.textContent = 'Processing...';
+
             try {
                 const response = await fetch('/api/proxy/create-checkout', {
                     method: 'POST',
@@ -596,11 +609,10 @@ Present workflows in a structured table format, including:
                 const data = await response.json();
                 console.log('Checkout response:', data);
 
-                // Handle both object {url:...} and array [{url:...}] formats
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
 
                 if (paymentUrl) {
-                    window.location.href = paymentUrl; // Redirect to Stripe
+                    window.location.href = paymentUrl;
                 } else {
                     throw new Error('No payment URL returned');
                 }
@@ -608,7 +620,7 @@ Present workflows in a structured table format, including:
                 console.error(err);
                 alert('Payment Error: ' + err.message);
                 payDepositBtn.disabled = false;
-                payDepositBtn.textContent = 'Try Again';
+                payDepositBtn.textContent = originalText;
             }
         });
     }
@@ -659,9 +671,9 @@ Present workflows in a structured table format, including:
             user_email: (document.getElementById('pro-email-input')?.value.trim()) || (document.getElementById('user-email')?.value.trim()) || 'guest@example.com',
             industry: 'General',
 
-            // Product Data (Arrays required)
-            main_asins: [document.getElementById('main-asin').value.trim()],
-            competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,]+/).map(s => s.trim()).filter(s => s),
+            // Product Data (Arrays required) - main: 1-5 ASINs, competitor: 5-15 recommended
+            main_asins: document.getElementById('main-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
+            competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
 
             // Config
             productSite: document.getElementById('marketplace').value,
@@ -693,10 +705,15 @@ Present workflows in a structured table format, including:
         const payload = preparePayload(isPro);
 
         try {
-            // All requests routed through backend proxy for security
-            // This removes the hardcoded n8n webhook from client-side code
-            let endpointUrl = '/api/proxy/analysis-request';
+            // Pro URL: routed through backend proxy (webhook URL stays server-side)
+            let endpointUrl = '/api/proxy/pro-analysis';
 
+            if (!isPro) {
+                // === FREE TIER: USE n8n WEBHOOK ===
+                endpointUrl = 'https://tony4927.app.n8n.cloud/webhook/c6b3034f-250a-433f-9017-c14c3f8c7f9f';
+            }
+
+            // === PRO TIER: Submit via backend proxy ===
             const response = await fetch(endpointUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -714,7 +731,6 @@ Present workflows in a structured table format, including:
                 // Redirect standard flow
                 const email = encodeURIComponent(payload.user_email);
                 const orderId = encodeURIComponent(payload.order_id);
-                // taskId might be returned by the proxy if it starts the task immediately
                 const taskId = data.taskId || data.report_id || '';
 
                 // Store for fallback
