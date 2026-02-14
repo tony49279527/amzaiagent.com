@@ -33,10 +33,9 @@ if [ -f .env ]; then
   # Note: logic in config.py is `.replace(" ", "")`. So we pass the full string here.
   # We need to be careful with commas in gcloud --set-env-vars.
   
-  # Let's clean the password for the deploy command string specifically to avoid quote hell
+  # Build env vars strictly from .env values; avoid hardcoded credentials/tokens in scripts.
   CLEAN_PWD="${SMTP_PASSWORD// /}"
-  
-  ENV_VARS="SMTP_USER=$SMTP_USER,SMTP_PASSWORD=$CLEAN_PWD,N8N_CHECKOUT_WEBHOOK_URL=https://tony4927.app.n8n.cloud/webhook/create-checkout,OPENROUTER_API_KEY=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,SMTP_PORT=465,SMTP_SERVER=smtp.gmail.com"
+  ENV_VARS="SMTP_USER=$SMTP_USER,SMTP_PASSWORD=$CLEAN_PWD,SMTP_PORT=${SMTP_PORT:-465},SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com},N8N_CHECKOUT_WEBHOOK_URL=$N8N_CHECKOUT_WEBHOOK_URL,N8N_FREE_ANALYSIS_URL=$N8N_FREE_ANALYSIS_URL,N8N_PRO_ANALYSIS_URL=$N8N_PRO_ANALYSIS_URL,N8N_SEND_REPORT_URL=$N8N_SEND_REPORT_URL,N8N_ALLOWED_HOSTS=$N8N_ALLOWED_HOSTS,OPENROUTER_API_KEY=$OPENROUTER_API_KEY,SUPABASE_URL=$SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY"
 else
   echo "❌ Error: .env file not found! Deployment will lack credentials."
   exit 1

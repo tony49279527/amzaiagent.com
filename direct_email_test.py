@@ -7,12 +7,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "leetony4927@gmail.com"
-SMTP_PASSWORD = "deaz lqro wons vcee".replace(" ", "")
-TARGET_EMAIL = "aurotony4927@gmail.com"
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
+TARGET_EMAIL = os.getenv("CONTACT_TARGET_EMAIL", SMTP_USER)
 # ...
 try:
+    if not SMTP_USER or not SMTP_PASSWORD or not TARGET_EMAIL:
+        raise RuntimeError("Missing SMTP_USER/SMTP_PASSWORD/CONTACT_TARGET_EMAIL in environment")
     print(f"1. Connecting to {SMTP_HOST}:{SMTP_PORT} (STARTTLS)...")
     server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
     server.starttls()

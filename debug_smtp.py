@@ -8,11 +8,11 @@ from email.mime.multipart import MIMEMultipart
 # Load config directly or from env
 sys.path.append(os.getcwd()) # Ensure current directory is in path for module imports
 
-# Hardcoded for debugging isolation
-SMTP_HOST = "142.251.10.108"
-SMTP_PORT = 465
-SMTP_USER = "leetony4927@gmail.com"
-SMTP_PASSWORD = "deaz lqro wons vcee"
+# Debug config from env only (do not store credentials in repo)
+SMTP_HOST = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
 
 print(f"DEBUG: SMTP Settings: Host={SMTP_HOST}, Port={SMTP_PORT}, User={SMTP_USER}")
 
@@ -56,6 +56,9 @@ def send_debug_email(to_email):
         print(f" ERROR: Failed to send email: {e}")
 
 if __name__ == "__main__":
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("ERROR: Missing SMTP_USER/SMTP_PASSWORD in environment.")
+        sys.exit(1)
     if len(sys.argv) > 1:
         target_email = sys.argv[1]
     else:

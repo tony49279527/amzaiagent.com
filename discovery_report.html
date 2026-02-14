@@ -685,7 +685,7 @@
             btn.disabled = true;
 
             try {
-                const successUrl = window.location.origin + `/discovery_report.html?id=${reportId}&balance_paid=true`;
+                const successUrl = window.location.origin + `/discovery_report.html?id=${reportId}&balance_paid=true&session_id={CHECKOUT_SESSION_ID}`;
                 const cancelUrl = window.location.href;
 
                 const resp = await fetch('/api/proxy/create-checkout', {
@@ -724,7 +724,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const reportId = urlParams.get('id');
-            const unlocked = urlParams.get('unlocked') === 'true';
             const balancePaid = urlParams.get('balance_paid') === 'true';
             const sessionId = urlParams.get('session_id');
 
@@ -742,16 +741,13 @@
                 const badge = document.querySelector('.preview-badge');
                 if (badge) badge.style.display = 'none';
                 const url = new URL(window.location.href);
-                url.searchParams.set('unlocked', 'true');
                 url.searchParams.delete('payment_pending');
                 url.searchParams.delete('balance_paid');
                 url.searchParams.delete('session_id');
                 window.history.replaceState({}, '', url);
             }
 
-            if (unlocked) {
-                await unlockReport();
-            } else if (balancePaid && sessionId) {
+            if (balancePaid && sessionId) {
                 try {
                     const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
                     const verifyData = await verifyResp.json();

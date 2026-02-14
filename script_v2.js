@@ -596,7 +596,7 @@ Present workflows in a structured table format, including:
                     body: JSON.stringify({
                         amount: '4.99',
                         order_id: orderId,
-                        success_url: window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}`,
+                        success_url: window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}&session_id={CHECKOUT_SESSION_ID}`,
                         cancel_url: window.location.href
                     })
                 });
@@ -709,8 +709,8 @@ Present workflows in a structured table format, including:
             let endpointUrl = '/api/proxy/pro-analysis';
 
             if (!isPro) {
-                // === FREE TIER: USE n8n WEBHOOK ===
-                endpointUrl = 'https://tony4927.app.n8n.cloud/webhook/c6b3034f-250a-433f-9017-c14c3f8c7f9f';
+                // Free tier also routes through backend proxy to avoid exposing webhook URLs in frontend.
+                endpointUrl = '/api/proxy/free-analysis';
             }
 
             // === PRO TIER: Submit via backend proxy ===
