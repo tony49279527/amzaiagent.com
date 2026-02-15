@@ -79,3 +79,59 @@ def get_report(report_id: str) -> Optional[AnalysisReport]:
         except Exception as e:
             print(f"Supabase get_report failed: {e}")
     return _reports_memory.get(report_id)
+
+
+# === Payment Status Persistence ===
+
+def mark_email_paid(email: str, checkout_id: str = None) -> bool:
+    """Persist payment status to Supabase. Returns True if saved."""
+    client = _supabase_client()
+    if client:
+        try:
+            client.table("PaidReports").upsert(
+                {"email": email, "checkout_id": checkout_id},
+                on_conflict="email"
+            ).execute()
+            return True
+        except Exception as e:
+            print(f"Supabase mark_email_paid failed: {e}")
+    return False
+
+
+def is_email_paid(email: str) -> bool:
+    """Check if email has paid via Supabase."""
+    client = _supabase_client()
+    if client:
+        try:
+            resp = client.table("PaidReports").select("email").eq("email", email).execute()
+            return len(resp.data) > 0
+        except Exception as e:
+            print(f"Supabase is_email_paid failed: {e}")
+    return False
+
+
+def mark_session_verified(session_id: str, email: str = None) -> bool:
+    """Persist verified session to Supabase."""
+    client = _supabase_client()
+    if client:
+        try:
+            client.table("VerifiedSessions").upsert(
+                {"session_id": session_id, "email": email},
+                on_conflict="session_id"
+            ).execute()
+            return True
+        except Exception as e:
+            print(f"Supabase mark_session_verified failed: {e}")
+    return False
+
+
+def is_session_verified(session_id: str) -> bool:
+    """Check if session is verified via Supabase."""
+    client = _supabase_client()
+    if client:
+        try:
+            resp = client.table("VerifiedSessions").select("session_id").eq("session_id", session_id).execute()
+            return len(resp.data) > 0
+        except Exception as e:
+            print(f"Supabase is_session_verified failed: {e}")
+    return False

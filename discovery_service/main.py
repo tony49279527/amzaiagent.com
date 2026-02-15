@@ -336,12 +336,17 @@ class ConfirmSessionRequest(PydanticBaseModel):
     session_id: str
     customer_email: Optional[str] = None  # When provided, also add to paid_reports for Pro verification
 
+INTERNAL_API_SECRET = os.getenv("INTERNAL_API_SECRET", "")
+
 @app.post("/api/payments/confirm-session")
-async def confirm_payment_session(req: ConfirmSessionRequest):
+async def confirm_payment_session(req: ConfirmSessionRequest, request: Request):
     """
-    Called by n8n when Stripe payment succeeds. Adds session to verified_sessions.
-    If customer_email provided, also adds to paid_reports for Discovery Pro verification.
+    Called by n8n when Stripe payment succeeds. Protected by internal API secret.
     """
+    # Verify caller is authorized (n8n must send this header)
+    auth_token = request.headers.get("x-internal-secret", "")
+    if not INTERNAL_API_SECRET or auth_token != INTERNAL_API_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
     if not req.session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     verified_sessions.add(req.session_id)
@@ -373,14 +378,15 @@ async def polar_webhook(request: Request):
     payload = await request.body()
     signature = request.headers.get("webhook-signature") or request.headers.get("stripe-signature")
 
-    # Verify webhook signature
-    if WEBHOOK_SECRET:
-        import hmac, hashlib
-        expected = hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
-        if not signature or not hmac.compare_digest(signature, expected):
-            raise HTTPException(status_code=403, detail="Invalid webhook signature")
-    else:
-        print("WARNING: POLAR_WEBHOOK_SECRET not set — webhook signature verification disabled")
+    # Verify webhook signature - REQUIRED for security
+    if not WEBHOOK_SECRET:
+        print("ERROR: POLAR_WEBHOOK_SECRET not set — rejecting webhook")
+        raise HTTPException(status_code=503, detail="Webhook verification not configured")
+
+    import hmac, hashlib
+    expected = hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
+    if not signature or not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=403, detail="Invalid webhook signature")
 
     import json
     data = json.loads(payload)
@@ -404,9 +410,15 @@ async def polar_webhook(request: Request):
 
     return {"status": "ok"}
 
+TEST_ENDPOINT_SECRET = os.getenv("TEST_ENDPOINT_SECRET", "")
+
 @app.get("/test-email")
-async def test_email_endpoint(email: str, type: str = "success"):
-    """Immediate test endpoint to verify email delivery"""
+async def test_email_endpoint(email: str, type: str = "success", token: str = ""):
+    """Immediate test endpoint to verify email delivery - PROTECTED"""
+    if not TEST_ENDPOINT_SECRET:
+        raise HTTPException(status_code=404, detail="Not found")
+    if token != TEST_ENDPOINT_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
     try:
         from .email_service import send_email_report
         from .models import AnalysisReport

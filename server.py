@@ -89,8 +89,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 
                 # Forward to n8n (Server-side only)
-                # In production, this URL should be an env var
-                N8N_WEBHOOK_URL = "https://tony4927.app.n8n.cloud/webhook/c6b3034f-250a-433f-9017-c14c3f8c7f9f"
+                N8N_WEBHOOK_URL = os.environ.get("N8N_ANALYSIS_WEBHOOK_URL", "")
                 
                 import urllib.request
                 req = urllib.request.Request(

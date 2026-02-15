@@ -4,12 +4,12 @@ import smtplib
 from email.mime.text import MIMEText
 from supabase_client import save_contact_inquiry
 
-# SMTP Configuration (from existing debug scripts)
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "leetony4927@gmail.com"
-SMTP_PASSWORD = "deazlqrowonsvcee"  # Space-removed version
-TARGET_EMAIL = "leetony4927@gmail.com"  # Where the notifications will be sent
+# SMTP Configuration (read from environment variables)
+SMTP_HOST = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").replace(" ", "")
+TARGET_EMAIL = os.environ.get("SMTP_USER", "")  # Send notifications to self
 
 def process_contact_request(data):
     """
@@ -66,11 +66,10 @@ def send_notification_email(name, email, subject, message):
         msg["From"] = SMTP_USER
         msg["To"] = TARGET_EMAIL
         
-        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_USER, TARGET_EMAIL, msg.as_string())
-        server.quit()
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, TARGET_EMAIL, msg.as_string())
         return True
     except Exception as e:
         print(f"Failed to send notification email: {e}")
