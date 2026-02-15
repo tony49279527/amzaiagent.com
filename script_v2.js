@@ -1,29 +1,7 @@
 console.log('SCRIPT_V2_LOADED_TOP');
 
 const initApp = () => {
-    // === MOBILE MENU TOGGLE ===
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navLinks = document.querySelector('.nav-links');
-    const navActions = document.querySelector('.nav-actions');
-
-    console.log('Mobile Menu Init:', { mobileMenuBtn, navLinks });
-
-    if (mobileMenuBtn && navLinks) {
-        mobileMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent bubbling issues
-            console.log('Mobile menu clicked');
-            const isOpen = navLinks.classList.toggle('active');
-            if (navActions) navActions.classList.toggle('active', isOpen);
-
-            // Toggle icons
-            const openIcon = mobileMenuBtn.querySelector('.menu-icon-open');
-            const closeIcon = mobileMenuBtn.querySelector('.menu-icon-close');
-            if (openIcon && closeIcon) {
-                openIcon.style.display = isOpen ? 'none' : 'block';
-                closeIcon.style.display = isOpen ? 'block' : 'none';
-            }
-        });
-    }
+    // Mobile menu logic removed as it is now handled by js/components.js
 
     // === FILE UPLOAD HANDLING ===
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -523,9 +501,14 @@ Present workflows in a structured table format, including:
             }
 
             if (isProIntent) {
-                paymentModal.classList.add('active');
+                if (paymentModal) paymentModal.classList.add('active');
+                else console.error("Payment modal not found");
             } else {
-                modal.classList.add('active');
+                if (modal) modal.classList.add('active');
+                else {
+                    // Fallback for pages without modal (e.g. index.html simple hunt)
+                    handleSubmission();
+                }
             }
         });
     }

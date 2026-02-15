@@ -1,14 +1,14 @@
 [
   {
     "id": "report_001",
-    "title": "Amazon Listing Optimization: High-End Coffee Maker - C4.5",
-    "asin": "B08XXXXXXX",
+    "title": "Amazon Listing Optimization: Rechargeable Fabric Shaver - C4.5",
+    "asin": "B0CJ5DRR84",
     "marketplace": "US",
     "created_at": "2025-12-31",
-    "summary": "In-depth analysis of the high-end coffee maker market, identifying key user pain points around temperature control and brewing speed. Optimization strategy led to a 15% increase in conversion rate.",
+    "summary": "In-depth analysis of the rechargeable fabric shaver market, identifying key user pain points around lint removal efficiency and battery life. Optimization strategy led to a 15% increase in conversion rate.",
     "category": "Home & Kitchen",
     "markdown_path": "data/reports/report_001.md",
-    "cover_image": "assets/images/thumbnails/coffee_maker.webp"
+    "cover_image": "assets/images/thumbnails/pet_feeder.webp"
   },
   {
     "id": "report_002",
