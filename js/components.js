@@ -140,6 +140,15 @@ function initMobileMenu() {
                     setMenuState(false);
                 }
             });
+
+            // Close menu when clicking nav links (mobile UX)
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        setMenuState(false);
+                    }
+                });
+            });
         }
     }, 0);
 }

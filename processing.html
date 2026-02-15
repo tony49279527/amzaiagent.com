@@ -141,7 +141,7 @@
 
             // 1. Basic Info Populating
             document.getElementById('display-order-id').innerText = orderId;
-            document.getElementById('display-email').innerText = email || 'user@example.com';
+            document.getElementById('display-email').innerText = email || '(Email not provided)';
 
             // 2. WebSocket Connection / Auto-Trigger
             const looksLikeCheckoutSession = !!taskId && (taskId.startsWith('cs_') || taskId.startsWith('chk_'));

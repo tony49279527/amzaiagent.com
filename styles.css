@@ -69,8 +69,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -323,7 +323,7 @@ body {
 
 .hero-subtitle {
     font-size: 1.125rem;
-    color: #94a3b8;
+    color: #cbd5e1;
     margin-bottom: 2.5rem;
     line-height: 1.6;
 }
@@ -612,7 +612,7 @@ body {
     justify-content: space-between;
     align-items: center;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: #cbd5e1;
     border-top: 1px solid var(--border-color);
     padding-top: 1rem;
     margin-top: auto;
@@ -1064,7 +1064,7 @@ textarea {
 }
 
 .modal-desc {
-    color: #94a3b8;
+    color: #cbd5e1;
     font-size: 0.95rem;
     margin-bottom: 2rem;
     line-height: 1.6;
@@ -1591,7 +1591,7 @@ textarea {
 .toc-nav .toc-h3 {
     padding-left: 2.5rem;
     font-size: 0.8125rem;
-    color: #94a3b8;
+    color: #cbd5e1;
 }
 
 .toc-nav .toc-h4 {
@@ -2502,7 +2502,7 @@ textarea {
 
 .cta-box .small-text {
     font-size: 0.8125rem;
-    color: #94a3b8;
+    color: #cbd5e1;
     margin-top: 1rem;
     margin-bottom: 0;
 }
@@ -3207,7 +3207,7 @@ body.dark-theme .nav-links a.active {
 
 body.dark-theme .analysis-header p,
 body.dark-theme .form-group .helper-text {
-    color: #94a3b8;
+    color: #cbd5e1;
 }
 
 body.dark-theme .form-card {

@@ -170,7 +170,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="name">Your Name</label>
-                                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                                <input type="text" id="name" name="name" placeholder="Enter your name" required maxlength="100">
                             </div>
 
                             <div class="form-group">
@@ -182,13 +182,13 @@
                         <div class="form-group">
                             <label for="subject">Subject</label>
                             <input type="text" id="subject" name="subject" placeholder="What can we help you with?"
-                                required>
+                                required maxlength="200">
                         </div>
 
                         <div class="form-group">
                             <label for="message">Message</label>
                             <textarea id="message" name="message" rows="5" placeholder="How can we help you?"
-                                required></textarea>
+                                required maxlength="5000"></textarea>
                         </div>
 
                         <button type="submit" class="submit-btn" id="contact-submit-btn">Send Message</button>
