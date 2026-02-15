@@ -1,4 +1,4 @@
-console.log('SCRIPT_V2_LOADED_TOP');
+// Script v2 loaded
 
 const initApp = () => {
     // Mobile menu logic removed as it is now handled by js/components.js
@@ -321,21 +321,9 @@ Present workflows in a structured table format, including:
     enforceProLock();
 
 
-    if (unlockOverlay && proLockedSection) {
-        unlockOverlay.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Unlock features for configuration (Payment happens on submit)
-            if (typeof window.unlockProFeatures === 'function') {
-                window.unlockProFeatures();
-            }
-        });
-    }
-
-    // LISTENER FOR PAYMENT SUCCESS (Simulated for now, would be callback based in real app)
-    // We expose a global function for the payment success handler to call
-    window.unlockProFeatures = function () {
+    // Unlock Pro features UI (payment is validated server-side on submit)
+    function unlockProFeatures() {
+        if (!proLockedSection) return;
         isProIntent = true;
 
         // Visual Unlock
@@ -368,7 +356,15 @@ Present workflows in a structured table format, including:
             badgePro.style.background = '#10b981';
             badgePro.textContent = 'PRO UNLOCKED';
         }
-    };
+    }
+
+    if (unlockOverlay && proLockedSection) {
+        unlockOverlay.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            unlockProFeatures();
+        });
+    }
 
     // === GLOBAL SCROLL REVEAL ===
     const observerOptions = {
@@ -502,7 +498,7 @@ Present workflows in a structured table format, including:
 
             if (isProIntent) {
                 if (paymentModal) paymentModal.classList.add('active');
-                else console.error("Payment modal not found");
+                // Payment modal not found — fallback silently
             } else {
                 if (modal) modal.classList.add('active');
                 else {
@@ -590,7 +586,7 @@ Present workflows in a structured table format, including:
                 }
 
                 const data = await response.json();
-                console.log('Checkout response:', data);
+                // Checkout response received
 
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
 
@@ -639,7 +635,6 @@ Present workflows in a structured table format, including:
             localStorage.setItem('pending_order_id', payload.order_id);
 
             // Allow default behavior (navigation to Polar) to continue
-            console.log('Proceeding to Polar with email:', userEmail);
         });
     }
 
@@ -708,7 +703,7 @@ Present workflows in a structured table format, including:
                 try {
                     data = await response.json();
                 } catch (e) {
-                    console.log('Response was not JSON');
+                    // Response was not JSON
                 }
 
                 // Redirect standard flow

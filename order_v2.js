@@ -1,6 +1,6 @@
 // order_v2.js - Supabase Integration (Live Data)
 
-console.log('--- order_v2.js LOADED (Live Mode) ---');
+// order_v2.js - Supabase Integration (Live Data)
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        console.log('Fetching order:', orderId);
+        // Fetch order data
 
         // 2. Fetch Data from Backend
         let orderData = null;
@@ -23,15 +23,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (res.ok) {
                 orderData = await res.json();
             } else {
-                console.warn('Report not found or error:', res.status);
+                // Report not found or server error
             }
         } catch (e) {
-            console.error('Fetch error:', e);
+            // Fetch error - will use fallback display
         }
 
         // 3. Fallback or Render
         if (!orderData) {
-            console.warn('Using fallback display for invalid/missing ID');
+            // Using fallback display for invalid/missing ID
             // Show loading or error state in UI
             document.getElementById('report-title').textContent = 'Order Not Found';
             document.getElementById('report-asin').textContent = 'ID: ' + orderId;
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
     } catch (error) {
-        console.error('CRITICAL ERROR in order_v2.js:', error);
+        // Critical initialization error
     }
 });
 

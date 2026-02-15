@@ -10,19 +10,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    console.log('Loading order:', orderId);
-
-    // 2. Mock Data (No Supabase in Static Mode)
-    // In a real app, we would fetch(orderId) here.
-    // For this static demo, we mock the order details so the page renders.
-
     // 2. Mock Data (Enhanced for Preview)
     // Structure derived from real reports
     const mockOrder = {
         order_id: orderId,
-        user_email: 'test_pro@example.com',
+        user_email: localStorage.getItem('pending_email') || '',
         report_id: 'RPT-' + orderId.substring(0, 8),
-        amount: '29.99',
+        amount: '25.00',
 
         // Full Framework Outline (TOC)
         toc: [
@@ -123,20 +117,40 @@ function renderOrderPage(order) {
 async function handlePaymentComplete(orderId, amount) {
     const btn = document.getElementById('payment-complete-btn');
 
-    // === TEST MODE START ===
-    const confirmed = confirm(`🚧 TEST MODE ACTIVATED 🚧\n\nSimulate paying the balance of $${amount}?\n\n(Click 'OK' to finish order)`);
-
-    if (!confirmed) return;
-    // === TEST MODE END ===
-
     btn.disabled = true;
-    btn.textContent = 'Verifying...';
+    btn.textContent = 'Processing...';
 
-    // Simulate Network Delay
-    setTimeout(() => {
-        // Redirect to Success
-        window.location.href = `success.html?order_id=${orderId}&paid=true`;
-    }, 1500);
+    try {
+        const userEmail = document.getElementById('user-email-display')?.textContent || '';
+        const response = await fetch('/api/proxy/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: amount,
+                order_id: orderId,
+                success_url: window.location.origin + `/success.html?order_id=${orderId}&paid=true`,
+                cancel_url: window.location.href
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || 'Payment service error');
+        }
+
+        const data = await response.json();
+        const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
+
+        if (paymentUrl) {
+            window.location.href = paymentUrl;
+        } else {
+            throw new Error('No payment URL returned');
+        }
+    } catch (err) {
+        alert('Payment Error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = `Pay $${amount} with Stripe`;
+    }
 }
 
 function scrollToOrder() {

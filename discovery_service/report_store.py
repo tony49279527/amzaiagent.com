@@ -135,3 +135,43 @@ def is_session_verified(session_id: str) -> bool:
         except Exception as e:
             print(f"Supabase is_session_verified failed: {e}")
     return False
+
+
+def mark_order_paid(order_id: str, email: str = None) -> bool:
+    """Persist paid order to Supabase."""
+    client = _supabase_client()
+    if client:
+        try:
+            client.table("PaidOrders").upsert(
+                {"order_id": order_id, "email": email},
+                on_conflict="order_id"
+            ).execute()
+            return True
+        except Exception as e:
+            print(f"Supabase mark_order_paid failed: {e}")
+    return False
+
+
+def is_order_paid(order_id: str) -> bool:
+    """Check if order is paid via Supabase."""
+    client = _supabase_client()
+    if client:
+        try:
+            resp = client.table("PaidOrders").select("order_id").eq("order_id", order_id).execute()
+            return len(resp.data) > 0
+        except Exception as e:
+            print(f"Supabase is_order_paid failed: {e}")
+    return False
+
+
+def get_order_email(order_id: str) -> Optional[str]:
+    """Get email associated with a paid order from Supabase."""
+    client = _supabase_client()
+    if client:
+        try:
+            resp = client.table("PaidOrders").select("email").eq("order_id", order_id).execute()
+            if resp.data and len(resp.data) > 0:
+                return resp.data[0].get("email")
+        except Exception as e:
+            print(f"Supabase get_order_email failed: {e}")
+    return None

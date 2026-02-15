@@ -290,13 +290,14 @@ async def start_analysis_task(
         if not request.category or not request.keywords:
             raise HTTPException(status_code=400, detail="Category and keywords are required")
 
-        # Pro tier: verify payment before starting (Polar webhook populates paid_reports)
+        # Pro tier: verify payment before starting (check memory cache + Supabase)
         if request.user_tier == UserTier.PRO:
-            if request.user_email not in paid_reports:
+            if request.user_email not in paid_reports and not is_email_paid(request.user_email):
                 raise HTTPException(
                     status_code=402,
                     detail="Payment required. Please complete your Pro payment before starting analysis. If you just paid, wait a moment and try again."
                 )
+            paid_reports.add(request.user_email)  # populate cache
 
         task_id = str(uuid.uuid4())
         
@@ -319,19 +320,24 @@ async def start_analysis_task(
 from .payment_service import payment_service
 from fastapi import Request
 
-# Store for paid reports
-# TODO: Replace with database persistence — in-memory stores are lost on container restart
-paid_reports = set()  # tracks paid emails
-verified_sessions = set()  # tracks verified checkout session IDs
-paid_orders = set()  # tracks paid order IDs
-paid_order_to_email = {}  # order_id -> customer_email
+# In-memory caches (backed by Supabase persistence via report_store)
+from .report_store import (
+    mark_email_paid, is_email_paid,
+    mark_session_verified, is_session_verified,
+    mark_order_paid, is_order_paid, get_order_email,
+)
+paid_reports = set()  # in-memory cache for paid emails
+verified_sessions = set()  # in-memory cache for verified checkout session IDs
+paid_orders = set()  # in-memory cache for paid order IDs
+paid_order_to_email = {}  # order_id -> customer_email cache
 
 @app.get("/api/payments/verify-session")
 async def verify_payment_session(session_id: str):
     """Verify a checkout session status. Populated by Polar webhook or /api/payments/confirm-session (n8n)."""
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    if session_id in verified_sessions:
+    if session_id in verified_sessions or is_session_verified(session_id):
+        verified_sessions.add(session_id)  # populate cache
         return {"status": "paid", "session_id": session_id}
     return {"status": "pending", "session_id": session_id}
 
@@ -355,10 +361,13 @@ async def confirm_payment_session(req: ConfirmSessionRequest, request: Request):
     if not req.session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     verified_sessions.add(req.session_id)
+    mark_session_verified(req.session_id, req.customer_email)
     if req.customer_email:
         paid_reports.add(req.customer_email)
+        mark_email_paid(req.customer_email, req.session_id)
     if req.order_id:
         paid_orders.add(req.order_id)
+        mark_order_paid(req.order_id, req.customer_email)
         if req.customer_email:
             paid_order_to_email[req.order_id] = req.customer_email
     return {"status": "ok", "session_id": req.session_id}
@@ -409,19 +418,20 @@ async def polar_webhook(request: Request):
             # Extract our custom data or find by email
             email = checkout_data.get("customer_email")
             print(f"Payment succeeded for {email}")
-            # In a real app, mark the report as paid in DB
-            # For now, we'll use the email to match or a metadata field if supported
             paid_reports.add(email)
+            mark_email_paid(email)
             metadata = checkout_data.get("metadata") or {}
             order_id = metadata.get("order_id") or metadata.get("orderId")
             if order_id:
                 paid_orders.add(order_id)
+                mark_order_paid(order_id, email)
                 if email:
                     paid_order_to_email[order_id] = email
             # Also track checkout session ID if available
             checkout_id = checkout_data.get("id") or checkout_data.get("checkout_id")
             if checkout_id:
                 verified_sessions.add(checkout_id)
+                mark_session_verified(checkout_id, email)
 
     return {"status": "ok"}
 
@@ -587,15 +597,19 @@ async def proxy_pro_analysis(payload: dict):
         # Server-side paywall: ignore client-side unlock state and require payment proof.
         user_email = str(payload.get("user_email", "")).strip()
         order_id = str(payload.get("order_id", "")).strip()
-        email_paid = bool(user_email and user_email in paid_reports)
-        order_paid = bool(order_id and order_id in paid_orders)
+        email_paid = bool(user_email and (user_email in paid_reports or is_email_paid(user_email)))
+        order_paid = bool(order_id and (order_id in paid_orders or is_order_paid(order_id)))
         if not email_paid and not order_paid:
             raise HTTPException(
                 status_code=402,
                 detail="Payment required. Please complete payment before submitting Pro analysis."
             )
+        if email_paid and user_email:
+            paid_reports.add(user_email)  # populate cache
+        if order_paid and order_id:
+            paid_orders.add(order_id)  # populate cache
         if order_paid and user_email:
-            mapped_email = paid_order_to_email.get(order_id)
+            mapped_email = paid_order_to_email.get(order_id) or get_order_email(order_id)
             if mapped_email and mapped_email != user_email:
                 raise HTTPException(
                     status_code=403,
