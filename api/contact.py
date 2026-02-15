@@ -4,12 +4,12 @@ import smtplib
 from email.mime.text import MIMEText
 from supabase_client import save_contact_inquiry
 
-# SMTP Configuration (read from environment variables)
-SMTP_HOST = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER = os.environ.get("SMTP_USER", "")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").replace(" ", "")
-TARGET_EMAIL = os.environ.get("SMTP_USER", "")  # Send notifications to self
+# SMTP Configuration
+SMTP_HOST = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+TARGET_EMAIL = os.getenv("CONTACT_TARGET_EMAIL", SMTP_USER)
 
 def process_contact_request(data):
     """
@@ -47,6 +47,10 @@ def send_notification_email(name, email, subject, message):
     Sends a notification email about the new contact inquiry.
     """
     try:
+        if not SMTP_USER or not SMTP_PASSWORD or not TARGET_EMAIL:
+            print("SMTP not configured for contact notifications")
+            return False
+
         body = f"""
         New Contact Inquiry from Amz AI Agent:
         
@@ -66,10 +70,11 @@ def send_notification_email(name, email, subject, message):
         msg["From"] = SMTP_USER
         msg["To"] = TARGET_EMAIL
         
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, TARGET_EMAIL, msg.as_string())
+        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(SMTP_USER, TARGET_EMAIL, msg.as_string())
+        server.quit()
         return True
     except Exception as e:
         print(f"Failed to send notification email: {e}")

@@ -114,19 +114,30 @@ function initMobileMenu() {
         const navLinks = document.querySelector('.nav-links');
         const iconOpen = document.querySelector('.menu-icon-open');
         const iconClose = document.querySelector('.menu-icon-close');
+        const navContainer = document.querySelector('.nav-container');
+
+        function setMenuState(isOpen) {
+            navLinks.classList.toggle('active', isOpen);
+            iconOpen.style.display = isOpen ? 'none' : 'block';
+            iconClose.style.display = isOpen ? 'block' : 'none';
+        }
 
         if (menuBtn && navLinks) {
-            menuBtn.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-
-                // Toggle Icons
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const isActive = navLinks.classList.contains('active');
-                if (isActive) {
-                    iconOpen.style.display = 'none';
-                    iconClose.style.display = 'block';
-                } else {
-                    iconOpen.style.display = 'block';
-                    iconClose.style.display = 'none';
+                setMenuState(!isActive);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!navLinks.classList.contains('active')) return;
+                if (navContainer && navContainer.contains(e.target)) return;
+                setMenuState(false);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && navLinks.classList.contains('active')) {
+                    setMenuState(false);
                 }
             });
         }

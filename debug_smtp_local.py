@@ -1,13 +1,12 @@
-
 import smtplib
 import ssl
 import traceback
+import os
 
-SMTP_PORT = 465
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_USER = "leetony4927@gmail.com"
-# Password with spaces stripped manually
-SMTP_PASSWORD = "pvcgrjjvmghikreq"
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
 
 def test_smtp_connection():
     print(f"Testing connection to {SMTP_SERVER}:{SMTP_PORT}...")
@@ -40,4 +39,7 @@ def test_smtp_connection():
         return False
 
 if __name__ == "__main__":
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("ERROR: Missing SMTP_USER/SMTP_PASSWORD in environment.")
+        raise SystemExit(1)
     test_smtp_connection()

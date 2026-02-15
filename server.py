@@ -88,8 +88,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode('utf-8'))
                 
-                # Forward to n8n (Server-side only)
-                N8N_WEBHOOK_URL = os.environ.get("N8N_ANALYSIS_WEBHOOK_URL", "")
+                # Forward to n8n (server-side only)
+                N8N_WEBHOOK_URL = os.environ.get("N8N_FREE_ANALYSIS_URL", "")
+                if not N8N_WEBHOOK_URL:
+                    self.send_error(503, "Free analysis service not configured")
+                    return
                 
                 import urllib.request
                 req = urllib.request.Request(

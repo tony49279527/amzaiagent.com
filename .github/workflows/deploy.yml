@@ -28,13 +28,13 @@ jobs:
         env_vars: |-
           SMTP_USER=${{ secrets.SMTP_USER }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
-          SMTP_PORT=465
-          SMTP_SERVER=smtp.gmail.com
+          SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_SERVER=${{ secrets.SMTP_SERVER }}
           N8N_CHECKOUT_WEBHOOK_URL=${{ secrets.N8N_CHECKOUT_WEBHOOK_URL }}
+          N8N_FREE_ANALYSIS_URL=${{ secrets.N8N_FREE_ANALYSIS_URL }}
           N8N_PRO_ANALYSIS_URL=${{ secrets.N8N_PRO_ANALYSIS_URL }}
           N8N_SEND_REPORT_URL=${{ secrets.N8N_SEND_REPORT_URL }}
           N8N_ALLOWED_HOSTS=${{ secrets.N8N_ALLOWED_HOSTS }}
           OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          POLAR_WEBHOOK_SECRET=${{ secrets.POLAR_WEBHOOK_SECRET }}

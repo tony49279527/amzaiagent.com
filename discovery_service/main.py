@@ -310,6 +310,8 @@ async def start_analysis_task(
             report_id=task_id  # Using report_id field to pass task_id for now
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error starting analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -321,6 +323,8 @@ from fastapi import Request
 # TODO: Replace with database persistence — in-memory stores are lost on container restart
 paid_reports = set()  # tracks paid emails
 verified_sessions = set()  # tracks verified checkout session IDs
+paid_orders = set()  # tracks paid order IDs
+paid_order_to_email = {}  # order_id -> customer_email
 
 @app.get("/api/payments/verify-session")
 async def verify_payment_session(session_id: str):
@@ -335,6 +339,7 @@ async def verify_payment_session(session_id: str):
 class ConfirmSessionRequest(PydanticBaseModel):
     session_id: str
     customer_email: Optional[str] = None  # When provided, also add to paid_reports for Pro verification
+    order_id: Optional[str] = None
 
 INTERNAL_API_SECRET = os.getenv("INTERNAL_API_SECRET", "")
 
@@ -352,6 +357,10 @@ async def confirm_payment_session(req: ConfirmSessionRequest, request: Request):
     verified_sessions.add(req.session_id)
     if req.customer_email:
         paid_reports.add(req.customer_email)
+    if req.order_id:
+        paid_orders.add(req.order_id)
+        if req.customer_email:
+            paid_order_to_email[req.order_id] = req.customer_email
     return {"status": "ok", "session_id": req.session_id}
 
 @app.post("/api/payments/create-checkout")
@@ -403,6 +412,12 @@ async def polar_webhook(request: Request):
             # In a real app, mark the report as paid in DB
             # For now, we'll use the email to match or a metadata field if supported
             paid_reports.add(email)
+            metadata = checkout_data.get("metadata") or {}
+            order_id = metadata.get("order_id") or metadata.get("orderId")
+            if order_id:
+                paid_orders.add(order_id)
+                if email:
+                    paid_order_to_email[order_id] = email
             # Also track checkout session ID if available
             checkout_id = checkout_data.get("id") or checkout_data.get("checkout_id")
             if checkout_id:
@@ -420,6 +435,8 @@ async def test_email_endpoint(email: str, type: str = "success", token: str = ""
     if token != TEST_ENDPOINT_SECRET:
         raise HTTPException(status_code=403, detail="Forbidden")
     try:
+        if os.getenv("ENABLE_TEST_EMAIL_ENDPOINT", "").lower() != "true":
+            raise HTTPException(status_code=404, detail="Not found")
         from .email_service import send_email_report
         from .models import AnalysisReport
         import datetime
@@ -444,6 +461,8 @@ async def test_email_endpoint(email: str, type: str = "success", token: str = ""
         else:
             await send_email_report(mock_report, is_pro_flow=False)
         return {"status": "success", "message": f"Test email sent to {email}"}
+    except HTTPException:
+        raise
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -524,8 +543,10 @@ async def handle_contact_form(req: ContactFormRequest, request: Request):
 # === Backend Proxy Endpoints ===
 # These proxy n8n webhook calls so that webhook URLs are not exposed in frontend code.
 N8N_CHECKOUT_URL = os.getenv("N8N_CHECKOUT_WEBHOOK_URL", "")
-N8N_PRO_ANALYSIS_URL = os.getenv("N8N_PRO_ANALYSIS_WEBHOOK_URL", "")
-N8N_SEND_REPORT_URL = os.getenv("N8N_SEND_REPORT_WEBHOOK_URL", "")
+N8N_FREE_ANALYSIS_URL = os.getenv("N8N_FREE_ANALYSIS_URL", "")
+# Support both legacy and current env var names to prevent deploy mismatches.
+N8N_PRO_ANALYSIS_URL = os.getenv("N8N_PRO_ANALYSIS_WEBHOOK_URL", "") or os.getenv("N8N_PRO_ANALYSIS_URL", "")
+N8N_SEND_REPORT_URL = os.getenv("N8N_SEND_REPORT_WEBHOOK_URL", "") or os.getenv("N8N_SEND_REPORT_URL", "")
 
 class CheckoutRequest(PydanticBaseModel):
     amount: str = "4.99"
@@ -563,6 +584,24 @@ async def proxy_pro_analysis(payload: dict):
     if not N8N_PRO_ANALYSIS_URL:
         raise HTTPException(status_code=503, detail="Pro analysis service not configured")
     try:
+        # Server-side paywall: ignore client-side unlock state and require payment proof.
+        user_email = str(payload.get("user_email", "")).strip()
+        order_id = str(payload.get("order_id", "")).strip()
+        email_paid = bool(user_email and user_email in paid_reports)
+        order_paid = bool(order_id and order_id in paid_orders)
+        if not email_paid and not order_paid:
+            raise HTTPException(
+                status_code=402,
+                detail="Payment required. Please complete payment before submitting Pro analysis."
+            )
+        if order_paid and user_email:
+            mapped_email = paid_order_to_email.get(order_id)
+            if mapped_email and mapped_email != user_email:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Order does not match this email."
+                )
+
         form_data = {}
         for key, value in payload.items():
             if isinstance(value, (list, dict)):
@@ -577,9 +616,35 @@ async def proxy_pro_analysis(payload: dict):
                 return resp.json()
             except Exception:
                 return {"status": "ok"}
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Pro analysis proxy error: {e}")
         raise HTTPException(status_code=502, detail="Pro analysis service unavailable")
+
+@app.post("/api/proxy/free-analysis")
+async def proxy_free_analysis(payload: dict):
+    """Proxy Free analysis submission to n8n (keeps webhook URL server-side)"""
+    if not N8N_FREE_ANALYSIS_URL:
+        raise HTTPException(status_code=503, detail="Free analysis service not configured")
+    try:
+        form_data = {}
+        for key, value in payload.items():
+            if isinstance(value, (list, dict)):
+                import json
+                form_data[key] = json.dumps(value)
+            else:
+                form_data[key] = str(value)
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(N8N_FREE_ANALYSIS_URL, data=form_data)
+            resp.raise_for_status()
+            try:
+                return resp.json()
+            except Exception:
+                return {"status": "ok"}
+    except Exception as e:
+        print(f"Free analysis proxy error: {e}")
+        raise HTTPException(status_code=502, detail="Free analysis service unavailable")
 
 @app.post("/api/proxy/send-full-report")
 async def proxy_send_full_report(req: SendReportRequest):

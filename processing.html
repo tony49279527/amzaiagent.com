@@ -31,12 +31,12 @@
                     💎 PREMIUM ANALYSIS IN PROGRESS
                 </div>
                 <div class="proc-header">
-                    <div class="status-icon-check">✅/div>
+                    <div class="status-icon-check">✅</div>
                     <div class="header-content">
                         <h1>Submission Successful</h1>
                         <p>We are initiating the AI Agent...</p>
-                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">鈴?Estimated time: 10—0
-                            minutes. You can close this page —the report will be sent to your email when ready.</p>
+                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">Estimated time: 10-20
+                            minutes. You can close this page; the report will be sent to your email when ready.</p>
                     </div>
                 </div>
 
@@ -135,6 +135,8 @@
             const params = new URLSearchParams(window.location.search);
             const email = params.get('email') || localStorage.getItem('pending_email');
             const taskId = params.get('taskId') || params.get('report_id') || localStorage.getItem('pending_task_id');
+            const sessionId = params.get('session_id');
+            const isProFlow = params.get('pro') === 'true';
             const orderId = params.get('orderId') || localStorage.getItem('pending_order_id') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
 
             // 1. Basic Info Populating
@@ -142,13 +144,19 @@
             document.getElementById('display-email').innerText = email || 'user@example.com';
 
             // 2. WebSocket Connection / Auto-Trigger
-            if (taskId) {
+            const looksLikeCheckoutSession = !!taskId && (taskId.startsWith('cs_') || taskId.startsWith('chk_'));
+            if (taskId && !looksLikeCheckoutSession) {
                 initWebSocket(taskId);
             } else {
                 // Fallback: Check if we have a pending payload from Polar redirect
                 const pendingPayload = localStorage.getItem('pending_analysis_payload');
                 if (pendingPayload) {
-                    triggerPendingAnalysis(JSON.parse(pendingPayload));
+                    triggerPendingAnalysis(JSON.parse(pendingPayload), {
+                        isProFlow,
+                        sessionId,
+                        orderId,
+                        email
+                    });
                 } else {
                     logToTerminal("System", "No Task ID found. Waiting for manual update...");
                 }
@@ -253,45 +261,85 @@
             const btn = document.getElementById('preview-btn');
             btn.style.display = 'inline-block';
             if (reportId) {
-                btn.href = `/api/discovery/report/${reportId}`;
+                btn.href = `/discovery_report.html?id=${encodeURIComponent(reportId)}`;
+                btn.textContent = "View Report";
+            } else {
+                btn.href = "#";
+                btn.textContent = "Check Email";
             }
-            btn.textContent = "Download Report";
             logToTerminal("System", "Report generated successfully. Check your email.", "#4ade80");
         }
-        async function triggerPendingAnalysis(payload) {
-            logToTerminal("System", "Payment confirmed. Starting analysis...", "#facc15");
+        async function verifyProSessionAndBind(sessionId, payload, fallbackEmail, fallbackOrderId) {
+            if (!sessionId) {
+                throw new Error("Missing payment session_id in redirect URL.");
+            }
+            const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
+            if (!verifyResp.ok) {
+                throw new Error("Payment verification request failed.");
+            }
+            const verifyData = await verifyResp.json();
+            if (verifyData.status !== 'paid') {
+                throw new Error("Payment is still pending. Please retry in a moment.");
+            }
+
+            // Bind session -> email/order in backend memory so Pro checks can pass consistently.
+            await fetch('/api/payments/confirm-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    customer_email: payload.user_email || fallbackEmail || null,
+                    order_id: payload.order_id || fallbackOrderId || null
+                })
+            });
+        }
+
+        function isCompetitorPayload(payload) {
+            return Array.isArray(payload.main_asins) || Array.isArray(payload.competitor_asins);
+        }
+
+        async function triggerPendingAnalysis(payload, context = {}) {
+            const { isProFlow = false, sessionId = null, orderId = null, email = null } = context;
+            logToTerminal("System", "Starting analysis workflow...", "#facc15");
 
             try {
-                // Remove the payload from storage so we don't trigger it again on refresh
-                // (Unless we want to allow refresh to retry? Better to clear it on success)
+                if (isProFlow && sessionId) {
+                    await verifyProSessionAndBind(sessionId, payload, email, orderId);
+                    logToTerminal("Payment", "Payment verified. Submitting Pro analysis...", "#4ade80");
+                } else if (isProFlow) {
+                    logToTerminal("Payment", "No session_id found, falling back to server-side payment check...", "#facc15");
+                }
 
-                const response = await fetch('/api/discovery/start-task', {
+                const endpoint = isCompetitorPayload(payload) ? '/api/proxy/pro-analysis' : '/api/discovery/start-task';
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
+                    const message = await response.text();
+                    throw new Error(`Server returned ${response.status}: ${message}`);
                 }
 
                 const data = await response.json();
 
-                if (data.success && data.report_id) {
+                // Discovery flow returns report_id as task id; competitor flow may not return task tracking.
+                if (data.report_id) {
                     logToTerminal("System", "Analysis task started successfully.", "#4ade80");
                     logToTerminal("System", `Task ID: ${data.report_id}`, "#a6accd");
-
-                    // Clear pending payload only after success
                     localStorage.removeItem('pending_analysis_payload');
-
-                    // Initialize WebSocket
                     initWebSocket(data.report_id);
 
-                    // Update URL so refresh uses the new ID
                     const newUrl = new URL(window.location.href);
                     newUrl.searchParams.set('taskId', data.report_id);
+                    newUrl.searchParams.delete('session_id');
                     window.history.pushState({}, '', newUrl);
-
+                } else if (endpoint === '/api/proxy/pro-analysis') {
+                    localStorage.removeItem('pending_analysis_payload');
+                    logToTerminal("System", "Pro analysis submitted. Please check your email for updates.", "#4ade80");
+                    document.getElementById('realtime-status-text').innerText = "Submitted";
+                    document.getElementById('realtime-status-text').style.color = "#10b981";
                 } else {
                     throw new Error(data.message || "Failed to start task");
                 }
@@ -306,4 +354,3 @@
 </body>
 
 </html>
-
