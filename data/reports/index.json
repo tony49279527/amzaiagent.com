@@ -1,7 +1,7 @@
 [
   {
     "id": "report_001",
-    "title": "Amazon Listing Optimization: Rechargeable Fabric Shaver - C4.5",
+    "title": "Amazon Listing Optimization: Rechargeable Fabric Shaver",
     "asin": "B0CJ5DRR84",
     "marketplace": "US",
     "created_at": "2025-12-31",
@@ -12,7 +12,7 @@
   },
   {
     "id": "report_002",
-    "title": "Collapsible Wagon Category Analysis - G3.0",
+    "title": "Collapsible Wagon Category Analysis",
     "asin": "B09RXXXXXX",
     "marketplace": "US",
     "created_at": "2025-08-22",
@@ -23,7 +23,7 @@
   },
   {
     "id": "report_003",
-    "title": "Cordless Drill/Driver Competitive Analysis - G3.0",
+    "title": "Cordless Drill/Driver Competitive Analysis",
     "asin": "B0111N8O6G",
     "marketplace": "US",
     "created_at": "2025-08-24",
@@ -34,7 +34,7 @@
   },
   {
     "id": "report_004",
-    "title": "Open Automatic Cat Litter Box Market Insights - C4.5",
+    "title": "Open Automatic Cat Litter Box Market Insights",
     "asin": "B0FMK94VY4",
     "marketplace": "US",
     "created_at": "2025-08-26",
@@ -45,7 +45,7 @@
   },
   {
     "id": "report_005",
-    "title": "Laser Level Competitive Analysis (Bosch vs. Competitors) - O5.1",
+    "title": "Laser Level Competitive Analysis (Bosch vs. Competitors)",
     "asin": "B0CKJXX4XR",
     "marketplace": "US",
     "created_at": "2025-08-28",
@@ -56,7 +56,7 @@
   },
   {
     "id": "report_006",
-    "title": "Torque Wrench Competitive Analysis (Craftsman) - O5.1",
+    "title": "Torque Wrench Competitive Analysis (Craftsman)",
     "asin": "B07SQM2RQR",
     "marketplace": "US",
     "created_at": "2025-08-30",
@@ -67,7 +67,7 @@
   },
   {
     "id": "report_007",
-    "title": "Car Polisher Kit Analysis (Chemical Guys) - C4.5",
+    "title": "Car Polisher Kit Analysis (Chemical Guys)",
     "asin": "B01BKT63XM",
     "marketplace": "US",
     "created_at": "2025-09-01",
@@ -78,7 +78,7 @@
   },
   {
     "id": "report_008",
-    "title": "Electric Pressure Washer Market Analysis - C4.5",
+    "title": "Electric Pressure Washer Market Analysis",
     "asin": "B0DPFYXT5R",
     "marketplace": "US",
     "created_at": "2025-09-03",
@@ -89,7 +89,7 @@
   },
   {
     "id": "report_009",
-    "title": "Dual 4K Dash Cam Competitive Analysis - G3.0",
+    "title": "Dual 4K Dash Cam Competitive Analysis",
     "asin": "B0FC6S2R7K",
     "marketplace": "US",
     "created_at": "2025-09-05",
@@ -111,7 +111,7 @@
   },
   {
     "id": "report_011",
-    "title": "Amazon Automatic Cat Feeder Competitor Analysis Report - BD S1.6",
+    "title": "Amazon Automatic Cat Feeder Competitor Analysis Report",
     "asin": "B0DF7H6SGZ",
     "marketplace": "US",
     "created_at": "2025-09-08",
@@ -122,7 +122,7 @@
   },
   {
     "id": "report_012",
-    "title": "Amazon Competitor Analysis Report: EKO Deluxe Mirage-T 50L Touchless Trash Can - BD S1.6",
+    "title": "Amazon Competitor Analysis Report: EKO Deluxe Mirage-T 50L Touchless Trash Can",
     "asin": "B0BKMSRZKN",
     "marketplace": "US",
     "created_at": "2026-01-11",
@@ -133,7 +133,7 @@
   },
   {
     "id": "report_013",
-    "title": "Amazon Competitor Analysis Report: Smart Cat Water Fountains - GPT-4.1",
+    "title": "Amazon Competitor Analysis Report: Smart Cat Water Fountains",
     "asin": "B0FDKQGRCK",
     "marketplace": "US",
     "created_at": "2026-01-11",
@@ -177,7 +177,7 @@
   },
   {
     "id": "report_017",
-    "title": "Amazon Competitor Analysis Report: HelloBaby HB6550 - M2.1",
+    "title": "Amazon Competitor Analysis Report: HelloBaby HB6550 Baby Monitor",
     "asin": "B09GM8JZM9",
     "marketplace": "US",
     "created_at": "2026-01-11",
@@ -210,7 +210,7 @@
   },
   {
     "id": "report_020",
-    "title": "Amazon Competitor Analysis Report: ELAFROS Heavy Duty Utility Cart - Qwen3-Max",
+    "title": "Amazon Competitor Analysis Report: ELAFROS Heavy Duty Utility Cart",
     "asin": "B09XB5Z5QT",
     "marketplace": "US",
     "created_at": "2026-01-11",
@@ -221,7 +221,7 @@
   },
   {
     "id": "report_021",
-    "title": "Amazon Competitor Analysis Report: Inflatable Camping Tent Market-C4.5",
+    "title": "Amazon Competitor Analysis Report: Inflatable Camping Tent Market",
     "asin": "B0C6SW6CXT",
     "marketplace": "US",
     "created_at": "2026-01-13",
