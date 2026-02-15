@@ -677,19 +677,21 @@ async def proxy_send_full_report(req: SendReportRequest):
         print(f"Send report proxy error: {e}")
         raise HTTPException(status_code=502, detail="Report service unavailable")
 
-N8N_ALLOWED_HOSTS = os.getenv("N8N_ALLOWED_HOSTS", "").split(",")
+N8N_ALLOWED_HOSTS = [h.strip() for h in os.getenv("N8N_ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 @app.get("/api/proxy/resume-workflow")
 async def proxy_resume_workflow(resume_url: str):
     """Proxy n8n resume URL call so the actual URL stays server-side"""
     if not resume_url:
         raise HTTPException(status_code=400, detail="resume_url is required")
-    # SSRF protection: only allow requests to known n8n hosts
+    # SSRF protection: only allow requests to explicitly configured n8n hosts
+    if not N8N_ALLOWED_HOSTS:
+        raise HTTPException(status_code=503, detail="Resume workflow not configured")
     from urllib.parse import urlparse
     parsed = urlparse(resume_url)
     if not parsed.hostname or not any(
-        parsed.hostname == h.strip() or parsed.hostname.endswith("." + h.strip())
-        for h in N8N_ALLOWED_HOSTS if h.strip()
+        parsed.hostname == h or parsed.hostname.endswith("." + h)
+        for h in N8N_ALLOWED_HOSTS
     ):
         raise HTTPException(status_code=403, detail="URL not allowed")
     try:

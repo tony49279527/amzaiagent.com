@@ -58,13 +58,12 @@
                         <p class="retry-intro">Choose a payment method to complete your order:</p>
 
                         <div class="payment-actions">
-                            <button class="btn btn-payment stripe disabled" id="btn-stripe" disabled
-                                title="Coming soon">
-                                Pay with Stripe (Coming Soon)
+                            <button class="btn btn-payment stripe" id="btn-stripe">
+                                Retry Payment with Stripe
                             </button>
                         </div>
 
-                        <p class="payment-redirect-note">You'll be redirected to PayPal to complete the payment.</p>
+                        <p class="payment-redirect-note">You'll be redirected to Stripe to complete the payment securely.</p>
                         <p class="payment-tip">
                             🛠️ Tip: Try another payment method or contact your bank for verification.
                         </p>
@@ -205,8 +204,43 @@
             orderParams.set('currency', currency);
             document.getElementById('back-to-order').href = `order.html?${orderParams.toString()}`;
 
-            // Note: PayPal button is now a direct link, no JS handler needed
-            // Stripe button is disabled (Coming Soon)
+            // Stripe retry handler
+            document.getElementById('btn-stripe').addEventListener('click', async () => {
+                const btn = document.getElementById('btn-stripe');
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+
+                try {
+                    const response = await fetch('/api/proxy/create-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: amount,
+                            order_id: orderId,
+                            success_url: window.location.origin + `/success.html?order_id=${orderId}&paid=true`,
+                            cancel_url: window.location.href
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Payment service error');
+                    }
+
+                    const data = await response.json();
+                    const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
+
+                    if (paymentUrl) {
+                        window.location.href = paymentUrl;
+                    } else {
+                        throw new Error('No payment URL returned');
+                    }
+                } catch (err) {
+                    alert('Payment Error: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
         });
     </script>
 <script src='js/components.js'></script>

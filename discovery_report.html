@@ -615,9 +615,9 @@
                 </svg>
                 Pay $25.00 with Stripe & Unlock Report
             </button>
-            <a href="https://buy.polar.sh/polar_cl_3udFF79S8v3TpXhKL6CWnHCGLfiHqc3urNBGs0Ae4qk" class="pay-btn"
-                id="pay-polar-balance-btn"
-                style="background: #000; color: #fff; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; border: none; padding: 1rem; border-radius: 50px; font-size: 1.1rem; font-weight: 600; gap: 0.5rem;">
+            <a href="#" class="pay-btn" id="pay-polar-balance-btn"
+                style="background: #000; color: #fff; width: 100%; display: flex; justify-content: center; align-items: center; text-decoration: none; margin-top: 10px; border: none; padding: 1rem; border-radius: 50px; font-size: 1.1rem; font-weight: 600; gap: 0.5rem;"
+                onclick="handlePolarPayment(event)">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2L2 19H22L12 2Z" fill="white" />
                     <path d="M12 6L6 17H18L12 6Z" fill="#111" />
@@ -718,6 +718,17 @@
                 btn.disabled = false;
                 btn.textContent = 'Pay $25.00 with Stripe & Unlock Report';
             }
+        }
+
+        // Polar.sh payment handler
+        function handlePolarPayment(event) {
+            event.preventDefault();
+            const reportId = new URLSearchParams(window.location.search).get('id') || 'unknown';
+            const email = localStorage.getItem('pending_email') || '';
+            const polarBaseUrl = 'https://buy.polar.sh/polar_cl_3udFF79S8v3TpXhKL6CWnHCGLfiHqc3urNBGs0Ae4qk';
+            const successUrl = encodeURIComponent(window.location.origin + `/discovery_report.html?id=${reportId}&balance_paid=true`);
+            const polarUrl = `${polarBaseUrl}?success_url=${successUrl}${email ? '&customer_email=' + encodeURIComponent(email) : ''}`;
+            window.location.href = polarUrl;
         }
 
         // Load report data from URL params
