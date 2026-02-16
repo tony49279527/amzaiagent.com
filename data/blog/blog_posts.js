@@ -2,6 +2,21 @@
 window.blogPostsCN = [];
 window.blogPostsEN = [
   {
+    "id": "amazon-disbursement-policy-changes-dd7-2024",
+    "title": "Amazon Disbursement Policy Changes 2024: DD+7 Update Explained",
+    "date": "February 16, 2026",
+    "author": "Amz AI Agent",
+    "cover_image": "assets/images/blog_thumbs/agentic.png",
+    "tags": [
+      "Amazon Disbursement Policy",
+      "DD+7",
+      "Amazon FBA",
+      "Seller Central",
+      "Amazon Payment Schedule"
+    ],
+    "content": "<div>        <h1>Amazon Disbursement Policy Changes 2024: What DD+7 Means for Sellers</h1>        <p>Amazon has announced a significant change to its disbursement policy, implementing a standard reserve period of seven days after delivery (DD+7) for all sellers. This update affects cash flow management and payment schedules for Amazon marketplace vendors worldwide.</p>        <img src='assets/images/blog_thumbs/agentic.png' alt='Amazon Disbursement Policy Changes 2024 - DD+7 Timeline Illustration' class='rounded-lg my-4 w-full object-cover'>        <h2>Understanding the New DD+7 Disbursement Policy</h2>        <p>The DD+7 policy means Amazon will hold seller funds for seven days after the delivery date before releasing them for disbursement. This standardization aims to align all seller accounts with Amazon's preferred payment schedule. For guidance on managing these changes, our <a href='/faq.html'>FBA FAQ section</a> provides detailed insights.</p>        <h2>Impact on Amazon Sellers</h2>        <p>This policy change primarily affects:</p>        <ul>            <li>Cash flow timing and predictability</li>            <li>Working capital management</li>            <li>Inventory replenishment cycles</li>            <li>Financial planning strategies</li>        </ul>        <h2>3 Essential Steps to Adapt to the New Policy</h2>        <ul>            <li>Adjust your cash flow forecasting to account for the 7-day hold period</li>            <li>Review and update your inventory management strategy</li>            <li>Consider using <a href='/index.html'>automated tools</a> to track payment schedules</li>        </ul>        <h2>Frequently Asked Questions</h2>        <h3>When does the DD+7 policy take effect?</h3>        <p>The policy is being rolled out gradually across seller accounts, with full implementation expected in 2024.</p>        <h3>Will this affect my current disbursement schedule?</h3>        <p>Yes, sellers may experience a transition period as their accounts adjust to the new 7-day post-delivery payment schedule.</p>        <h3>Can sellers opt out of the DD+7 policy?</h3>        <p>No, this is a standard policy implementation affecting all Amazon marketplace sellers.</p>        <h2>Conclusion</h2>        <p>The DD+7 policy represents a significant shift in Amazon's payment structure. Sellers must adapt their financial strategies accordingly and utilize available tools to maintain healthy cash flow.</p>        <p>How is the new DD+7 policy affecting your business operations? Share your experience in the comments below.</p>    </div>"
+  },
+  {
     "id": "amazon-fba-elite-sellers-marketplace-revenue-2024",
     "title": "Amazon FBA Elite Sellers: Top 1.6% Generate 50% of Marketplace Revenue",
     "date": "February 15, 2026",
