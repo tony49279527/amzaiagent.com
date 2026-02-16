@@ -2,6 +2,11 @@ console.log('SCRIPT_V2_LOADED_TOP');
 
 const initApp = () => {
     // Mobile menu logic removed as it is now handled by js/components.js
+    const emitTracking = (eventName, payload = {}) => {
+        if (typeof window.trackEvent === 'function') {
+            window.trackEvent(eventName, payload);
+        }
+    };
 
     // === FILE UPLOAD HANDLING ===
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -497,8 +502,10 @@ Present workflows in a structured table format, including:
             e.preventDefault();
 
             if (!validateAsins()) {
+                emitTracking('analysis_form_invalid', { path: window.location.pathname });
                 return;
             }
+            emitTracking('analysis_form_submit', { path: window.location.pathname, pro_intent: isProIntent });
 
             if (isProIntent) {
                 if (paymentModal) paymentModal.classList.add('active');
@@ -526,6 +533,7 @@ Present workflows in a structured table format, including:
     if (switchToProLink) {
         switchToProLink.addEventListener('click', (e) => {
             e.preventDefault();
+            emitTracking('analysis_upgrade_to_pro_click', { path: window.location.pathname });
             // Switch Modals
             modal.classList.remove('active');
 
@@ -540,6 +548,7 @@ Present workflows in a structured table format, including:
     if (modalForm) {
         modalForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            emitTracking('analysis_free_submit_click', { path: window.location.pathname });
             await handleSubmission(false);
         });
     }
@@ -554,6 +563,7 @@ Present workflows in a structured table format, including:
             if (!userEmail || !userEmail.includes('@')) {
                 alert("Please enter a valid email address.");
                 if (emailInput) emailInput.focus();
+                emitTracking('deposit_checkout_blocked_invalid_email', { path: window.location.pathname });
                 return;
             }
             if (document.getElementById('user-email')) document.getElementById('user-email').value = userEmail;
@@ -566,6 +576,7 @@ Present workflows in a structured table format, including:
             localStorage.setItem('pending_analysis_payload', JSON.stringify(payload));
             localStorage.setItem('pending_email', userEmail);
             localStorage.setItem('pending_order_id', orderId);
+            emitTracking('deposit_checkout_started', { path: window.location.pathname, order_id: orderId });
 
             // Loading state
             payDepositBtn.disabled = true;
@@ -595,6 +606,7 @@ Present workflows in a structured table format, including:
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
 
                 if (paymentUrl) {
+                    emitTracking('deposit_checkout_redirect', { path: window.location.pathname, order_id: orderId });
                     window.location.href = paymentUrl;
                 } else {
                     throw new Error('No payment URL returned');
@@ -602,6 +614,7 @@ Present workflows in a structured table format, including:
             } catch (err) {
                 console.error(err);
                 alert('Payment Error: ' + err.message);
+                emitTracking('deposit_checkout_failed', { path: window.location.pathname, order_id: orderId, error: err.message });
                 payDepositBtn.disabled = false;
                 payDepositBtn.textContent = originalText;
             }
@@ -620,6 +633,7 @@ Present workflows in a structured table format, including:
                 e.preventDefault(); // Stop link navigation
                 alert("Please enter a valid email address to receive your report.");
                 emailInput.focus();
+                emitTracking('polar_checkout_blocked_invalid_email', { path: window.location.pathname });
                 return;
             }
 
@@ -637,6 +651,7 @@ Present workflows in a structured table format, including:
             localStorage.setItem('pending_analysis_payload', JSON.stringify(payload));
             localStorage.setItem('pending_email', userEmail);
             localStorage.setItem('pending_order_id', payload.order_id);
+            emitTracking('polar_checkout_started', { path: window.location.pathname, order_id: payload.order_id });
 
             // Allow default behavior (navigation to Polar) to continue
             console.log('Proceeding to Polar with email:', userEmail);
@@ -686,6 +701,7 @@ Present workflows in a structured table format, including:
         submitBtn.textContent = 'Generating...';
 
         const payload = preparePayload(isPro);
+        emitTracking('analysis_submit_started', { path: window.location.pathname, tier: isPro ? 'pro' : 'free', order_id: payload.order_id });
 
         try {
             // Pro URL: routed through backend proxy (webhook URL stays server-side)
@@ -720,6 +736,12 @@ Present workflows in a structured table format, including:
                 localStorage.setItem('pending_email', payload.user_email);
                 localStorage.setItem('pending_order_id', payload.order_id);
                 if (taskId) localStorage.setItem('pending_task_id', taskId);
+                emitTracking('analysis_submit_success', {
+                    path: window.location.pathname,
+                    tier: isPro ? 'pro' : 'free',
+                    order_id: payload.order_id,
+                    has_task_id: !!taskId
+                });
 
                 window.location.href = `processing.html?email=${email}&orderId=${orderId}&taskId=${taskId}&pro=${isPro}`;
 
@@ -730,6 +752,12 @@ Present workflows in a structured table format, including:
         } catch (error) {
             console.error(error);
             alert('Submission Error: ' + error.message);
+            emitTracking('analysis_submit_failed', {
+                path: window.location.pathname,
+                tier: isPro ? 'pro' : 'free',
+                order_id: payload.order_id,
+                error: error.message
+            });
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }

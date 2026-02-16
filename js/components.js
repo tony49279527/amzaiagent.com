@@ -3,7 +3,29 @@
  * Handles Navbar and Footer injection across all pages.
  */
 
+function trackEvent(eventName, payload = {}) {
+    if (!eventName) return;
+    if (window.location.protocol === 'file:') return;
+    fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: eventName, payload }),
+        keepalive: true
+    }).catch(() => {
+        // Silent by design; analytics must never block UX.
+    });
+}
+
+window.trackEvent = trackEvent;
+
 document.addEventListener('DOMContentLoaded', () => {
+    const queryKeys = Array.from(new URLSearchParams(window.location.search).keys()).slice(0, 12);
+    trackEvent('page_view', {
+        path: window.location.pathname,
+        referrer: document.referrer || '',
+        query_keys: queryKeys
+    });
+
     renderNavbar();
     renderFooter();
     initMobileMenu();
@@ -61,6 +83,13 @@ function renderNavbar() {
     `;
 
     navPlaceholder.innerHTML = navHTML;
+
+    const navCta = navPlaceholder.querySelector('.nav-actions .btn');
+    if (navCta) {
+        navCta.addEventListener('click', () => {
+            trackEvent('nav_start_analysis_click', { path: window.location.pathname });
+        });
+    }
 }
 
 function renderFooter() {

@@ -117,34 +117,90 @@
             // Check for payment pending state
             const urlParams = new URLSearchParams(window.location.search);
             const paymentPending = urlParams.get('payment_pending');
+            const balancePaid = urlParams.get('balance_paid') === 'true';
+            const sessionId = urlParams.get('session_id');
+            const reportId = urlParams.get('id');
+
+            const modal = document.getElementById('balance-payment-modal');
+            const content = document.querySelector('.report-container');
+            const btn = document.getElementById('pay-balance-btn');
+
+            function unlockReportView() {
+                if (modal) modal.style.display = 'none';
+                if (content) content.style.filter = 'none';
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?id=" + encodeURIComponent(reportId || "");
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            }
 
             if (paymentPending === 'true') {
-                const modal = document.getElementById('balance-payment-modal');
-                const content = document.querySelector('.report-container');
-                const btn = document.getElementById('pay-balance-btn');
-
                 // Show modal and blur content
                 if (modal) modal.style.display = 'flex';
                 if (content) content.style.filter = 'blur(10px)';
+            }
 
-                // Payment handler
-                if (btn) {
-                    btn.addEventListener('click', () => {
-                        const originalText = btn.textContent;
-                        btn.textContent = "Processing...";
-                        btn.disabled = true;
-
-                        setTimeout(() => {
-                            alert('Payment Successful! Full report unlocked.');
-                            modal.style.display = 'none';
-                            if (content) content.style.filter = 'none';
-
-                            // Remove param from URL without reload
-                            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?id=" + urlParams.get('id');
-                            window.history.pushState({ path: newUrl }, '', newUrl);
-                        }, 1500);
+            if (balancePaid && sessionId) {
+                fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId))
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data.status === 'paid') {
+                            unlockReportView();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Payment verification failed:', err);
                     });
-                }
+            }
+
+            // Payment handler
+            if (btn) {
+                btn.addEventListener('click', async () => {
+                    if (typeof window.trackEvent === 'function') {
+                        window.trackEvent('legacy_report_balance_checkout_click', { path: window.location.pathname, report_id: reportId });
+                    }
+                    if (!reportId) {
+                        alert('Report ID missing. Please reopen from your email link.');
+                        return;
+                    }
+
+                    const originalText = btn.textContent;
+                    btn.textContent = "Processing...";
+                    btn.disabled = true;
+
+                    try {
+                        const successUrl = window.location.origin + `/report.html?id=${encodeURIComponent(reportId)}&balance_paid=true&session_id={CHECKOUT_SESSION_ID}`;
+                        const cancelUrl = window.location.href;
+                        const resp = await fetch('/api/proxy/create-checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                amount: '25.00',
+                                order_id: reportId,
+                                success_url: successUrl,
+                                cancel_url: cancelUrl
+                            })
+                        });
+                        if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            throw new Error(err.detail || 'Payment service unavailable');
+                        }
+                        const data = await resp.json();
+                        const paymentUrl = data.url || data.checkout_url || (Array.isArray(data) && data[0] && (data[0].url || data[0].checkout_url));
+                        if (!paymentUrl) {
+                            throw new Error('No payment URL returned');
+                        }
+                        if (typeof window.trackEvent === 'function') {
+                            window.trackEvent('legacy_report_balance_checkout_redirect', { path: window.location.pathname, report_id: reportId });
+                        }
+                        window.location.href = paymentUrl;
+                    } catch (err) {
+                        alert('Payment Error: ' + err.message);
+                        if (typeof window.trackEvent === 'function') {
+                            window.trackEvent('legacy_report_balance_checkout_failed', { path: window.location.pathname, report_id: reportId, error: err.message });
+                        }
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }
+                });
             }
 
             const timestamp = new Date().getTime();
@@ -188,4 +244,3 @@
 </body>
 
 </html>
-

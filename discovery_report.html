@@ -676,6 +676,9 @@
         async function processPayment() {
             const btn = document.getElementById('submit-payment-btn');
             const reportId = new URLSearchParams(window.location.search).get('id');
+            if (typeof window.trackEvent === 'function') {
+                window.trackEvent('report_balance_checkout_click', { path: window.location.pathname, report_id: reportId });
+            }
             if (!reportId) {
                 alert('Report ID missing. Please use the link from your email.');
                 return;
@@ -708,6 +711,9 @@
                 const paymentUrl = data.url || data.checkout_url || (Array.isArray(data) && data[0] && (data[0].url || data[0].checkout_url));
 
                 if (paymentUrl) {
+                    if (typeof window.trackEvent === 'function') {
+                        window.trackEvent('report_balance_checkout_redirect', { path: window.location.pathname, report_id: reportId });
+                    }
                     window.location.href = paymentUrl;
                 } else {
                     throw new Error('No payment URL returned');
@@ -715,6 +721,9 @@
             } catch (err) {
                 console.error(err);
                 alert('Payment Error: ' + err.message);
+                if (typeof window.trackEvent === 'function') {
+                    window.trackEvent('report_balance_checkout_failed', { path: window.location.pathname, report_id: reportId, error: err.message });
+                }
                 btn.disabled = false;
                 btn.textContent = 'Pay $25.00 with Stripe & Unlock Report';
             }
@@ -726,6 +735,53 @@
             const reportId = urlParams.get('id');
             const balancePaid = urlParams.get('balance_paid') === 'true';
             const sessionId = urlParams.get('session_id');
+
+            function renderFullReport(markdown) {
+                const sectionIds = [
+                    'executive-summary',
+                    'market-overview',
+                    'competitor-analysis',
+                    'customer-insights',
+                    'entry-strategy',
+                    'differentiation',
+                    'pricing-strategy',
+                    'recommendations'
+                ];
+                const blocks = markdown
+                    .split(/\n(?=##\s+)/)
+                    .map(block => block.trim())
+                    .filter(Boolean);
+
+                if (!blocks.length) {
+                    const summaryEl = document.getElementById('summary-content');
+                    if (summaryEl) summaryEl.innerHTML = marked.parse(markdown);
+                    return;
+                }
+
+                const extras = [];
+                blocks.forEach((block, index) => {
+                    const parsed = block.match(/^##\s+([^\n]+)\n?([\s\S]*)$/);
+                    const titleText = parsed ? parsed[1].trim() : `Section ${index + 1}`;
+                    const bodyText = parsed ? parsed[2].trim() : block;
+                    if (index >= sectionIds.length) {
+                        extras.push(`## ${titleText}\n${bodyText}`);
+                        return;
+                    }
+                    const section = document.getElementById(sectionIds[index]);
+                    if (!section) return;
+                    const title = section.querySelector('h2');
+                    const content = section.querySelector('.section-content');
+                    if (title) title.textContent = titleText;
+                    if (content) content.innerHTML = marked.parse(bodyText);
+                });
+
+                if (extras.length) {
+                    const tail = document.querySelector('#recommendations .section-content');
+                    if (tail) {
+                        tail.innerHTML += marked.parse('\n\n' + extras.join('\n\n'));
+                    }
+                }
+            }
 
             async function unlockReport() {
                 document.querySelectorAll('.report-section.locked').forEach(section => {
@@ -772,6 +828,10 @@
                                 `${data.keywords} - Product Discovery Report`;
                         }
 
+                        if (data.full_report_unlocked) {
+                            await unlockReport();
+                        }
+
                         // Update email
                         if (data.user_email) {
                             document.getElementById('report-email').textContent = data.user_email;
@@ -788,6 +848,10 @@
                                 document.getElementById('summary-content').innerHTML =
                                     marked.parse(sections[1].substring(0, 1500) + '...');
                             }
+                        }
+
+                        if (data.full_report_unlocked && data.report_markdown) {
+                            renderFullReport(data.report_markdown);
                         }
                     }
                 } catch (error) {

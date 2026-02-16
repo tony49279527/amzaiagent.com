@@ -25,7 +25,7 @@
     <div class="container" style="padding-top: 5rem; padding-bottom: 5rem; min-height: 60vh;">
         <div class="success-card"
             style="max-width: 600px; margin: 0 auto; background: white; padding: 3rem; border-radius: 1rem; box-shadow: var(--shadow-md); text-align: center;">
-            <div class="icon" style="font-size: 4rem; margin-bottom: 1.5rem;">馃帀</div>
+            <div class="icon" style="font-size: 4rem; margin-bottom: 1.5rem;">OK</div>
             <h1 style="color: var(--text-color); margin-bottom: 1rem;">Payment Confirmed!</h1>
             <p style="color: var(--text-light); font-size: 1.125rem; margin-bottom: 2rem;">
                 Thank you for your order. We have received your payment for order <strong id="order-id">...</strong>.
@@ -103,7 +103,7 @@
                         console.warn('⚠️ Resume call returned non-OK status:', response.status);
                     }
                 } catch (err) {
-                    console.error('鉂?Failed to resume workflow:', err);
+                    console.error('Failed to resume workflow:', err);
                 }
             } else if (paid === 'true' && !resumeUrl) {
                 console.log('⚠️ No resume_url found, falling back to backend proxy...');
@@ -142,4 +142,3 @@
 </body>
 
 </html>
-
