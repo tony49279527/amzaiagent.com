@@ -12,11 +12,84 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Individual Blog Posts -->
   <url>
-    <loc>https://amzaiagent.com/blog-post.html</loc>
-    <lastmod>2026-02-14</lastmod>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-fba-fee-change-2026-removal-disposal-fees</loc>
+    <lastmod>2026-01-31</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-safe-t-claims-window-30-days-2026-update</loc>
+    <lastmod>2026-01-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=usps-last-mile-delivery-amazon-fba-2026</loc>
+    <lastmod>2026-01-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-ai-price-drop-alerts-executive-hack</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-seller-registration-drop-2025-fba-impact</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-fba-return-policy-change-2026-high-value-items</loc>
+    <lastmod>2026-01-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-listing-image-optimization-ai-visual-script</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-competitor-analysis-efficiency-cost-calculator</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-agency-sop-automation-ai-scalability</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=reduce-amazon-fba-returns-packaging-ai-analysis</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-case-study-polishing-wheel-blue-ocean</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=amazon-cosmo-rufus-algorithm-intent-graph</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amzaiagent.com/blog-post.html?id=agentic-ai-amazon-operations-2025</loc>
+    <lastmod>2025-09-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://amzaiagent.com/blog.html</loc>

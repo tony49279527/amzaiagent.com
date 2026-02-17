@@ -1,9 +1,75 @@
 /**
  * components.js - Unified UI Components for Amz AI Agent
- * Handles Navbar and Footer injection across all pages.
+ * Handles Navbar, Footer, and Analytics across all pages.
  */
 
+// Google Analytics 4 Configuration
+// Replace 'G-XXXXXXXXXX' with your actual GA4 Measurement ID
+const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+
+function initGA4() {
+    if (GA4_MEASUREMENT_ID === 'G-XXXXXXXXXX') {
+        console.log('GA4: Measurement ID not configured. Analytics disabled.');
+        return;
+    }
+
+    // Load gtag.js
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
+    document.head.appendChild(script);
+
+    // Initialize gtag
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', GA4_MEASUREMENT_ID, {
+        page_title: document.title,
+        page_location: window.location.href
+    });
+
+    // Track key events
+    trackAnalyticsEvents();
+}
+
+function trackAnalyticsEvents() {
+    // Track form submissions
+    document.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form.id === 'analysis-form' || form.id === 'discovery-form') {
+            gtag('event', 'form_submit', {
+                event_category: 'engagement',
+                event_label: form.id
+            });
+        }
+    });
+
+    // Track CTA button clicks
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button, a');
+        if (!btn) return;
+
+        // Track payment button clicks
+        if (btn.id === 'pay-deposit-btn' || btn.id === 'pay-polar-deposit-btn') {
+            gtag('event', 'begin_checkout', {
+                event_category: 'ecommerce',
+                event_label: btn.id
+            });
+        }
+
+        // Track primary CTA clicks
+        if (btn.classList.contains('btn-primary') || btn.classList.contains('submit-btn')) {
+            gtag('event', 'cta_click', {
+                event_category: 'engagement',
+                event_label: btn.textContent.trim().substring(0, 50)
+            });
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initGA4();
     renderNavbar();
     renderFooter();
     initMobileMenu();

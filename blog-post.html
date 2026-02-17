@@ -242,6 +242,87 @@
                     return;
                 }
 
+                // 0. Update SEO meta tags dynamically
+                // Update page title
+                document.title = `${post.title} | Amz AI Agent`;
+
+                // Update canonical URL
+                const canonicalLink = document.querySelector('link[rel="canonical"]');
+                if (canonicalLink) {
+                    canonicalLink.href = `https://amzaiagent.com/blog-post.html?id=${post.id}`;
+                }
+
+                // Update meta description
+                const metaDesc = document.querySelector('meta[name="description"]');
+                if (metaDesc) {
+                    // Extract first 155 chars of content text for description
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = post.content || '';
+                    const plainText = tempDiv.textContent || tempDiv.innerText || '';
+                    const description = plainText.substring(0, 155).trim() + '...';
+                    metaDesc.content = description;
+                }
+
+                // Update Open Graph tags
+                let ogTitle = document.querySelector('meta[property="og:title"]');
+                if (!ogTitle) {
+                    ogTitle = document.createElement('meta');
+                    ogTitle.setAttribute('property', 'og:title');
+                    document.head.appendChild(ogTitle);
+                }
+                ogTitle.content = post.title;
+
+                let ogDesc = document.querySelector('meta[property="og:description"]');
+                if (!ogDesc) {
+                    ogDesc = document.createElement('meta');
+                    ogDesc.setAttribute('property', 'og:description');
+                    document.head.appendChild(ogDesc);
+                }
+                const tempDiv2 = document.createElement('div');
+                tempDiv2.innerHTML = post.content || '';
+                ogDesc.content = (tempDiv2.textContent || '').substring(0, 155).trim() + '...';
+
+                let ogUrl = document.querySelector('meta[property="og:url"]');
+                if (!ogUrl) {
+                    ogUrl = document.createElement('meta');
+                    ogUrl.setAttribute('property', 'og:url');
+                    document.head.appendChild(ogUrl);
+                }
+                ogUrl.content = `https://amzaiagent.com/blog-post.html?id=${post.id}`;
+
+                // Add Article structured data (JSON-LD)
+                const articleSchema = {
+                    "@context": "https://schema.org",
+                    "@type": "Article",
+                    "headline": post.title,
+                    "author": {
+                        "@type": "Organization",
+                        "name": post.author || "Amz AI Agent"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Amz AI Agent",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "https://amzaiagent.com/assets/images/logo.png"
+                        }
+                    },
+                    "datePublished": post.date || new Date().toISOString(),
+                    "dateModified": post.date || new Date().toISOString(),
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": `https://amzaiagent.com/blog-post.html?id=${post.id}`
+                    },
+                    "image": post.cover_image ? `https://amzaiagent.com/${post.cover_image}` : "https://amzaiagent.com/assets/images/og-image.png"
+                };
+
+                const schemaScript = document.createElement('script');
+                schemaScript.type = 'application/ld+json';
+                schemaScript.textContent = JSON.stringify(articleSchema);
+                document.head.appendChild(schemaScript);
+
+                // Update breadcrumb
+                updateBreadcrumbTitle(post.title);
 
                 // 1. Render Article
                 articleContent.innerHTML = `
