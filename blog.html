@@ -4,13 +4,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - Competitor Analysis Assistant</title>
+    <title>Amazon Seller Blog | FBA Tips & Competitor Analysis Guides | Amz AI Agent</title>
     <meta name="description"
-        content="Read the latest articles on Amazon selling strategies, competitor analysis tips, and e-commerce market insights from Amz AI Agent.">
+        content="Expert articles on Amazon FBA strategies, competitor analysis techniques, product research tips, and AI tools for e-commerce sellers.">
 
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="canonical" href="https://amzaiagent.com/blog.html">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Amazon Seller Blog | Amz AI Agent">
+    <meta property="og:description" content="Expert articles on Amazon selling strategies, competitor analysis tips, FBA updates, and AI tools for e-commerce sellers.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://amzaiagent.com/blog.html">
+    <meta property="og:image" content="https://amzaiagent.com/assets/images/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Amazon Seller Blog | Amz AI Agent">
+    <meta name="twitter:description" content="Expert articles on Amazon selling strategies, competitor analysis, and AI tools for sellers.">
+    <meta name="twitter:image" content="https://amzaiagent.com/assets/images/og-image.png">
+
+    <!-- Schema.org CollectionPage Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Amazon Seller Blog",
+        "description": "Expert articles on Amazon FBA strategies, competitor analysis techniques, product research tips, and AI tools for e-commerce sellers.",
+        "url": "https://amzaiagent.com/blog.html",
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "Amz AI Agent",
+            "url": "https://amzaiagent.com"
+        },
+        "about": {
+            "@type": "Thing",
+            "name": "Amazon Selling and E-commerce"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "Amz AI Agent",
+            "url": "https://amzaiagent.com"
+        }
+    }
+    </script>
+
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
 </head>
@@ -65,7 +104,7 @@
                         <article class="card">
                             <div class="card-image-wrapper">
                                 <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #fce7f3 0%, #e0e7ff 100%);">
-                                    <img src="${(featured.cover_image || '').replace('.png', '.webp')}" style="width:100%;height:100%;object-fit:cover;" alt="Featured" loading="lazy" onerror="this.style.display='none'">
+                                    <img src="${(featured.cover_image || '').replace('.png', '.webp')}" style="width:100%;height:100%;object-fit:cover;" alt="${featured.title}" loading="lazy" onerror="this.style.display='none'">
                                 </div>
                             </div>
                             <div class="card-content">
