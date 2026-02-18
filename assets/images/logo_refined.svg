@@ -1,0 +1,8 @@
+<svg width="128" height="128" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bold 'A' Letterform in Website Blue (#2563eb) -->
+  <path d="M50 15 L20 85 H32 L50 42 L68 85 H80 L50 15 Z" fill="#2563eb"/>
+  
+  <!-- Integrated Amazon Smile Arrow as Crossbar (#FF9900) -->
+  <path d="M38 60 C43 65 57 65 62 60" stroke="#FF9900" stroke-width="5" stroke-linecap="round"/>
+  <path d="M59 58 L65 62 L63 55" stroke="#FF9900" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

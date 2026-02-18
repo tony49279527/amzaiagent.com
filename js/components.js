@@ -58,11 +58,7 @@ function renderNavbar() {
             </button>
 
             <a href="index.html" class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="2" width="20" height="20" rx="6" fill="#2563eb" />
-                    <path d="M12 5L6 19H9L10.5 15H13.5L15 19H18L12 5ZM11.25 12.5L12 10L12.75 12.5H11.25Z"
-                        fill="white" />
-                </svg>
+                <img src="assets/images/logo_final.svg" alt="Amz AI Agent" style="width: 32px; height: 32px; border-radius: 4px;">
                 <span class="logo-text">Amz AI Agent</span>
             </a>
 
@@ -102,7 +98,10 @@ function renderFooter() {
     <footer class="footer">
         <div class="container">
             <div class="footer-top">
-                <h3 class="footer-logo">Amz AI Agent</h3>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <img src="assets/images/logo_final.svg" alt="Logo" style="width: 40px; height: 40px; border-radius: 6px;">
+                    <h3 class="footer-logo" style="margin-bottom: 0;">Amz AI Agent</h3>
+                </div>
                 <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
             </div>
             <!-- Middle: 3 Link Columns -->

@@ -1,0 +1,11 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Color -->
+  <rect width="1024" height="1024" fill="#3b82f6"/>
+  
+  <!-- Large White 'A' -->
+  <path d="M512 180 L220 840 H340 L512 440 L684 840 H804 L512 180 Z" fill="white"/>
+  
+  <!-- Amazon Smile Arrow -->
+  <path d="M250 550 C320 680 650 680 720 550" stroke="#FF9900" stroke-width="45" stroke-linecap="round"/>
+  <path d="M685 530 L745 560 L735 490" fill="#FF9900" stroke="#FF9900" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
