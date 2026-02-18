@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Report | Amz AI Agent</title>
-    <meta name="description"
+    <title id="page-title">Analysis Report | Amz AI Agent</title>
+    <meta name="description" id="meta-description"
         content="Detailed AI competitor analysis report with insights on customer pain points, feature gaps, and listing optimization recommendations for Amazon sellers.">
-    <link rel="canonical" href="https://amzaiagent.com/report.html">
+    <link rel="canonical" id="canonical-link" href="https://amzaiagent.com/report.html">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Analysis Report | Amz AI Agent">
@@ -130,6 +130,15 @@
                 if (content) content.style.filter = 'none';
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?id=" + encodeURIComponent(reportId || "");
                 window.history.replaceState({ path: newUrl }, '', newUrl);
+
+                // Update SEO metadata if report data exists
+                if (window.reportsData) {
+                    const report = window.reportsData.find(r => r.id === reportId);
+                    if (report) {
+                        document.title = `${report.title} | Success Case | Amz AI Agent`;
+                        document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/report.html?id=${report.id}`);
+                    }
+                }
             }
 
             if (paymentPending === 'true') {
@@ -221,10 +230,20 @@
             loadScript('data/reports/reports.js')
                 .catch(err => {
                     console.warn('Offline reports data failed to load, falling back to fetch:', err);
-                    // Return resolved promise to continue chain
                     return Promise.resolve();
                 })
-                .then(() => loadScript('report.js'))
+                .then(() => {
+                    // SEO Update immediately after data load
+                    if (window.reportsData && reportId) {
+                        const report = window.reportsData.find(r => r.id === reportId);
+                        if (report) {
+                            document.title = `${report.title} | Amz AI Agent`;
+                            const canonical = document.getElementById('canonical-link');
+                            if (canonical) canonical.setAttribute('href', `https://amzaiagent.com/report.html?id=${report.id}`);
+                        }
+                    }
+                    return loadScript('report.js');
+                })
                 .catch(err => {
                     console.error('Critical: Failed to load report logic:', err);
                     const container = document.querySelector('.report-container');
@@ -240,7 +259,7 @@
                 });
         });
     </script>
-<script src='js/components.js'></script>
+    <script src='js/components.js'></script>
 </body>
 
 </html>

@@ -35,6 +35,7 @@ def generate_sitemap():
         files.remove('index.html')
         files.insert(0, 'index.html')
     
+    urls_added = 0
     for f in files:
         # Determine URL
         if f == 'index.html':
@@ -58,7 +59,46 @@ def generate_sitemap():
         xml += f'    <changefreq>{freq}</changefreq>\n'
         xml += f'    <priority>{priority}</priority>\n'
         xml += '  </url>\n'
-        
+        urls_added += 1
+
+    # Add dynamic Blog Posts
+    print("Fetching blog posts...")
+    blog_posts_file = 'data/blog/blog_posts.js'
+    if os.path.exists(blog_posts_file):
+        with open(blog_posts_file, 'r', encoding='utf-8') as bpf:
+            content = bpf.read()
+            # Crude extraction of IDs from JS file
+            import re
+            post_ids = re.findall(r'"id":\s*"([^"]+)"', content)
+            unique_ids = sorted(list(set(post_ids)))
+            print(f"Adding {len(unique_ids)} blog posts to sitemap...")
+            for pid in unique_ids:
+                xml += '  <url>\n'
+                xml += f'    <loc>{BASE_URL}/blog-post.html?id={pid}</loc>\n'
+                xml += f'    <lastmod>{today}</lastmod>\n'
+                xml += f'    <changefreq>monthly</changefreq>\n'
+                xml += f'    <priority>0.6</priority>\n'
+                xml += '  </url>\n'
+                urls_added += 1
+
+    # Add dynamic Reports/Cases
+    print("Fetching reports...")
+    reports_file = 'data/reports/reports.js'
+    if os.path.exists(reports_file):
+        with open(reports_file, 'r', encoding='utf-8') as rf:
+            content = rf.read()
+            report_ids = re.findall(r'"id":\s*"([^"]+)"', content)
+            unique_rids = sorted(list(set(report_ids)))
+            print(f"Adding {len(unique_rids)} case reports to sitemap...")
+            for rid in unique_rids:
+                xml += '  <url>\n'
+                xml += f'    <loc>{BASE_URL}/report.html?id={rid}</loc>\n'
+                xml += f'    <lastmod>{today}</lastmod>\n'
+                xml += f'    <changefreq>monthly</changefreq>\n'
+                xml += f'    <priority>0.5</priority>\n'
+                xml += '  </url>\n'
+                urls_added += 1
+    
     xml += '</urlset>'
     
     with open('sitemap.xml', 'w', encoding='utf-8') as f:

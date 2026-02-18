@@ -1,3 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard.html
+Disallow: /processing.html
+Disallow: /failed.html
+Disallow: /success.html
+
 Sitemap: https://amzaiagent.com/sitemap.xml

@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Article - Amz AI Agent</title>
-    <meta name="description"
+    <title id="page-title">Article - Amz AI Agent</title>
+    <meta name="description" id="meta-description"
         content="Amazon selling insights and competitor analysis strategies from Amz AI Agent.">
 
     <link rel="stylesheet" href="styles.css">
@@ -138,7 +138,7 @@
             color: var(--text-light);
         }
     </style>
-    <link rel="canonical" href="https://amzaiagent.com/blog-post.html">
+    <link rel="canonical" id="canonical-link" href="https://amzaiagent.com/blog-post.html">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
 </head>
@@ -205,6 +205,16 @@
             }
         }
 
+        function stripHtml(html) {
+            let tmp = document.createElement("DIV");
+            tmp.innerHTML = html;
+            let firstP = tmp.querySelector("p");
+            if (firstP) {
+                return firstP.textContent || firstP.innerText || "";
+            }
+            return tmp.textContent || tmp.innerText || "";
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             initBackButton();
 
@@ -242,6 +252,13 @@
                     return;
                 }
 
+                // Update SEO metadata dynamically
+                const pageTitle = `${post.title} | Amz AI Agent`;
+                document.title = pageTitle;
+                const description = post.content ? stripHtml(post.content).substring(0, 160) + '...' : post.title;
+                document.querySelector('meta[name="description"]').setAttribute('content', description);
+                document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/blog-post.html?id=${post.id}`);
+
 
                 // 1. Render Article
                 articleContent.innerHTML = `
@@ -255,7 +272,7 @@
                                 </div>
                             </header>
 
-                            ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${post.cover_image.replace('.png','.webp')}" alt="${post.title}" class="article-cover" loading="lazy" onerror="this.style.display='none'"></div>` : ''}
+                            ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${post.cover_image.replace('.png', '.webp')}" alt="${post.title}" class="article-cover" loading="lazy" onerror="this.style.display='none'"></div>` : ''}
 
                             <div class="article-content">
                                 ${post.content || post.content_html}
@@ -298,7 +315,7 @@
                 if (relatedContainer && related.length > 0) {
                     relatedContainer.innerHTML = related.map(p => `
                         <a href="blog-post.html?id=${p.id}" class="related-post-card">
-                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png','.webp')}" alt="${p.title}" loading="lazy">
+                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png', '.webp')}" alt="${p.title}" loading="lazy">
                             <div class="content">
                                 <div class="title">${p.title}</div>
                                 <div class="date">${p.date || ''}</div>
@@ -324,7 +341,7 @@
             document.head.appendChild(script);
         });
     </script>
-<script src='js/components.js'></script>
+    <script src='js/components.js'></script>
 </body>
 
 </html>

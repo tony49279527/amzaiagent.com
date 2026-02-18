@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Discovery Report | Amz AI Agent</title>
+    <title id="page-title">Product Discovery Report | Amz AI Agent</title>
     <meta name="robots" content="noindex">
-    <meta name="description"
+    <meta name="description" id="meta-description"
         content="AI-powered product discovery analysis report with market insights, competitor analysis, and entry strategy for Amazon sellers.">
-    <link rel="canonical" href="https://amzaiagent.com/discovery_report.html">
+    <link rel="canonical" id="canonical-link" href="https://amzaiagent.com/discovery_report.html">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Product Discovery Report | Amz AI Agent">
@@ -656,7 +656,9 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="footer-copyright">© <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.</p>
+                <p class="footer-copyright">©
+                    <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.
+                </p>
                 <a href="contact.html" class="footer-contact">Contact Us</a>
             </div>
         </div>
@@ -801,6 +803,12 @@
                 url.searchParams.delete('balance_paid');
                 url.searchParams.delete('session_id');
                 window.history.replaceState({}, '', url);
+
+                // Update SEO metadata
+                const reportId = url.searchParams.get('id');
+                const titleText = document.getElementById('report-title').textContent;
+                document.title = `${titleText} | Amz AI Agent`;
+                document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/discovery_report.html?id=${reportId}`);
             }
 
             if (balancePaid && sessionId) {
@@ -824,8 +832,11 @@
 
                         // Update title
                         if (data.keywords) {
-                            document.getElementById('report-title').textContent =
-                                `${data.keywords} - Product Discovery Report`;
+                            const title = `${data.keywords} - Product Discovery Report`;
+                            document.getElementById('report-title').textContent = title;
+                            document.title = `${title} | Amz AI Agent`;
+                            const canonical = document.getElementById('canonical-link');
+                            if (canonical) canonical.setAttribute('href', `https://amzaiagent.com/discovery_report.html?id=${reportId}`);
                         }
 
                         if (data.full_report_unlocked) {
