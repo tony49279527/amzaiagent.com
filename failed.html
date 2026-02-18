@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -19,34 +19,7 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <span class="logo-text">Amz AI Agent</span>
-            </a>
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" aria-label="Toggle Menu">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-open">
-                    <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-close" style="display:none;">
-                    <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
-
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="create.html">Competitor Analysis</a>
-                <a href="discovery.html">Product Discovery</a>
-                <a href="cases.html">Cases</a>
-                <a href="blog.html">Blog</a>
-                <a href="pricing.html">Pricing</a>
-            </div>
-            <div class="nav-actions">
-                <a href="create.html" class="btn btn-primary" style="border-radius: 0.375rem;">Start Analysis</a>
-            </div>
-        </div>
-    </nav>
+    <div id="navbar-placeholder"></div>
 
     <!-- Main Content -->
     <div class="failed-page-wrapper">
@@ -75,7 +48,7 @@
                             We couldn't complete the payment. This can happen due to bank verification or card limits.
                         </p>
                         <p class="error-code" id="error-code" style="display: none;">
-                            Reason code: <span id="reason-code">—</span>
+                            Reason code: <span id="reason-code">&mdash;</span>
                         </p>
                     </div>
 
@@ -91,15 +64,16 @@
                             </button>
                         </div>
 
-                        <p class="payment-redirect-note">You'll be redirected to PayPal to complete the payment.</p>
+                        <p class="payment-redirect-note">You'll be redirected to the secure checkout page to complete
+                            the payment.</p>
                         <p class="payment-tip">
-                            💡 Tip: Try another payment method or contact your bank for verification.
+                            🛠️ Tip: Try another payment method or contact your bank for verification.
                         </p>
                     </div>
 
                     <!-- Navigation Links -->
                     <div class="failed-links">
-                        <a href="#" id="back-to-order" class="btn btn-secondary">← Back to Order Page</a>
+                        <a href="#" id="back-to-order" class="btn btn-secondary">→Back to Order Page</a>
                         <a href="cases.html">Return to Cases</a>
                     </div>
                 </div>
@@ -112,27 +86,27 @@
                         <div class="summary-rows">
                             <div class="summary-row" id="row-orderId">
                                 <span class="label">Order ID</span>
-                                <span class="value" id="val-orderId">—</span>
+                                <span class="value" id="val-orderId">&mdash;</span>
                             </div>
                             <div class="summary-row" id="row-reportId">
                                 <span class="label">Report ID</span>
-                                <span class="value" id="val-reportId">—</span>
+                                <span class="value" id="val-reportId">&mdash;</span>
                             </div>
                             <div class="summary-row" id="row-email">
                                 <span class="label">Email</span>
-                                <span class="value" id="val-email">—</span>
+                                <span class="value" id="val-email">&mdash;</span>
                             </div>
                             <div class="summary-row" id="row-amount">
                                 <span class="label">Amount</span>
-                                <span class="value amount" id="val-amount">—</span>
+                                <span class="value amount" id="val-amount">&mdash;</span>
                             </div>
                             <div class="summary-row" id="row-provider">
                                 <span class="label">Last Attempt</span>
-                                <span class="value" id="val-provider">—</span>
+                                <span class="value" id="val-provider">&mdash;</span>
                             </div>
                             <div class="summary-row">
                                 <span class="label">Timestamp</span>
-                                <span class="value" id="val-timestamp">—</span>
+                                <span class="value" id="val-timestamp">&mdash;</span>
                             </div>
                         </div>
                     </div>
@@ -142,7 +116,7 @@
                         <h3>Need Help?</h3>
                         <p>If you continue to experience issues, please contact our support team.</p>
                         <!-- TODO: Replace with actual support email if different -->
-                        <a href="mailto:support@amzaiagent.com" class="btn btn-secondary btn-sm">Contact Support</a>
+                        <a href="mailto:contact@amzaiagent.com" class="btn btn-secondary btn-sm">Contact Support</a>
                         <p class="help-note">Include your Order ID in the email for faster assistance.</p>
                     </div>
                 </div>
@@ -151,38 +125,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-top">
-                <h3 class="footer-logo">Amz AI Agent</h3>
-                <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
-            </div>
-            <!-- Middle: 3 Link Columns -->
-            <div class="footer-columns">
-                <div class="footer-col">
-                    <h4>Product</h4>
-                    <a href="create.html">Competitor Analysis</a>
-                    <a href="reports.html">Analysis Reports</a>
-                    <a href="pricing.html">Pricing</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Resources</h4>
-                    <a href="blog.html">Blog</a>
-                    <a href="cases.html">Case Studies</a>
-                    <a href="faq.html">FAQ</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Company</h4>
-                    <a href="about.html">About Us</a>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">© <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <div id="footer-placeholder"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -267,6 +210,7 @@
             // Stripe button is disabled (Coming Soon)
         });
     </script>
+    <script src='js/components.js'></script>
 </body>
 
 </html>

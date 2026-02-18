@@ -1,29 +1,12 @@
 console.log('SCRIPT_V2_LOADED_TOP');
 
 const initApp = () => {
-    // === MOBILE MENU TOGGLE ===
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navLinks = document.querySelector('.nav-links');
-    const navActions = document.querySelector('.nav-actions');
-
-    console.log('Mobile Menu Init:', { mobileMenuBtn, navLinks });
-
-    if (mobileMenuBtn && navLinks) {
-        mobileMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent bubbling issues
-            console.log('Mobile menu clicked');
-            const isOpen = navLinks.classList.toggle('active');
-            if (navActions) navActions.classList.toggle('active', isOpen);
-
-            // Toggle icons
-            const openIcon = mobileMenuBtn.querySelector('.menu-icon-open');
-            const closeIcon = mobileMenuBtn.querySelector('.menu-icon-close');
-            if (openIcon && closeIcon) {
-                openIcon.style.display = isOpen ? 'none' : 'block';
-                closeIcon.style.display = isOpen ? 'block' : 'none';
-            }
-        });
-    }
+    // Mobile menu logic removed as it is now handled by js/components.js
+    const emitTracking = (eventName, payload = {}) => {
+        if (typeof window.trackEvent === 'function') {
+            window.trackEvent(eventName, payload);
+        }
+    };
 
     // === FILE UPLOAD HANDLING ===
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -437,14 +420,21 @@ Present workflows in a structured table format, including:
         mainAsin.setCustomValidity("");
         compAsin.setCustomValidity("");
 
-        // Check Main ASIN - not empty AND valid format
-        const mainAsinValue = mainAsin.value.trim().toUpperCase();
-        if (!mainAsinValue) {
+        // Check Main ASIN - 1-5 ASINs, split by comma/newline/space, each valid format
+        const mainAsinRaw = mainAsin.value.trim();
+        const mainAsins = mainAsinRaw ? mainAsinRaw.split(/[\n,\s]+/).map(s => s.trim().toUpperCase()).filter(s => s) : [];
+        if (mainAsins.length === 0) {
             isMainValid = false;
-            mainAsin.setCustomValidity("Please enter the Core Product ASIN.");
-        } else if (!asinRegex.test(mainAsinValue)) {
+            mainAsin.setCustomValidity("Please enter at least one Core Product ASIN (1-5 recommended).");
+        } else if (mainAsins.length > 5) {
             isMainValid = false;
-            mainAsin.setCustomValidity("Invalid ASIN format. Must start with 'B' followed by 9 alphanumeric characters (e.g. B08CVS825S).");
+            mainAsin.setCustomValidity("Please enter at most 5 Core Product ASINs (same product variants).");
+        } else {
+            const invalidMain = mainAsins.filter(a => !asinRegex.test(a));
+            if (invalidMain.length > 0) {
+                isMainValid = false;
+                mainAsin.setCustomValidity(`Invalid ASIN format: ${invalidMain.join(', ')}. Each ASIN must start with 'B' followed by 9 alphanumeric characters (e.g. B08CVS825S).`);
+            }
         }
 
         if (!isMainValid) {
@@ -512,13 +502,20 @@ Present workflows in a structured table format, including:
             e.preventDefault();
 
             if (!validateAsins()) {
+                emitTracking('analysis_form_invalid', { path: window.location.pathname });
                 return;
             }
+            emitTracking('analysis_form_submit', { path: window.location.pathname, pro_intent: isProIntent });
 
             if (isProIntent) {
-                paymentModal.classList.add('active');
+                if (paymentModal) paymentModal.classList.add('active');
+                else console.error("Payment modal not found");
             } else {
-                modal.classList.add('active');
+                if (modal) modal.classList.add('active');
+                else {
+                    // Fallback for pages without modal (e.g. index.html simple hunt)
+                    handleSubmission();
+                }
             }
         });
     }
@@ -536,6 +533,7 @@ Present workflows in a structured table format, including:
     if (switchToProLink) {
         switchToProLink.addEventListener('click', (e) => {
             e.preventDefault();
+            emitTracking('analysis_upgrade_to_pro_click', { path: window.location.pathname });
             // Switch Modals
             modal.classList.remove('active');
 
@@ -550,32 +548,41 @@ Present workflows in a structured table format, including:
     if (modalForm) {
         modalForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            emitTracking('analysis_free_submit_click', { path: window.location.pathname });
             await handleSubmission(false);
         });
     }
 
-    // === STRIPE PAYMENT HANDLER (Free/Sandbox) ===
+    // === STRIPE PAYMENT HANDLER ===
     if (payDepositBtn) {
         payDepositBtn.addEventListener('click', async () => {
             if (!validateAsins()) return;
 
-            // ... (Validation Logic same as before) ...
             const emailInput = document.getElementById('pro-email-input');
             let userEmail = emailInput ? emailInput.value.trim() : '';
             if (!userEmail || !userEmail.includes('@')) {
                 alert("Please enter a valid email address.");
                 if (emailInput) emailInput.focus();
+                emitTracking('deposit_checkout_blocked_invalid_email', { path: window.location.pathname });
                 return;
             }
             if (document.getElementById('user-email')) document.getElementById('user-email').value = userEmail;
 
+            // Prepare payload and orderId (required for checkout)
+            const payload = preparePayload(true);
+            const orderId = payload.order_id;
 
-            // Simulate Stripe Payment Success -> Unlock
-            // In real app, this would redirect or use Stripe Elements
-            alert('Payment successful! (Sandbox mode) Pro features are now unlocked.');
-            if (paymentModal) paymentModal.classList.remove('active');
+            // Store for fallback/auto-start on processing.html when user returns from Stripe
+            localStorage.setItem('pending_analysis_payload', JSON.stringify(payload));
+            localStorage.setItem('pending_email', userEmail);
+            localStorage.setItem('pending_order_id', orderId);
+            emitTracking('deposit_checkout_started', { path: window.location.pathname, order_id: orderId });
 
-            // 2. Call backend proxy to get Stripe Link (webhook URL stays server-side)
+            // Loading state
+            payDepositBtn.disabled = true;
+            const originalText = payDepositBtn.textContent;
+            payDepositBtn.textContent = 'Processing...';
+
             try {
                 const response = await fetch('/api/proxy/create-checkout', {
                     method: 'POST',
@@ -583,7 +590,7 @@ Present workflows in a structured table format, including:
                     body: JSON.stringify({
                         amount: '4.99',
                         order_id: orderId,
-                        success_url: window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}`,
+                        success_url: window.location.origin + `/processing.html?pro=true&orderId=${orderId}&email=${encodeURIComponent(userEmail)}&session_id={CHECKOUT_SESSION_ID}`,
                         cancel_url: window.location.href
                     })
                 });
@@ -596,19 +603,20 @@ Present workflows in a structured table format, including:
                 const data = await response.json();
                 console.log('Checkout response:', data);
 
-                // Handle both object {url:...} and array [{url:...}] formats
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
 
                 if (paymentUrl) {
-                    window.location.href = paymentUrl; // Redirect to Stripe
+                    emitTracking('deposit_checkout_redirect', { path: window.location.pathname, order_id: orderId });
+                    window.location.href = paymentUrl;
                 } else {
                     throw new Error('No payment URL returned');
                 }
             } catch (err) {
                 console.error(err);
                 alert('Payment Error: ' + err.message);
+                emitTracking('deposit_checkout_failed', { path: window.location.pathname, order_id: orderId, error: err.message });
                 payDepositBtn.disabled = false;
-                payDepositBtn.textContent = 'Try Again';
+                payDepositBtn.textContent = originalText;
             }
         });
     }
@@ -625,6 +633,7 @@ Present workflows in a structured table format, including:
                 e.preventDefault(); // Stop link navigation
                 alert("Please enter a valid email address to receive your report.");
                 emailInput.focus();
+                emitTracking('polar_checkout_blocked_invalid_email', { path: window.location.pathname });
                 return;
             }
 
@@ -642,6 +651,7 @@ Present workflows in a structured table format, including:
             localStorage.setItem('pending_analysis_payload', JSON.stringify(payload));
             localStorage.setItem('pending_email', userEmail);
             localStorage.setItem('pending_order_id', payload.order_id);
+            emitTracking('polar_checkout_started', { path: window.location.pathname, order_id: payload.order_id });
 
             // Allow default behavior (navigation to Polar) to continue
             console.log('Proceeding to Polar with email:', userEmail);
@@ -659,9 +669,9 @@ Present workflows in a structured table format, including:
             user_email: (document.getElementById('pro-email-input')?.value.trim()) || (document.getElementById('user-email')?.value.trim()) || 'guest@example.com',
             industry: 'General',
 
-            // Product Data (Arrays required)
-            main_asins: [document.getElementById('main-asin').value.trim()],
-            competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,]+/).map(s => s.trim()).filter(s => s),
+            // Product Data (Arrays required) - main: 1-5 ASINs, competitor: 5-15 recommended
+            main_asins: document.getElementById('main-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
+            competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
 
             // Config
             productSite: document.getElementById('marketplace').value,
@@ -691,14 +701,15 @@ Present workflows in a structured table format, including:
         submitBtn.textContent = 'Generating...';
 
         const payload = preparePayload(isPro);
+        emitTracking('analysis_submit_started', { path: window.location.pathname, tier: isPro ? 'pro' : 'free', order_id: payload.order_id });
 
         try {
             // Pro URL: routed through backend proxy (webhook URL stays server-side)
             let endpointUrl = '/api/proxy/pro-analysis';
 
             if (!isPro) {
-                // === FREE TIER: USE n8n WEBHOOK ===
-                endpointUrl = 'https://tony4927.app.n8n.cloud/webhook/c6b3034f-250a-433f-9017-c14c3f8c7f9f';
+                // Free tier also routes through backend proxy to avoid exposing webhook URLs in frontend.
+                endpointUrl = '/api/proxy/free-analysis';
             }
 
             // === PRO TIER: Submit via backend proxy ===
@@ -725,6 +736,12 @@ Present workflows in a structured table format, including:
                 localStorage.setItem('pending_email', payload.user_email);
                 localStorage.setItem('pending_order_id', payload.order_id);
                 if (taskId) localStorage.setItem('pending_task_id', taskId);
+                emitTracking('analysis_submit_success', {
+                    path: window.location.pathname,
+                    tier: isPro ? 'pro' : 'free',
+                    order_id: payload.order_id,
+                    has_task_id: !!taskId
+                });
 
                 window.location.href = `processing.html?email=${email}&orderId=${orderId}&taskId=${taskId}&pro=${isPro}`;
 
@@ -735,6 +752,12 @@ Present workflows in a structured table format, including:
         } catch (error) {
             console.error(error);
             alert('Submission Error: ' + error.message);
+            emitTracking('analysis_submit_failed', {
+                path: window.location.pathname,
+                tier: isPro ? 'pro' : 'free',
+                order_id: payload.order_id,
+                error: error.message
+            });
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }

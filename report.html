@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -30,40 +30,7 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="2" width="20" height="20" rx="6" fill="#2563eb" />
-                    <path d="M7 12H17M7 8H17M7 16H13" stroke="white" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <span class="logo-text">Amz AI Agent</span>
-            </a>
-
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" aria-label="Toggle Menu">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-open">
-                    <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-close"
-                    style="display:none;">
-                    <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
-
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="create.html">Competitor Analysis</a>
-                <a href="discovery.html">Product Discovery</a>
-                <a href="cases.html" class="active">Cases</a>
-                <a href="blog.html">Blog</a>
-                <a href="pricing.html">Pricing</a>
-            </div>
-            <div class="nav-actions">
-                <a href="create.html" class="btn btn-primary">Start Analysis</a>
-            </div>
-        </div>
-    </nav>
+    <div id="navbar-placeholder"></div>
 
     <!-- Main Report Content -->
     <main class="report-main">
@@ -119,44 +86,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <!-- Top: Brand + Tagline -->
-            <div class="footer-top">
-                <h3 class="footer-logo">Amz AI Agent</h3>
-                <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
-            </div>
-
-            <!-- Middle: 3 Link Columns -->
-            <div class="footer-columns">
-                <div class="footer-col">
-                    <h4>Product</h4>
-                    <a href="create.html">Competitor Analysis</a>
-                    <a href="discovery.html">Product Discovery</a>
-                    <a href="reports.html">Analysis Reports</a>
-                    <a href="pricing.html">Pricing</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Resources</h4>
-                    <a href="blog.html">Blog</a>
-                    <a href="cases.html">Case Studies</a>
-                    <a href="faq.html">FAQ</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Company</h4>
-                    <a href="about.html">About Us</a>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                </div>
-            </div>
-
-            <!-- Bottom: Copyright + Contact -->
-            <div class="footer-bottom">
-                <p class="footer-copyright">© <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.</p>
-                <a href="contact.html" class="footer-contact">Contact Us</a>
-            </div>
-        </div>
-    </footer>
+    <div id="footer-placeholder"></div>
 
     <div id="balance-payment-modal" class="modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
@@ -187,34 +117,90 @@
             // Check for payment pending state
             const urlParams = new URLSearchParams(window.location.search);
             const paymentPending = urlParams.get('payment_pending');
+            const balancePaid = urlParams.get('balance_paid') === 'true';
+            const sessionId = urlParams.get('session_id');
+            const reportId = urlParams.get('id');
+
+            const modal = document.getElementById('balance-payment-modal');
+            const content = document.querySelector('.report-container');
+            const btn = document.getElementById('pay-balance-btn');
+
+            function unlockReportView() {
+                if (modal) modal.style.display = 'none';
+                if (content) content.style.filter = 'none';
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?id=" + encodeURIComponent(reportId || "");
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+            }
 
             if (paymentPending === 'true') {
-                const modal = document.getElementById('balance-payment-modal');
-                const content = document.querySelector('.report-container');
-                const btn = document.getElementById('pay-balance-btn');
-
                 // Show modal and blur content
                 if (modal) modal.style.display = 'flex';
                 if (content) content.style.filter = 'blur(10px)';
+            }
 
-                // Payment handler
-                if (btn) {
-                    btn.addEventListener('click', () => {
-                        const originalText = btn.textContent;
-                        btn.textContent = "Processing...";
-                        btn.disabled = true;
-
-                        setTimeout(() => {
-                            alert('Payment Successful! Full report unlocked.');
-                            modal.style.display = 'none';
-                            if (content) content.style.filter = 'none';
-
-                            // Remove param from URL without reload
-                            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?id=" + urlParams.get('id');
-                            window.history.pushState({ path: newUrl }, '', newUrl);
-                        }, 1500);
+            if (balancePaid && sessionId) {
+                fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId))
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data.status === 'paid') {
+                            unlockReportView();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Payment verification failed:', err);
                     });
-                }
+            }
+
+            // Payment handler
+            if (btn) {
+                btn.addEventListener('click', async () => {
+                    if (typeof window.trackEvent === 'function') {
+                        window.trackEvent('legacy_report_balance_checkout_click', { path: window.location.pathname, report_id: reportId });
+                    }
+                    if (!reportId) {
+                        alert('Report ID missing. Please reopen from your email link.');
+                        return;
+                    }
+
+                    const originalText = btn.textContent;
+                    btn.textContent = "Processing...";
+                    btn.disabled = true;
+
+                    try {
+                        const successUrl = window.location.origin + `/report.html?id=${encodeURIComponent(reportId)}&balance_paid=true&session_id={CHECKOUT_SESSION_ID}`;
+                        const cancelUrl = window.location.href;
+                        const resp = await fetch('/api/proxy/create-checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                amount: '25.00',
+                                order_id: reportId,
+                                success_url: successUrl,
+                                cancel_url: cancelUrl
+                            })
+                        });
+                        if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            throw new Error(err.detail || 'Payment service unavailable');
+                        }
+                        const data = await resp.json();
+                        const paymentUrl = data.url || data.checkout_url || (Array.isArray(data) && data[0] && (data[0].url || data[0].checkout_url));
+                        if (!paymentUrl) {
+                            throw new Error('No payment URL returned');
+                        }
+                        if (typeof window.trackEvent === 'function') {
+                            window.trackEvent('legacy_report_balance_checkout_redirect', { path: window.location.pathname, report_id: reportId });
+                        }
+                        window.location.href = paymentUrl;
+                    } catch (err) {
+                        alert('Payment Error: ' + err.message);
+                        if (typeof window.trackEvent === 'function') {
+                            window.trackEvent('legacy_report_balance_checkout_failed', { path: window.location.pathname, report_id: reportId, error: err.message });
+                        }
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }
+                });
             }
 
             const timestamp = new Date().getTime();
@@ -254,6 +240,7 @@
                 });
         });
     </script>
+<script src='js/components.js'></script>
 </body>
 
 </html>

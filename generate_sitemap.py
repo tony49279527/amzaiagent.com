@@ -3,7 +3,7 @@ from datetime import datetime
 
 BASE_URL = "https://amzaiagent.com"
 # Exclude system/utility pages or pages not meant for public indexing
-EXCLUDE_FILES = ['create_old.html', 'logo_preview.html', 'failed.html', 'success.html', '404.html']
+EXCLUDE_FILES = ['create_old.html', 'logo_preview.html', 'failed.html', 'success.html', '404.html', 'order.html', 'processing.html', 'discovery_report.html']
 
 def generate_sitemap():
     # List all HTML files in current directory
@@ -21,6 +21,7 @@ def generate_sitemap():
         'index.html': '1.0',
         'create.html': '0.9',
         'pricing.html': '0.9',
+        'discovery.html': '0.9',
         'cases.html': '0.8',
         'blog.html': '0.8',
         'reports.html': '0.8',

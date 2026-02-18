@@ -104,3 +104,41 @@ def get_system_prompt(slug):
     except Exception as e:
         print(f"Supabase select failed: {e}")
     return None
+
+def get_report(report_id):
+    """
+    Fetches a specific report by ID from AnalysisReports.
+    Returns the report dict or None.
+    """
+    if not supabase:
+        print(f"Supabase not initialized. Mocking get_report for {report_id}")
+        return None
+
+    try:
+        response = supabase.table("AnalysisReports").select("*").eq("id", report_id).execute()
+        if response.data:
+            return response.data[0]
+    except Exception as e:
+        print(f"Supabase select failed: {e}")
+    return None
+
+def save_contact_inquiry(name, email, subject, message):
+    """
+    Inserts a new contact inquiry into ContactInquiries table.
+    """
+    if not supabase:
+        print(f"Supabase not initialized. Mocking save_contact for {email}")
+        return True
+
+    data = {
+        "name": name,
+        "email": email,
+        "subject": subject,
+        "message": message
+    }
+    try:
+        supabase.table("ContactInquiries").insert(data).execute()
+        return True
+    except Exception as e:
+        print(f"Supabase contact insert failed: {e}")
+        return False

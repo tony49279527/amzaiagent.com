@@ -1,0 +1,30 @@
+# Ensure all text files use LF line endings
+* text=auto eol=lf
+
+# Explicitly declare text files
+*.html text
+*.css text
+*.js text
+*.py text
+*.md text
+*.json text
+*.txt text
+*.yml text
+*.yaml text
+
+# Ensure UTF-8 encoding for specific files
+*.html working-tree-encoding=UTF-8
+*.css working-tree-encoding=UTF-8
+*.js working-tree-encoding=UTF-8
+
+# Binary files (don't modify)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

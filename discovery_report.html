@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Discovery Report | Amz AI Agent</title>
+    <meta name="robots" content="noindex">
     <meta name="description"
         content="AI-powered product discovery analysis report with market insights, competitor analysis, and entry strategy for Amazon sellers.">
     <link rel="canonical" href="https://amzaiagent.com/discovery_report.html">
@@ -672,48 +673,117 @@
             document.getElementById('payment-modal').classList.remove('active');
         }
 
-        function processPayment() {
+        async function processPayment() {
             const btn = document.getElementById('submit-payment-btn');
+            const reportId = new URLSearchParams(window.location.search).get('id');
+            if (typeof window.trackEvent === 'function') {
+                window.trackEvent('report_balance_checkout_click', { path: window.location.pathname, report_id: reportId });
+            }
+            if (!reportId) {
+                alert('Report ID missing. Please use the link from your email.');
+                return;
+            }
+
             btn.textContent = 'Processing...';
             btn.disabled = true;
 
-            // Simulate Stripe payment
-            setTimeout(() => {
-                // Success - unlock all sections
-                document.querySelectorAll('.report-section.locked').forEach(section => {
-                    section.classList.remove('locked');
-                    section.classList.add('unlocked');
-                    const overlay = section.querySelector('.lock-overlay');
-                    if (overlay) overlay.remove();
+            try {
+                const successUrl = window.location.origin + `/discovery_report.html?id=${reportId}&balance_paid=true&session_id={CHECKOUT_SESSION_ID}`;
+                const cancelUrl = window.location.href;
+
+                const resp = await fetch('/api/proxy/create-checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: '25.00',
+                        order_id: reportId,
+                        success_url: successUrl,
+                        cancel_url: cancelUrl
+                    })
                 });
 
-                document.querySelectorAll('.report-toc a.locked').forEach(a => {
-                    a.classList.remove('locked');
-                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Payment service unavailable');
+                }
 
-                // Hide floating CTA and preview badge
-                document.getElementById('floating-payment-btn').style.display = 'none';
-                document.querySelector('.preview-badge').style.display = 'none';
+                const data = await resp.json();
+                const paymentUrl = data.url || data.checkout_url || (Array.isArray(data) && data[0] && (data[0].url || data[0].checkout_url));
 
-                closePaymentModal();
-                alert('🎉 Payment Successful! Your full report is now unlocked.');
-
-                // Update URL
-                const url = new URL(window.location.href);
-                url.searchParams.delete('payment_pending');
-                url.searchParams.set('unlocked', 'true');
-                window.history.pushState({}, '', url);
-            }, 2000);
+                if (paymentUrl) {
+                    if (typeof window.trackEvent === 'function') {
+                        window.trackEvent('report_balance_checkout_redirect', { path: window.location.pathname, report_id: reportId });
+                    }
+                    window.location.href = paymentUrl;
+                } else {
+                    throw new Error('No payment URL returned');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Payment Error: ' + err.message);
+                if (typeof window.trackEvent === 'function') {
+                    window.trackEvent('report_balance_checkout_failed', { path: window.location.pathname, report_id: reportId, error: err.message });
+                }
+                btn.disabled = false;
+                btn.textContent = 'Pay $25.00 with Stripe & Unlock Report';
+            }
         }
 
         // Load report data from URL params
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const reportId = urlParams.get('id');
-            const unlocked = urlParams.get('unlocked') === 'true';
+            const balancePaid = urlParams.get('balance_paid') === 'true';
+            const sessionId = urlParams.get('session_id');
 
-            if (unlocked) {
-                // Already unlocked - show full content
+            function renderFullReport(markdown) {
+                const sectionIds = [
+                    'executive-summary',
+                    'market-overview',
+                    'competitor-analysis',
+                    'customer-insights',
+                    'entry-strategy',
+                    'differentiation',
+                    'pricing-strategy',
+                    'recommendations'
+                ];
+                const blocks = markdown
+                    .split(/\n(?=##\s+)/)
+                    .map(block => block.trim())
+                    .filter(Boolean);
+
+                if (!blocks.length) {
+                    const summaryEl = document.getElementById('summary-content');
+                    if (summaryEl) summaryEl.innerHTML = marked.parse(markdown);
+                    return;
+                }
+
+                const extras = [];
+                blocks.forEach((block, index) => {
+                    const parsed = block.match(/^##\s+([^\n]+)\n?([\s\S]*)$/);
+                    const titleText = parsed ? parsed[1].trim() : `Section ${index + 1}`;
+                    const bodyText = parsed ? parsed[2].trim() : block;
+                    if (index >= sectionIds.length) {
+                        extras.push(`## ${titleText}\n${bodyText}`);
+                        return;
+                    }
+                    const section = document.getElementById(sectionIds[index]);
+                    if (!section) return;
+                    const title = section.querySelector('h2');
+                    const content = section.querySelector('.section-content');
+                    if (title) title.textContent = titleText;
+                    if (content) content.innerHTML = marked.parse(bodyText);
+                });
+
+                if (extras.length) {
+                    const tail = document.querySelector('#recommendations .section-content');
+                    if (tail) {
+                        tail.innerHTML += marked.parse('\n\n' + extras.join('\n\n'));
+                    }
+                }
+            }
+
+            async function unlockReport() {
                 document.querySelectorAll('.report-section.locked').forEach(section => {
                     section.classList.remove('locked');
                     section.classList.add('unlocked');
@@ -724,13 +794,31 @@
                     a.classList.remove('locked');
                 });
                 document.getElementById('floating-payment-btn').style.display = 'none';
-                document.querySelector('.preview-badge').style.display = 'none';
+                const badge = document.querySelector('.preview-badge');
+                if (badge) badge.style.display = 'none';
+                const url = new URL(window.location.href);
+                url.searchParams.delete('payment_pending');
+                url.searchParams.delete('balance_paid');
+                url.searchParams.delete('session_id');
+                window.history.replaceState({}, '', url);
+            }
+
+            if (balancePaid && sessionId) {
+                try {
+                    const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
+                    const verifyData = await verifyResp.json();
+                    if (verifyData.status === 'paid') {
+                        await unlockReport();
+                    }
+                } catch (e) {
+                    console.error('Payment verification failed:', e);
+                }
             }
 
             if (reportId) {
                 try {
                     // Fetch report data from API
-                    const response = await fetch(`https://amz-ai-replica-znaw4q4ldq-uc.a.run.app/api/discovery-report/${reportId}`);
+                    const response = await fetch(`/api/discovery-report/${reportId}`);
                     if (response.ok) {
                         const data = await response.json();
 
@@ -738,6 +826,10 @@
                         if (data.keywords) {
                             document.getElementById('report-title').textContent =
                                 `${data.keywords} - Product Discovery Report`;
+                        }
+
+                        if (data.full_report_unlocked) {
+                            await unlockReport();
                         }
 
                         // Update email
@@ -756,6 +848,10 @@
                                 document.getElementById('summary-content').innerHTML =
                                     marked.parse(sections[1].substring(0, 1500) + '...');
                             }
+                        }
+
+                        if (data.full_report_unlocked && data.report_markdown) {
+                            renderFullReport(data.report_markdown);
                         }
                     }
                 } catch (error) {

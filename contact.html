@@ -16,145 +16,173 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 2rem;
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
-        @media (min-width: 768px) {
+        @media (min-width: 992px) {
             .contact-grid {
-                grid-template-columns: 1fr 1.5fr;
-                gap: 4rem;
+                grid-template-columns: 0.8fr 1.2fr;
+                gap: 3rem;
             }
         }
 
-        .contact-info {
-            background: #f8fafc;
-            padding: 2rem;
-            border-radius: 1rem;
+        /* Glassmorphism Sidebar */
+        .contact-info-glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
             height: fit-content;
-            border: 1px solid var(--border-color);
         }
 
-        .contact-method {
-            margin-bottom: 2rem;
+        .contact-method-card {
+            display: flex;
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
         }
 
-        .contact-method:last-child {
+        .contact-method-card:last-child {
             margin-bottom: 0;
         }
 
-        .contact-method h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-color);
-            font-weight: 600;
+        .method-icon {
+            font-size: 1.75rem;
+            background: rgba(37, 99, 235, 0.1);
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            flex-shrink: 0;
+            color: var(--primary-color);
         }
 
-        .contact-method p {
-            color: var(--text-light);
-            line-height: 1.5;
+        .method-text h3 {
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .method-text p {
+            color: var(--text-secondary);
+            line-height: 1.6;
             font-size: 0.95rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
-        .contact-method a {
+        .method-text a {
             color: var(--primary-color);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: opacity 0.2s;
         }
 
-        .contact-method a:hover {
-            text-decoration: underline;
+        .method-text a:hover {
+            opacity: 0.8;
         }
 
-        /* Dark mode tweaks if needed */
-        body.dark-theme .contact-info {
+        /* Premium Form Card */
+        .form-card-premium {
             background: var(--bg-card);
-            border-color: var(--border-color);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card-premium {
+                padding: 1.5rem;
+            }
+        }
+
+        .status-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 1.25rem;
+            text-align: center;
         }
     </style>
 </head>
 
-<body>
+<body class="dark-theme create-page">
     <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="2" width="20" height="20" rx="6" fill="#2563eb" />
-                    <path d="M12 5L6 19H9L10.5 15H13.5L15 19H18L12 5ZM11.25 12.5L12 10L12.75 12.5H11.25Z"
-                        fill="white" />
-                </svg>
-                <span class="logo-text">Amz AI Agent</span>
-            </a>
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" aria-label="Toggle Menu">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-open">
-                    <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="menu-icon-close" style="display:none;">
-                    <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
-
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="create.html">Competitor Analysis</a>
-                <a href="discovery.html">Product Discovery</a>
-                <a href="cases.html">Cases</a>
-                <a href="blog.html">Blog</a>
-                <a href="pricing.html">Pricing</a>
-            </div>
-            <div class="nav-actions">
-                <a href="create.html" class="btn btn-primary" style="border-radius: 0.375rem;">Start Analysis</a>
-            </div>
-        </div>
-    </nav>
+    <div id="navbar-placeholder"></div>
 
     <!-- Main Content -->
     <main>
-        <div class="container" style="padding-top: 100px; padding-bottom: 6rem;">
-            <div class="section-header fade-up">
-                <h1 class="section-title">Contact Us</h1>
-                <p class="section-subtitle">We'd love to hear from you. Our team is ready to help.</p>
+        <div class="container" style="padding-top: 120px; padding-bottom: 8rem;">
+            <div class="analysis-header fade-up">
+                <h1>📬 Get in Touch</h1>
+                <h2>Contact Our AI Experts</h2>
+                <p>Have questions? We're here to help you dominate your Amazon market.</p>
             </div>
 
             <div class="contact-grid">
                 <!-- Sidebar -->
-                <div class="contact-info fade-up fade-up-delay-1">
-                    <div class="contact-method">
-                        <h3>📧 Email Support</h3>
-                        <p>For general inquiries and support:</p>
-                        <a href="mailto:support@amzaiagent.com">support@amzaiagent.com</a>
+                <div class="contact-info-glass fade-up fade-up-delay-1">
+                    <div class="contact-method-card">
+                        <div class="method-icon">📧</div>
+                        <div class="method-text">
+                            <h3>Email Support</h3>
+                            <p>For general inquiries and technical guidance:</p>
+                            <a href="mailto:contact@amzaiagent.com">contact@amzaiagent.com</a>
+                        </div>
                     </div>
 
-                    <div class="contact-method">
-                        <h3>🌍 Global Support</h3>
-                        <p>Our team is available 7 days a week to assist you with your Amazon analysis needs.</p>
+                    <div class="contact-method-card">
+                        <div class="method-icon">🌐</div>
+                        <div class="method-text">
+                            <h3>Global Support</h3>
+                            <p>Our distributed team is available 24/7 to assist with your market analysis needs.</p>
+                        </div>
                     </div>
 
-                    <div class="contact-method">
-                        <h3>💡 Quick Resources</h3>
-                        <p>Check our <a href="faq.html">FAQ Page</a> for instant answers to common questions.</p>
+                    <div class="contact-method-card">
+                        <div class="method-icon">🛠️</div>
+                        <div class="method-text">
+                            <h3>Instant Help</h3>
+                            <p>Self-service resources for the most common questions.</p>
+                            <a href="faq.html">Browse FAQ →</a>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Form -->
-                <div class="form-card fade-up fade-up-delay-2">
+                <div class="form-card-premium fade-up fade-up-delay-2">
                     <form id="contact-form">
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" id="name" name="name" placeholder="Your Name" required>
-                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label for="subject">Subject</label>
-                            <input type="text" id="subject" name="subject" placeholder="What is this about?" required>
+                            <input type="text" id="subject" name="subject" placeholder="What can we help you with?"
+                                required>
                         </div>
 
                         <div class="form-group">
@@ -163,14 +191,13 @@
                                 required></textarea>
                         </div>
 
-                        <button type="submit" class="submit-btn" id="contact-submit-btn" style="width: 100%;">Send Message</button>
-                        <p id="contact-status"
-                            style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem; text-align: center;">
+                        <button type="submit" class="submit-btn" id="contact-submit-btn">Send Message</button>
+                        <p id="contact-status" class="status-message">
                             We'll respond within 24 hours.
                         </p>
                     </form>
                     <script>
-                        document.getElementById('contact-form').addEventListener('submit', async function(e) {
+                        document.getElementById('contact-form').addEventListener('submit', async function (e) {
                             e.preventDefault();
                             const btn = document.getElementById('contact-submit-btn');
                             const status = document.getElementById('contact-status');
@@ -197,7 +224,7 @@
                                 }
                             } catch (err) {
                                 status.style.color = '#ef4444';
-                                status.textContent = 'Failed to send. Please email support@amzaiagent.com directly.';
+                                status.textContent = 'Failed to send. Please email contact@amzaiagent.com directly.';
                             } finally {
                                 btn.disabled = false;
                                 btn.textContent = 'Send Message';
@@ -210,39 +237,8 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-top">
-                <h3 class="footer-logo">Amz AI Agent</h3>
-                <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
-            </div>
-            <div class="footer-columns">
-                <div class="footer-col">
-                    <h4>Product</h4>
-                    <a href="create.html">Competitor Analysis</a>
-                    <a href="discovery.html">Product Discovery</a>
-                    <a href="reports.html">Analysis Reports</a>
-                    <a href="pricing.html">Pricing</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Resources</h4>
-                    <a href="blog.html">Blog</a>
-                    <a href="cases.html">Case Studies</a>
-                    <a href="faq.html">FAQ</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Company</h4>
-                    <a href="about.html">About Us</a>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">© <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.</p>
-                <a href="contact.html" class="footer-contact">Contact Us</a>
-            </div>
-        </div>
-    </footer>
+    <div id="footer-placeholder"></div>
+    <script src='js/components.js'></script>
     <script src="script_v2.js?v=4"></script>
     <script>
         // Form submission is handled via standard mailto: action

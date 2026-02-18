@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -19,22 +19,7 @@
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <span class="logo-text">Amz AI Agent</span>
-            </a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="create.html">Competitor Analysis</a>
-                <a href="cases.html">Cases</a>
-                <a href="blog.html">Blog</a>
-            </div>
-            <div class="nav-actions">
-                <a href="create.html" class="btn btn-primary">Start Analysis</a>
-            </div>
-        </div>
-    </nav>
+    <div id="navbar-placeholder"></div>
 
     <!-- Main Content -->
     <div class="order-page-wrapper">
@@ -46,14 +31,14 @@
                         <div class="report-tag" id="report-tag">Market Analysis</div>
                         <h1 class="report-title" id="report-title">AI Competitor Analysis Report</h1>
                         <div class="report-meta">
-                            <span id="report-asin">ASIN: Loading...</span> •
+                            <span id="report-asin">ASIN: Loading...</span> —
                             <span id="report-date">Generated just now</span>
                         </div>
                     </div>
 
                     <!-- Report Structure/Framework Preview -->
                     <div class="report-framework">
-                        <h3>📋 What's In This Report</h3>
+                        <h3>What's In This Report</h3>
                         <p class="framework-intro">Your comprehensive analysis includes the following sections:</p>
                         <ul id="preview-toc" class="framework-list">
                             <li>Loading structure...</li>
@@ -69,12 +54,12 @@
                         <!-- End of Preview Hint -->
                         <div class="preview-end-hint" id="preview-end-hint"
                             style="padding: 30px; background: linear-gradient(to bottom, rgba(255,255,255,0.9), #f0f9ff); border-radius: 12px; text-align: center; margin-top: 20px;">
-                            <h3 style="color: #1e40af; margin: 0 0 10px 0;">📄 You've previewed Section 4: Listing
+                            <h3 style="color: #1e40af; margin: 0 0 10px 0;">You've previewed Section 4: Listing
                                 Optimization</h3>
                             <p style="color: #374151; margin: 0 0 20px 0;">The complete report includes 5 more in-depth
                                 sections. Unlock now for <strong>$25.00</strong>.</p>
                             <button class="btn btn-primary btn-lg" onclick="scrollToOrder()"
-                                style="font-size: 1.1rem;">Unlock Full Report ($25) →</button>
+                                style="font-size: 1.1rem;">Unlock Full Report ($25) -></button>
                         </div>
                     </div>
                 </div>
@@ -95,9 +80,9 @@
                             <hr class="divider">
 
                             <ul class="features-list">
-                                <li>✅ <strong>Full Report Access</strong> on web immediately</li>
-                                <li>✅ <strong>PDF Download</strong> delivered to email</li>
-                                <li>✅ <strong>Deep Insights</strong> into competitor gaps</li>
+                                <li>✅<strong>Full Report Access</strong> on web immediately</li>
+                                <li>✅<strong>PDF Download</strong> delivered to email</li>
+                                <li>✅<strong>Deep Insights</strong> into competitor gaps</li>
                             </ul>
 
                             <hr class="divider">
@@ -119,7 +104,7 @@
                                 <p>Order ID: <span id="order-id-display">...</span></p>
                                 <div class="support-info">
                                     <p>Need help?</p>
-                                    <a href="mailto:support@amzaiagent.com">support@amzaiagent.com</a>
+                                    <a href="mailto:contact@amzaiagent.com">contact@amzaiagent.com</a>
                                 </div>
                             </div>
                         </div>
@@ -127,7 +112,7 @@
                         <!-- Paid State (Hidden by default) -->
                         <div id="state-paid" style="display: none;">
                             <div class="success-header">
-                                <div class="icon">✅</div>
+                                <div class="icon">✓</div>
                                 <h2>Payment Received</h2>
                                 <p>Full report unlocked successfully!</p>
                             </div>
@@ -149,42 +134,12 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-top">
-                <h3 class="footer-logo">Amz AI Agent</h3>
-                <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
-            </div>
-            <!-- Middle: 3 Link Columns -->
-            <div class="footer-columns">
-                <div class="footer-col">
-                    <h4>Product</h4>
-                    <a href="create.html">Competitor Analysis</a>
-                    <a href="reports.html">Analysis Reports</a>
-                    <a href="pricing.html">Pricing</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Resources</h4>
-                    <a href="blog.html">Blog</a>
-                    <a href="cases.html">Case Studies</a>
-                    <a href="faq.html">FAQ</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Company</h4>
-                    <a href="about.html">About Us</a>
-                    <a href="privacy.html">Privacy Policy</a>
-                    <a href="terms.html">Terms of Service</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">© <script>document.write(new Date().getFullYear())</script> Amz AI Agent. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseConfig.js"></script>
     <script src="order_v2.js?v=6"></script>
+    <script src='js/components.js'></script>
 </body>
 
 </html>
