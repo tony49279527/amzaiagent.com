@@ -39,11 +39,15 @@ jobs:
       run: |
         python generate_sitemap.py
 
+    - name: Generate RSS/Atom feed
+      run: |
+        python generate_feed.py
+
     - name: Commit and Push changes
       run: |
         git config --global user.name 'GitHub Action'
         git config --global user.email 'action@github.com'
-        git add data/blog/blog_posts.js assets/images/blog_thumbs/ sitemap.xml
+        git add data/blog/blog_posts.js assets/images/blog_thumbs/ sitemap.xml feed.xml
         git commit -m "Auto-update blog content [skip ci]" || echo "No changes to commit"
         git push
 
