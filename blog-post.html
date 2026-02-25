@@ -349,12 +349,19 @@
                             </section>
                         `;
 
-                // 2. Populate Related Posts (Random 3 excluding current)
+                // 2. Populate Related Posts (tag-priority, fallback random)
                 const otherPosts = posts.filter(p => p.id !== post.id);
-                // Shuffle array
-                const shuffled = otherPosts.sort(() => 0.5 - Math.random());
-                // Get top 3
-                const related = shuffled.slice(0, 3);
+                const currentTags = (post.tags || []).map(t => t.toLowerCase());
+                const scored = otherPosts.map(p => {
+                    const ptags = (p.tags || []).map(t => t.toLowerCase());
+                    const overlap = ptags.filter(t => currentTags.includes(t)).length;
+                    return { p, score: overlap };
+                }).sort((a, b) => b.score - a.score);
+                const related = scored
+                    .filter(item => item.score > 0)
+                    .slice(0, 3)
+                    .concat(scored.filter(item => item.score === 0).slice(0, 3 - Math.min(3, scored.filter(i => i.score > 0).length)))
+                    .map(item => item.p);
 
                 const relatedContainer = document.getElementById('related-posts-container');
                 if (relatedContainer && related.length > 0) {
