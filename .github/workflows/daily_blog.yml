@@ -35,11 +35,15 @@ jobs:
       run: |
         python daily_blog_bot.py
 
+    - name: Regenerate sitemap with fresh dates
+      run: |
+        python generate_sitemap.py
+
     - name: Commit and Push changes
       run: |
         git config --global user.name 'GitHub Action'
         git config --global user.email 'action@github.com'
-        git add data/blog/blog_posts.js assets/images/blog_thumbs/
+        git add data/blog/blog_posts.js assets/images/blog_thumbs/ sitemap.xml
         git commit -m "Auto-update blog content [skip ci]" || echo "No changes to commit"
         git push
 
