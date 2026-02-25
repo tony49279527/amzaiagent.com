@@ -1,9 +1,27 @@
 import os
 from datetime import datetime
+from typing import Optional
 
 BASE_URL = "https://amzaiagent.com"
 # Exclude system/utility pages or pages not meant for public indexing
 EXCLUDE_FILES = ['create_old.html', 'logo_preview.html', 'failed.html', 'success.html', '404.html', 'order.html', 'processing.html', 'discovery_report.html']
+
+def _file_lastmod(path: str, fallback: str) -> str:
+    try:
+        ts = os.path.getmtime(path)
+        return datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+    except Exception:
+        return fallback
+
+def _parse_date(date_str: str) -> Optional[str]:
+    """
+    Convert human-readable date like 'February 18, 2026' to '2026-02-18'.
+    Returns None if parsing fails.
+    """
+    try:
+        return datetime.strptime(date_str.strip(), "%B %d, %Y").strftime('%Y-%m-%d')
+    except Exception:
+        return None
 
 def generate_sitemap():
     # List all HTML files in current directory
@@ -55,7 +73,8 @@ def generate_sitemap():
         
         xml += '  <url>\n'
         xml += f'    <loc>{url}</loc>\n'
-        xml += f'    <lastmod>{today}</lastmod>\n'
+        lastmod = _file_lastmod(f, today)
+        xml += f'    <lastmod>{lastmod}</lastmod>\n'
         xml += f'    <changefreq>{freq}</changefreq>\n'
         xml += f'    <priority>{priority}</priority>\n'
         xml += '  </url>\n'
@@ -70,12 +89,15 @@ def generate_sitemap():
             # Crude extraction of IDs from JS file
             import re
             post_ids = re.findall(r'"id":\s*"([^"]+)"', content)
+            post_dates = dict(re.findall(r'"id":\s*"([^"]+)"[\\s\\S]*?"date":\s*"([^"]+)"', content))
             unique_ids = sorted(list(set(post_ids)))
             print(f"Adding {len(unique_ids)} blog posts to sitemap...")
             for pid in unique_ids:
+                raw_date = post_dates.get(pid, "")
+                parsed_date = _parse_date(raw_date) or today
                 xml += '  <url>\n'
                 xml += f'    <loc>{BASE_URL}/blog-post.html?id={pid}</loc>\n'
-                xml += f'    <lastmod>{today}</lastmod>\n'
+                xml += f'    <lastmod>{parsed_date}</lastmod>\n'
                 xml += f'    <changefreq>monthly</changefreq>\n'
                 xml += f'    <priority>0.6</priority>\n'
                 xml += '  </url>\n'
@@ -88,12 +110,15 @@ def generate_sitemap():
         with open(reports_file, 'r', encoding='utf-8') as rf:
             content = rf.read()
             report_ids = re.findall(r'"id":\s*"([^"]+)"', content)
+            report_dates = dict(re.findall(r'"id":\s*"([^"]+)"[\\s\\S]*?"created_at":\s*"([^"]+)"', content))
             unique_rids = sorted(list(set(report_ids)))
             print(f"Adding {len(unique_rids)} case reports to sitemap...")
             for rid in unique_rids:
+                rid_date = report_dates.get(rid, "")
+                parsed_date = _parse_date(rid_date) or rid_date[:10] or today
                 xml += '  <url>\n'
                 xml += f'    <loc>{BASE_URL}/report.html?id={rid}</loc>\n'
-                xml += f'    <lastmod>{today}</lastmod>\n'
+                xml += f'    <lastmod>{parsed_date}</lastmod>\n'
                 xml += f'    <changefreq>monthly</changefreq>\n'
                 xml += f'    <priority>0.5</priority>\n'
                 xml += '  </url>\n'
