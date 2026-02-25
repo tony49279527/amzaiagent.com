@@ -10,6 +10,7 @@
 
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="alternate" type="application/atom+xml" href="https://amzaiagent.com/feed.xml">
     <style>
         /* Article specific styles */
         .article-container {
@@ -215,6 +216,38 @@
             return tmp.textContent || tmp.innerText || "";
         }
 
+        function injectSchema(post) {
+            const ld = {
+                "@context": "https://schema.org",
+                "@type": "Article",
+                "mainEntityOfPage": {
+                    "@type": "WebPage",
+                    "@id": `https://amzaiagent.com/blog-post.html?id=${post.id}`
+                },
+                "headline": post.title,
+                "description": stripHtml(post.content || "").substring(0, 300),
+                "datePublished": post.date || new Date().toISOString(),
+                "dateModified": post.date || new Date().toISOString(),
+                "author": {
+                    "@type": "Organization",
+                    "name": post.author || "Amz AI Agent"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Amz AI Agent",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://amzaiagent.com/assets/images/logo_final.svg"
+                    }
+                },
+                "image": post.cover_image ? post.cover_image.replace('.png', '.webp') : undefined
+            };
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.textContent = JSON.stringify(ld);
+            document.head.appendChild(script);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             initBackButton();
 
@@ -258,6 +291,7 @@
                 const description = post.content ? stripHtml(post.content).substring(0, 160) + '...' : post.title;
                 document.querySelector('meta[name="description"]').setAttribute('content', description);
                 document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/blog-post.html?id=${post.id}`);
+                injectSchema(post);
 
 
                 // 1. Render Article
@@ -296,20 +330,38 @@
                         </article>
 
                         <!-- Related Posts -->
-                        <section class="related-posts">
-                            <h3>Read Next</h3>
-                            <div class="related-posts-grid" id="related-posts-container">
-                                <!-- JS will populate this -->
-                            </div>
-                        </section>
-                    `;
+                            <section class="related-posts">
+                                <h3>Read Next</h3>
+                                <div class="related-posts-grid" id="related-posts-container">
+                                    <!-- JS will populate this -->
+                                </div>
+                            </section>
 
-                // 2. Populate Related Posts (Random 3 excluding current)
+                            <section class="cta-panel" style="margin-top:3rem; padding:2rem; border:1px solid var(--border-color); border-radius: 1rem; background: var(--bg-secondary); display:grid; gap:1rem;">
+                                <div>
+                                    <h3 style="margin:0 0 0.5rem 0;">Turn insights into action</h3>
+                                    <p style="margin:0; color: var(--text-secondary);">Run a free competitor analysis or try product discovery now.</p>
+                                </div>
+                                <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                                    <a class="btn btn-primary" href="create.html">Start Competitor Analysis</a>
+                                    <a class="btn btn-secondary" href="discovery.html">Explore Product Discovery</a>
+                                </div>
+                            </section>
+                        `;
+
+                // 2. Populate Related Posts (tag-priority, fallback random)
                 const otherPosts = posts.filter(p => p.id !== post.id);
-                // Shuffle array
-                const shuffled = otherPosts.sort(() => 0.5 - Math.random());
-                // Get top 3
-                const related = shuffled.slice(0, 3);
+                const currentTags = (post.tags || []).map(t => t.toLowerCase());
+                const scored = otherPosts.map(p => {
+                    const ptags = (p.tags || []).map(t => t.toLowerCase());
+                    const overlap = ptags.filter(t => currentTags.includes(t)).length;
+                    return { p, score: overlap };
+                }).sort((a, b) => b.score - a.score);
+                const related = scored
+                    .filter(item => item.score > 0)
+                    .slice(0, 3)
+                    .concat(scored.filter(item => item.score === 0).slice(0, 3 - Math.min(3, scored.filter(i => i.score > 0).length)))
+                    .map(item => item.p);
 
                 const relatedContainer = document.getElementById('related-posts-container');
                 if (relatedContainer && related.length > 0) {
