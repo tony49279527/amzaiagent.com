@@ -13,6 +13,14 @@
     <link rel="canonical" href="https://amzaiagent.com/create.html">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Create Analysis - AI Competitor Analysis | Amz AI Agent">
+    <meta property="og:description"
+        content="Enter your Amazon ASIN to generate an AI-powered competitor analysis report with customer insights, pain points, and optimization strategies.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://amzaiagent.com/create.html">
+    <meta property="og:image" content="https://amzaiagent.com/assets/images/og-image.png">
 </head>
 
 <body class="dark-theme create-page">
@@ -34,8 +42,17 @@
                     <div class="form-grid">
                         <!-- Core Product ASIN -->
                         <div class="form-group">
-                            <label for="main-asin">Core Product ASIN *</label>
-                            <p class="helper-text">Enter 1-5 ASINs of the same product (variants) you want to analyze
+                            <label for="main-asin"
+                                style="display: flex; justify-content: space-between; align-items: center;">
+                                Core Product ASIN *
+                                <a href="#"
+                                    onclick="document.getElementById('main-asin').value='B08CVS825S'; return false;"
+                                    style="font-size: 0.75rem; font-weight: 400; color: var(--primary-color); text-decoration: underline;">Try
+                                    an example</a>
+                            </label>
+                            <p class="helper-text">Enter 1-5 ASINs of the same product (variants) you want to analyze.
+                                <span style="opacity:0.7;">Find the ASIN on the Amazon product page URL, e.g.
+                                    <code>B08CVS825S</code></span>
                             </p>
                             <textarea id="main-asin" name="main-asin"
                                 placeholder="Enter core product ASINs (e.g., B08CVS825S)..."></textarea>

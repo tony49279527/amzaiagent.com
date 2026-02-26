@@ -13,6 +13,14 @@
     <link rel="canonical" href="https://amzaiagent.com/discovery.html">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Product Discovery - AI Market Analysis | Amz AI Agent">
+    <meta property="og:description"
+        content="Discover profitable product opportunities with AI-powered market analysis. No need to reveal your own product.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://amzaiagent.com/discovery.html">
+    <meta property="og:image" content="https://amzaiagent.com/assets/images/og-image.png">
 </head>
 
 <body class="dark-theme create-page">
@@ -522,6 +530,16 @@
                     payDepositBtn.disabled = true;
                     payDepositBtn.textContent = 'Processing...';
 
+                    // Setup error container
+                    let errDiv = paymentModal.querySelector('.api-error-msg');
+                    if (!errDiv) {
+                        errDiv = document.createElement('div');
+                        errDiv.className = 'api-error-msg';
+                        errDiv.style.cssText = 'display:none; color:#ef4444; background:#fee2e2; border:1px solid #f87171; padding:10px; border-radius:4px; margin-bottom:15px; font-size:0.9rem; text-align:center; word-break:break-word;';
+                        payDepositBtn.parentNode.insertBefore(errDiv, payDepositBtn);
+                    }
+                    errDiv.style.display = 'none';
+
                     // Construct Payload for Post-Payment
                     const payload = {
                         category: [
@@ -562,15 +580,26 @@
                                 customer_email: proEmail
                             })
                         });
+
+                        if (!resp.ok) {
+                            const errData = await resp.json().catch(() => ({}));
+                            throw new Error(errData.detail || `Server error (${resp.status})`);
+                        }
+
                         const data = await resp.json();
-                        if (data.checkout_url) {
-                            window.location.href = data.checkout_url;
+
+                        // Stripe or Polar URLs
+                        const paymentUrl = data.checkout_url || data.url || (Array.isArray(data) && data[0] && data[0].url);
+
+                        if (paymentUrl) {
+                            window.location.href = paymentUrl;
                         } else {
-                            throw new Error('No checkout URL returned');
+                            throw new Error('No checkout URL returned by the gateway.');
                         }
                     } catch (e) {
-                        alert('Payment service unavailable. Please try again later.');
                         console.error(e);
+                        errDiv.textContent = 'Service Error: ' + e.message + ' - Please try again later.';
+                        errDiv.style.display = 'block';
                         payDepositBtn.disabled = false;
                         payDepositBtn.textContent = 'Pay $4.99 Deposit with Stripe';
                     }
@@ -809,6 +838,16 @@
                 submitBtn.textContent = "Processing...";
                 submitBtn.disabled = true;
 
+                // Setup error container
+                let errDiv = modal.querySelector('.api-error-msg');
+                if (!errDiv) {
+                    errDiv = document.createElement('div');
+                    errDiv.className = 'api-error-msg';
+                    errDiv.style.cssText = 'display:none; color:#ef4444; background:#fee2e2; border:1px solid #f87171; padding:10px; border-radius:4px; margin-bottom:15px; font-size:0.9rem; text-align:center; word-break:break-word;';
+                    submitBtn.parentNode.insertBefore(errDiv, submitBtn);
+                }
+                errDiv.style.display = 'none';
+
                 // Prepare API Payload
                 const apiPayload = {
                     category: finalPayload.category,
@@ -839,7 +878,9 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            return response.json().then(err => { throw new Error(err.detail || 'Server Error'); });
+                            return response.json().catch(() => { }).then(err => {
+                                throw new Error((err && err.detail) ? err.detail : `Server error (${response.status})`);
+                            });
                         }
                         return response.json();
                     })
@@ -856,12 +897,13 @@
                             form.reset();
                             modalForm.reset();
                         } else {
-                            alert('Error: ' + (data.message || 'Unknown error'));
+                            throw new Error(data.message || 'Unknown error');
                         }
                     })
                     .catch(error => {
                         console.error('API Error:', error);
-                        alert('Submission Failed: ' + error.message + '\n\nPlease ensure the backend service is running.');
+                        errDiv.textContent = 'Service Error: ' + error.message + ' - Please try again in a moment. Ensure the backend is running.';
+                        errDiv.style.display = 'block';
                     })
                     .finally(() => {
                         // Reset UI
