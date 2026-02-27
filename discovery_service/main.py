@@ -115,7 +115,13 @@ async def read_html(filename: str):
         
     file_path = f"{filename}.html"
     if os.path.exists(file_path):
-        return FileResponse(file_path)
+        # CRITICAL: Force no-cache for HTML files to ensure latest version
+        from starlette.responses import FileResponse
+        response = FileResponse(file_path)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
     
     # Check if it's a blog post (e.g. blog/xxx.html requested as xxx.html? No, usually it's /blog/xxx)
     # If filename matches a known page, return it.
