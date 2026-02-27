@@ -730,6 +730,40 @@ N8N_FREE_ANALYSIS_URL = os.getenv("N8N_FREE_ANALYSIS_URL", "")
 N8N_PRO_ANALYSIS_URL = os.getenv("N8N_PRO_ANALYSIS_WEBHOOK_URL", "") or os.getenv("N8N_PRO_ANALYSIS_URL", "")
 N8N_SEND_REPORT_URL = os.getenv("N8N_SEND_REPORT_WEBHOOK_URL", "") or os.getenv("N8N_SEND_REPORT_URL", "")
 
+# CRITICAL: Validate webhook URLs on startup
+print("=" * 60)
+print("[STARTUP] Webhook Configuration Check")
+print("=" * 60)
+print(f"[CONFIG] N8N_FREE_ANALYSIS_URL configured: {'YES' if N8N_FREE_ANALYSIS_URL else 'NO'}")
+print(f"[CONFIG] N8N_PRO_ANALYSIS_URL configured: {'YES' if N8N_PRO_ANALYSIS_URL else 'NO'}")
+
+if N8N_FREE_ANALYSIS_URL:
+    free_suffix = N8N_FREE_ANALYSIS_URL[-20:]
+    print(f"[CONFIG] Free webhook ends with: ...{free_suffix}")
+    # Expected: ...c6b3034f-250a-433f-9017-c14c3f8c7f9f
+    if "c6b3034f-250a-433f-9017-c14c3f8c7f9f" in N8N_FREE_ANALYSIS_URL:
+        print("[CONFIG] ✓ Free webhook URL matches expected pattern")
+    else:
+        print("[WARNING] Free webhook URL does not match expected pattern!")
+
+if N8N_PRO_ANALYSIS_URL:
+    pro_suffix = N8N_PRO_ANALYSIS_URL[-20:]
+    print(f"[CONFIG] Pro webhook ends with: ...{pro_suffix}")
+    # Expected: ...3f76a439-5a54-4d08-97cd-6e98d7b6e034
+    if "3f76a439-5a54-4d08-97cd-6e98d7b6e034" in N8N_PRO_ANALYSIS_URL:
+        print("[CONFIG] ✓ Pro webhook URL matches expected pattern")
+    else:
+        print("[WARNING] Pro webhook URL does not match expected pattern!")
+
+# CRITICAL CHECK: Ensure webhooks are different
+if N8N_FREE_ANALYSIS_URL and N8N_PRO_ANALYSIS_URL:
+    if N8N_FREE_ANALYSIS_URL == N8N_PRO_ANALYSIS_URL:
+        print("[CRITICAL ERROR] Free and Pro webhooks are IDENTICAL!")
+        print("[CRITICAL ERROR] This will cause routing errors!")
+    else:
+        print("[CONFIG] ✓ Free and Pro webhooks are different (correct)")
+print("=" * 60)
+
 class CheckoutRequest(PydanticBaseModel):
     amount: str = "4.99"
     order_id: str
@@ -766,14 +800,23 @@ async def proxy_create_checkout(req: CheckoutRequest, request: Request):
 
 @app.post("/api/proxy/pro-analysis")
 async def proxy_pro_analysis(payload: dict, request: Request):
-    """Proxy Pro analysis submission to n8n"""
+    """Proxy Pro analysis submission to n8n - CRITICAL: Must use Pro webhook URL"""
     if not N8N_PRO_ANALYSIS_URL:
+        print("[ERROR] N8N_PRO_ANALYSIS_URL is not configured!")
         _log_event("analysis.pro_failed", {"reason": "not_configured"}, request)
         raise HTTPException(status_code=503, detail="Pro analysis service not configured")
+    
+    # CRITICAL VALIDATION: Ensure we're using the PRO webhook, not FREE
+    if N8N_PRO_ANALYSIS_URL == N8N_FREE_ANALYSIS_URL:
+        print(f"[CRITICAL ERROR] Pro and Free webhooks are the same! URL: {N8N_PRO_ANALYSIS_URL}")
+        raise HTTPException(status_code=500, detail="Configuration error: Pro and Free webhooks cannot be the same")
+    
     try:
         # Server-side paywall: ignore client-side unlock state and require payment proof.
         user_email = str(payload.get("user_email", "")).strip()
         order_id = str(payload.get("order_id", "")).strip()
+        print(f"[PRO ANALYSIS] Request received - Email: {user_email}, Order: {order_id}")
+        print(f"[PRO ANALYSIS] Webhook URL (last 20 chars): ...{N8N_PRO_ANALYSIS_URL[-20:]}")
         _log_event(
             "analysis.pro_requested",
             {
@@ -781,6 +824,7 @@ async def proxy_pro_analysis(payload: dict, request: Request):
                 "order_id": order_id,
                 "main_asins_count": len(payload.get("main_asins", []) or []),
                 "competitor_asins_count": len(payload.get("competitor_asins", []) or []),
+                "webhook_url_suffix": N8N_PRO_ANALYSIS_URL[-20:] if N8N_PRO_ANALYSIS_URL else "NOT_SET",
             },
             request
         )
@@ -809,6 +853,9 @@ async def proxy_pro_analysis(payload: dict, request: Request):
             else:
                 form_data[key] = str(value)
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Debug: Log the actual webhook URL being used
+            print(f"[DEBUG] Pro analysis webhook URL: {N8N_PRO_ANALYSIS_URL}")
+            _log_event("analysis.pro_webhook_called", {"webhook_url": N8N_PRO_ANALYSIS_URL, "order_id": order_id}, request)
             resp = await client.post(N8N_PRO_ANALYSIS_URL, data=form_data)
             resp.raise_for_status()
             _log_event("analysis.pro_success", {"order_id": order_id, "user_email": user_email}, request)
@@ -825,19 +872,30 @@ async def proxy_pro_analysis(payload: dict, request: Request):
 
 @app.post("/api/proxy/free-analysis")
 async def proxy_free_analysis(payload: dict, request: Request):
-    """Proxy Free analysis submission to n8n (keeps webhook URL server-side)"""
+    """Proxy Free analysis submission to n8n - CRITICAL: Must use Free webhook URL"""
     if not N8N_FREE_ANALYSIS_URL:
+        print("[ERROR] N8N_FREE_ANALYSIS_URL is not configured!")
         _log_event("analysis.free_failed", {"reason": "not_configured"}, request)
         raise HTTPException(status_code=503, detail="Free analysis service not configured")
+    
+    # CRITICAL VALIDATION: Ensure we're using the FREE webhook, not PRO
+    if N8N_FREE_ANALYSIS_URL == N8N_PRO_ANALYSIS_URL:
+        print(f"[CRITICAL ERROR] Free and Pro webhooks are the same! URL: {N8N_FREE_ANALYSIS_URL}")
+        raise HTTPException(status_code=500, detail="Configuration error: Free and Pro webhooks cannot be the same")
+    
     try:
         user_email = str(payload.get("user_email", "")).strip()
+        order_id = str(payload.get("order_id", "")).strip()
+        print(f"[FREE ANALYSIS] Request received - Email: {user_email}, Order: {order_id}")
+        print(f"[FREE ANALYSIS] Webhook URL (last 20 chars): ...{N8N_FREE_ANALYSIS_URL[-20:]}")
         _log_event(
             "analysis.free_requested",
             {
                 "user_email": user_email,
-                "order_id": payload.get("order_id"),
+                "order_id": order_id,
                 "main_asins_count": len(payload.get("main_asins", []) or []),
                 "competitor_asins_count": len(payload.get("competitor_asins", []) or []),
+                "webhook_url_suffix": N8N_FREE_ANALYSIS_URL[-20:] if N8N_FREE_ANALYSIS_URL else "NOT_SET",
             },
             request
         )
@@ -849,6 +907,9 @@ async def proxy_free_analysis(payload: dict, request: Request):
             else:
                 form_data[key] = str(value)
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Debug: Log the actual webhook URL being used
+            print(f"[DEBUG] Free analysis webhook URL: {N8N_FREE_ANALYSIS_URL}")
+            _log_event("analysis.free_webhook_called", {"webhook_url": N8N_FREE_ANALYSIS_URL, "user_email": user_email}, request)
             resp = await client.post(N8N_FREE_ANALYSIS_URL, data=form_data)
             resp.raise_for_status()
             _log_event("analysis.free_success", {"user_email": user_email}, request)

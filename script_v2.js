@@ -679,15 +679,17 @@ Present workflows in a structured table format, including:
         emitTracking('analysis_submit_started', { path: window.location.pathname, tier: isPro ? 'pro' : 'free', order_id: payload.order_id });
 
         try {
-            // Pro URL: routed through backend proxy (webhook URL stays server-side)
-            let endpointUrl = '/api/proxy/pro-analysis';
-
-            if (!isPro) {
-                // Free tier also routes through backend proxy to avoid exposing webhook URLs in frontend.
+            // CRITICAL: Route to correct endpoint based on isPro flag
+            let endpointUrl;
+            if (isPro) {
+                endpointUrl = '/api/proxy/pro-analysis';
+                console.log('[DEBUG] Routing to PRO endpoint:', endpointUrl);
+            } else {
                 endpointUrl = '/api/proxy/free-analysis';
+                console.log('[DEBUG] Routing to FREE endpoint:', endpointUrl);
             }
 
-            // === PRO TIER: Submit via backend proxy ===
+            // === Submit via backend proxy ===
             const response = await fetch(endpointUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

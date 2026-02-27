@@ -329,15 +329,25 @@
                     logToTerminal("Payment", "No session_id found, falling back to server-side payment check...", "#facc15");
                 }
 
-                // Fix: Check both payload type AND isProFlow to route correctly
+                // CRITICAL: Check both payload type AND isProFlow to route correctly
                 let endpoint;
                 if (isCompetitorPayload(payload)) {
                     // Competitor Analysis: route to Pro or Free based on payment status
-                    endpoint = isProFlow ? '/api/proxy/pro-analysis' : '/api/proxy/free-analysis';
+                    if (isProFlow) {
+                        endpoint = '/api/proxy/pro-analysis';
+                        console.log('[DEBUG] Processing.html: Routing to PRO endpoint for competitor analysis');
+                        logToTerminal("System", "Routing to Pro analysis endpoint...", "#4ade80");
+                    } else {
+                        endpoint = '/api/proxy/free-analysis';
+                        console.log('[DEBUG] Processing.html: Routing to FREE endpoint for competitor analysis');
+                        logToTerminal("System", "Routing to Free analysis endpoint...", "#facc15");
+                    }
                 } else {
                     // Product Discovery: use discovery endpoint
                     endpoint = '/api/discovery/start-task';
+                    console.log('[DEBUG] Processing.html: Routing to Discovery endpoint');
                 }
+                console.log('[DEBUG] Final endpoint selected:', endpoint, 'isProFlow:', isProFlow);
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
