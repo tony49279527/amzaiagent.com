@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    console.log('Loading order:', orderId);
 
     // 2. Mock Data (No Supabase in Static Mode)
     // In a real app, we would fetch(orderId) here.

@@ -1,5 +1,3 @@
-console.log('SCRIPT_V2_LOADED_TOP');
-
 const initApp = () => {
     // Mobile menu logic removed as it is now handled by js/components.js
     const emitTracking = (eventName, payload = {}) => {
@@ -430,16 +428,19 @@ Present workflows in a structured table format, including:
         let isMainValid = true;
         let isCompValid = true;
 
-        // ASIN format regex: B followed by 9 alphanumeric characters
+        // ASIN format regex: B followed by 9 alphanumeric characters (Amazon standard)
         const asinRegex = /^B[A-Z0-9]{9}$/i;
+
+        // Split by any non-word chars (comma, space, newline, full-width comma，semicolon；etc), extract alphanumeric, uppercase
+        const splitAsins = (raw) => (raw || '').split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s);
 
         // Reset Validity
         mainAsin.setCustomValidity("");
         compAsin.setCustomValidity("");
 
-        // Check Main ASIN - 1-5 ASINs, split by comma/newline/space, each valid format
+        // Check Main ASIN - 1-5 ASINs
         const mainAsinRaw = mainAsin.value.trim();
-        const mainAsins = mainAsinRaw ? mainAsinRaw.split(/[\n,\s]+/).map(s => s.trim().toUpperCase()).filter(s => s) : [];
+        const mainAsins = mainAsinRaw ? splitAsins(mainAsinRaw) : [];
         if (mainAsins.length === 0) {
             isMainValid = false;
             mainAsin.setCustomValidity("Please enter at least one Core Product ASIN (1-5 recommended).");
@@ -475,8 +476,7 @@ Present workflows in a structured table format, including:
             isCompValid = false;
             compAsin.setCustomValidity("Please enter at least one Competitor ASIN.");
         } else {
-            // Split by comma, newline, or space and validate each ASIN
-            const compAsins = compAsinValue.split(/[\n,\s]+/).map(s => s.trim().toUpperCase()).filter(s => s);
+            const compAsins = splitAsins(compAsinValue);
             const invalidAsins = compAsins.filter(asin => !asinRegex.test(asin));
             if (invalidAsins.length > 0) {
                 isCompValid = false;
@@ -627,8 +627,6 @@ Present workflows in a structured table format, including:
                 }
 
                 const data = await response.json();
-                console.log('Checkout response:', data);
-
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
 
                 if (paymentUrl) {
@@ -681,7 +679,6 @@ Present workflows in a structured table format, including:
             emitTracking('polar_checkout_started', { path: window.location.pathname, order_id: payload.order_id });
 
             // Allow default behavior (navigation to Polar) to continue
-            console.log('Proceeding to Polar with email:', userEmail);
         });
     }
 
@@ -696,9 +693,9 @@ Present workflows in a structured table format, including:
             user_email: (document.getElementById('pro-email-input')?.value.trim()) || (document.getElementById('user-email')?.value.trim()) || 'guest@example.com',
             industry: 'General',
 
-            // Product Data (Arrays required) - main: 1-5 ASINs, competitor: 5-15 recommended
-            main_asins: document.getElementById('main-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
-            competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
+            // Product Data (Arrays required) - use same split as validateAsins for consistency
+            main_asins: (document.getElementById('main-asin').value.trim().split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s) || []),
+            competitor_asins: (document.getElementById('comp-asin').value.trim().split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s) || []),
 
             // Config
             productSite: document.getElementById('marketplace').value,
@@ -763,7 +760,7 @@ Present workflows in a structured table format, including:
                 try {
                     data = await response.json();
                 } catch (e) {
-                    console.log('Response was not JSON');
+                    // Response was not JSON; data stays {}
                 }
 
                 // Redirect standard flow
