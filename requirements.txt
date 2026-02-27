@@ -14,4 +14,5 @@ googlesearch-python
 markdown
 youtube-transcript-api
 polar-sdk
+stripe>=5.0.0
 Pillow
