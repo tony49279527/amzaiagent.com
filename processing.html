@@ -329,7 +329,15 @@
                     logToTerminal("Payment", "No session_id found, falling back to server-side payment check...", "#facc15");
                 }
 
-                const endpoint = isCompetitorPayload(payload) ? '/api/proxy/pro-analysis' : '/api/discovery/start-task';
+                // Fix: Check both payload type AND isProFlow to route correctly
+                let endpoint;
+                if (isCompetitorPayload(payload)) {
+                    // Competitor Analysis: route to Pro or Free based on payment status
+                    endpoint = isProFlow ? '/api/proxy/pro-analysis' : '/api/proxy/free-analysis';
+                } else {
+                    // Product Discovery: use discovery endpoint
+                    endpoint = '/api/discovery/start-task';
+                }
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
