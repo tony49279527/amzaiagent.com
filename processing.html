@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -278,17 +278,27 @@
             }
             logToTerminal("System", "Report generated successfully. Check your email.", "#4ade80");
         }
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
         async function verifyProSessionAndBind(sessionId, payload, fallbackEmail, fallbackOrderId) {
             if (!sessionId) {
                 throw new Error("Missing payment session_id in redirect URL.");
             }
-            const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
-            if (!verifyResp.ok) {
-                throw new Error("Payment verification request failed.");
-            }
-            const verifyData = await verifyResp.json();
-            if (verifyData.status !== 'paid') {
-                throw new Error("Payment is still pending. Please retry in a moment.");
+            const maxRetries = 6;
+            const retryDelayMs = 3000;
+            for (let i = 0; i < maxRetries; i++) {
+                const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
+                if (!verifyResp.ok) {
+                    throw new Error("Payment verification request failed.");
+                }
+                const verifyData = await verifyResp.json();
+                if (verifyData.status === 'paid') break;
+                if (i < maxRetries - 1) {
+                    logToTerminal("Payment", `Waiting for payment confirmation... (${i + 1}/${maxRetries})`, "#facc15");
+                    await sleep(retryDelayMs);
+                } else {
+                    throw new Error("Payment is still pending. Please refresh the page in a minute or check your email.");
+                }
             }
 
             // Bind session -> email/order in backend memory so Pro checks can pass consistently.
