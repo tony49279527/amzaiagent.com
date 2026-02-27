@@ -81,7 +81,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(response_data).encode('utf-8'))
             except Exception as e:
                 self.send_error(500, f"Contact Error: {str(e)}")
-        elif self.path == '/api/proxy/analysis-request':
+        elif self.path in ['/api/proxy/analysis-request', '/api/proxy/free-analysis']:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             

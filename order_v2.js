@@ -1,6 +1,5 @@
 // order_v2.js - Supabase Integration (Live Data)
 
-console.log('--- order_v2.js LOADED (Live Mode) ---');
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -13,8 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '<div style="text-align:center; padding: 4rem;"><h3>Error: No Order ID provided</h3><p>Please return to the home page.</p></div>';
             return;
         }
-
-        console.log('Fetching order:', orderId);
 
         // 2. Fetch Data from Backend
         let orderData = null;

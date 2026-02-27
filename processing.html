@@ -137,15 +137,24 @@
             const taskId = params.get('taskId') || params.get('report_id') || localStorage.getItem('pending_task_id');
             const sessionId = params.get('session_id');
             const isProFlow = params.get('pro') === 'true';
+            const isSubmitted = params.get('submitted') === 'true';
             const orderId = params.get('orderId') || localStorage.getItem('pending_order_id') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
 
             // 1. Basic Info Populating
             document.getElementById('display-order-id').innerText = orderId;
             document.getElementById('display-email').innerText = email || 'user@example.com';
 
-            // 2. WebSocket Connection / Auto-Trigger
+            // 2. Routing Logic
             const looksLikeCheckoutSession = !!taskId && (taskId.startsWith('cs_') || taskId.startsWith('chk_'));
-            if (taskId && !looksLikeCheckoutSession) {
+
+            if (isSubmitted) {
+                // Free flow from script_v2.js already submitted the webhook successfully
+                localStorage.removeItem('pending_analysis_payload');
+                logToTerminal("System", "Analysis submitted successfully. Please check your email for the report.", "#4ade80");
+                document.getElementById('realtime-status-text').innerText = "Submitted";
+                document.getElementById('realtime-status-text').style.color = "#10b981";
+                highlightStep('Complete');
+            } else if (taskId && !looksLikeCheckoutSession) {
                 initWebSocket(taskId);
             } else {
                 // Fallback: Check if we have a pending payload from Polar redirect

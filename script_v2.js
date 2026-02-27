@@ -1,5 +1,3 @@
-console.log('SCRIPT_V2_LOADED_TOP');
-
 const initApp = () => {
     // Mobile menu logic removed as it is now handled by js/components.js
     const emitTracking = (eventName, payload = {}) => {
@@ -407,22 +405,42 @@ Present workflows in a structured table format, including:
     const payDepositBtn = document.getElementById('pay-deposit-btn');
 
     // === FORM VALIDATION HELPER ===
+    const mainAsin = document.getElementById('main-asin');
+    const compAsin = document.getElementById('comp-asin');
+
+    // Clear validation styles on input
+    if (mainAsin) {
+        mainAsin.addEventListener('input', () => {
+            mainAsin.style.borderColor = '';
+            mainAsin.style.boxShadow = '';
+            mainAsin.setCustomValidity('');
+        });
+    }
+    if (compAsin) {
+        compAsin.addEventListener('input', () => {
+            compAsin.style.borderColor = '';
+            compAsin.style.boxShadow = '';
+            compAsin.setCustomValidity('');
+        });
+    }
+
     function validateAsins() {
-        const mainAsin = document.getElementById('main-asin');
-        const compAsin = document.getElementById('comp-asin');
         let isMainValid = true;
         let isCompValid = true;
 
-        // ASIN format regex: B followed by 9 alphanumeric characters
+        // ASIN format regex: B followed by 9 alphanumeric characters (Amazon standard)
         const asinRegex = /^B[A-Z0-9]{9}$/i;
+
+        // Split by any non-word chars (comma, space, newline, full-width comma，semicolon；etc), extract alphanumeric, uppercase
+        const splitAsins = (raw) => (raw || '').split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s);
 
         // Reset Validity
         mainAsin.setCustomValidity("");
         compAsin.setCustomValidity("");
 
-        // Check Main ASIN - 1-5 ASINs, split by comma/newline/space, each valid format
+        // Check Main ASIN - 1-5 ASINs
         const mainAsinRaw = mainAsin.value.trim();
-        const mainAsins = mainAsinRaw ? mainAsinRaw.split(/[\n,\s]+/).map(s => s.trim().toUpperCase()).filter(s => s) : [];
+        const mainAsins = mainAsinRaw ? splitAsins(mainAsinRaw) : [];
         if (mainAsins.length === 0) {
             isMainValid = false;
             mainAsin.setCustomValidity("Please enter at least one Core Product ASIN (1-5 recommended).");
@@ -458,8 +476,7 @@ Present workflows in a structured table format, including:
             isCompValid = false;
             compAsin.setCustomValidity("Please enter at least one Competitor ASIN.");
         } else {
-            // Split by comma, newline, or space and validate each ASIN
-            const compAsins = compAsinValue.split(/[\n,\s]+/).map(s => s.trim().toUpperCase()).filter(s => s);
+            const compAsins = splitAsins(compAsinValue);
             const invalidAsins = compAsins.filter(asin => !asinRegex.test(asin));
             if (invalidAsins.length > 0) {
                 isCompValid = false;
@@ -578,10 +595,19 @@ Present workflows in a structured table format, including:
             localStorage.setItem('pending_order_id', orderId);
             emitTracking('deposit_checkout_started', { path: window.location.pathname, order_id: orderId });
 
-            // Loading state
             payDepositBtn.disabled = true;
             const originalText = payDepositBtn.textContent;
             payDepositBtn.textContent = 'Processing...';
+
+            // Setup error container
+            let errDiv = paymentModal.querySelector('.api-error-msg');
+            if (!errDiv) {
+                errDiv = document.createElement('div');
+                errDiv.className = 'api-error-msg';
+                errDiv.style.cssText = 'display:none; color:#ef4444; background:#fee2e2; border:1px solid #f87171; padding:10px; border-radius:4px; margin-bottom:15px; font-size:0.9rem; text-align:center; word-break:break-word;';
+                payDepositBtn.parentNode.insertBefore(errDiv, payDepositBtn);
+            }
+            errDiv.style.display = 'none';
 
             try {
                 const response = await fetch('/api/proxy/create-checkout', {
@@ -597,23 +623,22 @@ Present workflows in a structured table format, including:
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.detail || 'Payment service error');
+                    throw new Error(errData.detail || `Server error (${response.status})`);
                 }
 
                 const data = await response.json();
-                console.log('Checkout response:', data);
-
                 const paymentUrl = data.url || (Array.isArray(data) && data[0] && data[0].url);
 
                 if (paymentUrl) {
                     emitTracking('deposit_checkout_redirect', { path: window.location.pathname, order_id: orderId });
                     window.location.href = paymentUrl;
                 } else {
-                    throw new Error('No payment URL returned');
+                    throw new Error('No payment gateway URL returned by the server.');
                 }
             } catch (err) {
                 console.error(err);
-                alert('Payment Error: ' + err.message);
+                errDiv.textContent = 'Service Error: ' + err.message + ' - Please try again in a moment.';
+                errDiv.style.display = 'block';
                 emitTracking('deposit_checkout_failed', { path: window.location.pathname, order_id: orderId, error: err.message });
                 payDepositBtn.disabled = false;
                 payDepositBtn.textContent = originalText;
@@ -654,7 +679,6 @@ Present workflows in a structured table format, including:
             emitTracking('polar_checkout_started', { path: window.location.pathname, order_id: payload.order_id });
 
             // Allow default behavior (navigation to Polar) to continue
-            console.log('Proceeding to Polar with email:', userEmail);
         });
     }
 
@@ -669,9 +693,9 @@ Present workflows in a structured table format, including:
             user_email: (document.getElementById('pro-email-input')?.value.trim()) || (document.getElementById('user-email')?.value.trim()) || 'guest@example.com',
             industry: 'General',
 
-            // Product Data (Arrays required) - main: 1-5 ASINs, competitor: 5-15 recommended
-            main_asins: document.getElementById('main-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
-            competitor_asins: document.getElementById('comp-asin').value.trim().split(/[\n,\s]+/).map(s => s.trim()).filter(s => s),
+            // Product Data (Arrays required) - use same split as validateAsins for consistency
+            main_asins: (document.getElementById('main-asin').value.trim().split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s) || []),
+            competitor_asins: (document.getElementById('comp-asin').value.trim().split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s) || []),
 
             // Config
             productSite: document.getElementById('marketplace').value,
@@ -698,7 +722,19 @@ Present workflows in a structured table format, including:
         const submitBtn = isPro ? payDepositBtn : modalForm.querySelector('.submit-btn');
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Generating...';
+        submitBtn.textContent = 'Processing...';
+
+        // Setup error container
+        const modalContainer = isPro ? paymentModal : modal;
+        let errDiv = modalContainer.querySelector('.api-error-msg');
+        if (!errDiv) {
+            errDiv = document.createElement('div');
+            errDiv.className = 'api-error-msg';
+            errDiv.style.cssText = 'display:none; color:#ef4444; background:#fee2e2; border:1px solid #f87171; padding:10px; border-radius:4px; margin-bottom:15px; font-size:0.9rem; text-align:center; word-break:break-word;';
+            const targetParent = isPro ? submitBtn.parentNode : modalForm;
+            targetParent.insertBefore(errDiv, isPro ? submitBtn : modalForm.querySelector('.submit-btn'));
+        }
+        errDiv.style.display = 'none';
 
         const payload = preparePayload(isPro);
         emitTracking('analysis_submit_started', { path: window.location.pathname, tier: isPro ? 'pro' : 'free', order_id: payload.order_id });
@@ -724,7 +760,7 @@ Present workflows in a structured table format, including:
                 try {
                     data = await response.json();
                 } catch (e) {
-                    console.log('Response was not JSON');
+                    // Response was not JSON; data stays {}
                 }
 
                 // Redirect standard flow
@@ -743,15 +779,19 @@ Present workflows in a structured table format, including:
                     has_task_id: !!taskId
                 });
 
-                window.location.href = `processing.html?email=${email}&orderId=${orderId}&taskId=${taskId}&pro=${isPro}`;
+                // Prevent processing.html from re-triggering old payloads
+                localStorage.removeItem('pending_analysis_payload');
+
+                window.location.href = `processing.html?email=${email}&orderId=${orderId}&taskId=${taskId}&pro=${isPro}&submitted=true`;
 
             } else {
                 const errText = await response.text();
-                throw new Error(`Server responded with ${response.status}: ${errText}`);
+                throw new Error(`Server responded with Code ${response.status}`);
             }
         } catch (error) {
             console.error(error);
-            alert('Submission Error: ' + error.message);
+            errDiv.textContent = 'Service Error: ' + error.message + ' - Please try again in a moment. Ensure the backend is running.';
+            errDiv.style.display = 'block';
             emitTracking('analysis_submit_failed', {
                 path: window.location.pathname,
                 tier: isPro ? 'pro' : 'free',

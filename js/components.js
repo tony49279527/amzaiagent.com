@@ -121,6 +121,7 @@ function renderFooter() {
                 <div class="footer-col">
                     <h4>Company</h4>
                     <a href="about.html">About Us</a>
+                    <a href="contact.html">Contact</a>
                     <a href="privacy.html">Privacy Policy</a>
                     <a href="terms.html">Terms of Service</a>
                 </div>
