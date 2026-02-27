@@ -153,9 +153,21 @@
             const email = params.get('email') || localStorage.getItem('pending_email');
             const taskId = params.get('taskId') || params.get('report_id') || localStorage.getItem('pending_task_id');
             const sessionId = params.get('session_id');
-            const isProFlow = params.get('pro') === 'true';
+            let isProFlow = params.get('pro') === 'true';
             const isSubmitted = params.get('submitted') === 'true';
             const orderId = params.get('orderId') || localStorage.getItem('pending_order_id') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
+
+            // Polar flow: URL has no pro=true, but pending payload has payment_status
+            const pendingPayloadRaw = localStorage.getItem('pending_analysis_payload');
+            if (!isProFlow && pendingPayloadRaw) {
+                try {
+                    const pp = JSON.parse(pendingPayloadRaw);
+                    if (pp.payment_status === 'deposit_paid' || pp.amount_paid > 0) {
+                        isProFlow = true;
+                        console.log('[DEBUG] Detected Pro flow from pending payload (Polar redirect)');
+                    }
+                } catch (e) {}
+            }
 
             // 1. Basic Info Populating
             document.getElementById('display-order-id').innerText = orderId;
