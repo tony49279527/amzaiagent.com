@@ -424,92 +424,31 @@ Present workflows in a structured table format, including:
         });
     }
 
+    // Extract valid ASINs only (B + 9 alphanumeric). No blocking - clean and use.
+    const asinRegex = /^B[A-Z0-9]{9}$/i;
+    const parseAsins = (raw) => (raw || '').split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => asinRegex.test(s));
+
     function validateAsins() {
-        let isMainValid = true;
-        let isCompValid = true;
-
-        // ASIN format regex: B followed by 9 alphanumeric characters (Amazon standard)
-        const asinRegex = /^B[A-Z0-9]{9}$/i;
-
-        // Split by any non-word chars (comma, space, newline, full-width comma，semicolon；etc), extract alphanumeric, uppercase
-        const splitAsins = (raw) => (raw || '').split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s);
-
-        // Reset Validity
         mainAsin.setCustomValidity("");
         compAsin.setCustomValidity("");
+        mainAsin.style.borderColor = '';
+        mainAsin.style.boxShadow = '';
+        compAsin.style.borderColor = '';
+        compAsin.style.boxShadow = '';
 
-        // Check Main ASIN - 1-5 ASINs
-        const mainAsinRaw = mainAsin.value.trim();
-        const mainAsins = mainAsinRaw ? splitAsins(mainAsinRaw) : [];
+        const mainAsins = parseAsins(mainAsin.value.trim());
+        const compAsins = parseAsins(compAsin.value.trim());
+
         if (mainAsins.length === 0) {
-            isMainValid = false;
-            mainAsin.setCustomValidity("Please enter at least one Core Product ASIN (1-5 recommended).");
-        } else if (mainAsins.length > 5) {
-            isMainValid = false;
-            mainAsin.setCustomValidity("Please enter at most 5 Core Product ASINs (same product variants).");
-        } else {
-            const invalidMain = mainAsins.filter(a => !asinRegex.test(a));
-            if (invalidMain.length > 0) {
-                isMainValid = false;
-                mainAsin.setCustomValidity(`Invalid ASIN format: ${invalidMain.join(', ')}. Each ASIN must start with 'B' followed by 9 alphanumeric characters (e.g. B08CVS825S).`);
-            }
-        }
-
-        if (!isMainValid) {
-            mainAsin.style.borderColor = '#ef4444';
-            mainAsin.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
-            // Shake animation
-            mainAsin.animate([
-                { transform: 'translate(0)' },
-                { transform: 'translate(-5px)' },
-                { transform: 'translate(5px)' },
-                { transform: 'translate(0)' }
-            ], { duration: 300, iterations: 1 });
-        } else {
-            mainAsin.style.borderColor = '';
-            mainAsin.style.boxShadow = '';
-        }
-
-        // Check Comp ASIN - not empty AND all ASINs valid format
-        const compAsinValue = compAsin.value.trim();
-        if (!compAsinValue) {
-            isCompValid = false;
-            compAsin.setCustomValidity("Please enter at least one Competitor ASIN.");
-        } else {
-            const compAsins = splitAsins(compAsinValue);
-            const invalidAsins = compAsins.filter(asin => !asinRegex.test(asin));
-            if (invalidAsins.length > 0) {
-                isCompValid = false;
-                compAsin.setCustomValidity(`Invalid ASIN format: ${invalidAsins.join(', ')}. Each ASIN must start with 'B' followed by 9 alphanumeric characters.`);
-            }
-        }
-
-        if (!isCompValid) {
-            compAsin.style.borderColor = '#ef4444';
-            compAsin.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
-            // Shake animation
-            compAsin.animate([
-                { transform: 'translate(0)' },
-                { transform: 'translate(-5px)' },
-                { transform: 'translate(5px)' },
-                { transform: 'translate(0)' }
-            ], { duration: 300, iterations: 1 });
-        } else {
-            compAsin.style.borderColor = '';
-            compAsin.style.boxShadow = '';
-        }
-
-        // Trigger Messages (Native Bubble but with English Text)
-        if (!isMainValid) {
+            mainAsin.setCustomValidity("Please enter at least one Core Product ASIN.");
             mainAsin.reportValidity();
             return false;
         }
-
-        if (!isCompValid) {
+        if (compAsins.length === 0) {
+            compAsin.setCustomValidity("Please enter at least one Competitor ASIN.");
             compAsin.reportValidity();
             return false;
         }
-
         return true;
     }
 
@@ -693,9 +632,9 @@ Present workflows in a structured table format, including:
             user_email: (document.getElementById('pro-email-input')?.value.trim()) || (document.getElementById('user-email')?.value.trim()) || 'guest@example.com',
             industry: 'General',
 
-            // Product Data (Arrays required) - use same split as validateAsins for consistency
-            main_asins: (document.getElementById('main-asin').value.trim().split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s) || []),
-            competitor_asins: (document.getElementById('comp-asin').value.trim().split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => s) || []),
+            // Product Data (Arrays required) - use parseAsins to clean and keep only valid ASINs
+            main_asins: parseAsins(document.getElementById('main-asin').value),
+            competitor_asins: parseAsins(document.getElementById('comp-asin').value),
 
             // Config
             productSite: document.getElementById('marketplace').value,
