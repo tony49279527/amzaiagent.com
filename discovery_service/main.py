@@ -485,12 +485,28 @@ from .payment_service import payment_service
 
 @app.get("/api/payments/verify-session")
 async def verify_payment_session(session_id: str, request: Request):
-    """Verify a checkout session status. Populated by Polar webhook or /api/payments/confirm-session (n8n)."""
+    """Verify checkout session. Uses verified_sessions (from n8n) or direct Stripe API as fallback."""
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     if session_id in verified_sessions:
-        _log_event("payment.session_verify", {"status": "paid", "session_id": session_id}, request)
+        _log_event("payment.session_verify", {"status": "paid", "source": "memory", "session_id": session_id}, request)
         return {"status": "paid", "session_id": session_id}
+
+    # Fallback: direct Stripe API verification (handles race when n8n webhook is slow)
+    stripe_key = os.getenv("STRIPE_SECRET_KEY")
+    if stripe_key and session_id.startswith("cs_"):
+        try:
+            import stripe
+            stripe.api_key = stripe_key
+            sess = stripe.checkout.Session.retrieve(session_id)
+            if getattr(sess, "payment_status", None) == "paid" and getattr(sess, "status", None) == "complete":
+                verified_sessions.add(session_id)
+                _persist_payment_state()
+                _log_event("payment.session_verify", {"status": "paid", "source": "stripe_api", "session_id": session_id}, request)
+                return {"status": "paid", "session_id": session_id}
+        except Exception as e:
+            print(f"Stripe verify fallback error: {e}")
+
     _log_event("payment.session_verify", {"status": "pending", "session_id": session_id}, request)
     return {"status": "pending", "session_id": session_id}
 
