@@ -403,6 +403,7 @@ Present workflows in a structured table format, including:
     const analysisForm = document.getElementById('analysis-form');
     const modalForm = document.getElementById('modal-form');
     const payDepositBtn = document.getElementById('pay-deposit-btn');
+    const isCreateAnalysisPage = !!analysisForm;
 
     // === FORM VALIDATION HELPER ===
     const mainAsin = document.getElementById('main-asin');
@@ -429,6 +430,8 @@ Present workflows in a structured table format, including:
     const parseAsins = (raw) => (raw || '').split(/\W+/).map(s => s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()).filter(s => asinRegex.test(s));
 
     function validateAsins() {
+        if (!isCreateAnalysisPage || !mainAsin || !compAsin) return true;
+
         mainAsin.setCustomValidity("");
         compAsin.setCustomValidity("");
         mainAsin.style.borderColor = '';
@@ -477,31 +480,33 @@ Present workflows in a structured table format, including:
     }
 
     // Close Handlers
-    [modalClose, paymentModalClose].forEach(btn => {
-        if (btn) btn.addEventListener('click', () => {
-            modal.classList.remove('active');
-            paymentModal.classList.remove('active');
+    if (isCreateAnalysisPage) {
+        [modalClose, paymentModalClose].forEach(btn => {
+            if (btn) btn.addEventListener('click', () => {
+                if (modal) modal.classList.remove('active');
+                if (paymentModal) paymentModal.classList.remove('active');
+            });
         });
-    });
+    }
 
     // === SWITCH TO PRO (Upsell Link) ===
     const switchToProLink = document.getElementById('switch-to-pro-link');
-    if (switchToProLink) {
+    if (switchToProLink && isCreateAnalysisPage) {
         switchToProLink.addEventListener('click', (e) => {
             e.preventDefault();
             emitTracking('analysis_upgrade_to_pro_click', { path: window.location.pathname });
             // Switch Modals
-            modal.classList.remove('active');
+            if (modal) modal.classList.remove('active');
 
             // Confirm Upgrade Logic? Or just direct to Payment?
             // User wants to upgrade -> Show them Payment immediately as confirmation of intent
             isProIntent = true;
-            paymentModal.classList.add('active');
+            if (paymentModal) paymentModal.classList.add('active');
         });
     }
 
     // Path A: Free Submission
-    if (modalForm) {
+    if (modalForm && isCreateAnalysisPage) {
         modalForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             emitTracking('analysis_free_submit_click', { path: window.location.pathname });
@@ -510,7 +515,7 @@ Present workflows in a structured table format, including:
     }
 
     // === STRIPE PAYMENT HANDLER ===
-    if (payDepositBtn) {
+    if (payDepositBtn && isCreateAnalysisPage) {
         payDepositBtn.addEventListener('click', async () => {
             if (!validateAsins()) return;
 
@@ -539,7 +544,7 @@ Present workflows in a structured table format, including:
             payDepositBtn.textContent = 'Processing...';
 
             // Setup error container
-            let errDiv = paymentModal.querySelector('.api-error-msg');
+            let errDiv = paymentModal ? paymentModal.querySelector('.api-error-msg') : null;
             if (!errDiv) {
                 errDiv = document.createElement('div');
                 errDiv.className = 'api-error-msg';
@@ -587,7 +592,7 @@ Present workflows in a structured table format, including:
 
     // === POLAR PAYMENT HANDLER (Dual Option) ===
     const payPolarDepositBtn = document.getElementById('pay-polar-deposit-btn');
-    if (payPolarDepositBtn) {
+    if (payPolarDepositBtn && isCreateAnalysisPage) {
         payPolarDepositBtn.addEventListener('click', function (e) {
             const emailInput = document.getElementById('pro-email-input');
             let userEmail = emailInput ? emailInput.value.trim() : '';
@@ -633,16 +638,16 @@ Present workflows in a structured table format, including:
             industry: 'General',
 
             // Product Data (Arrays required) - use parseAsins to clean and keep only valid ASINs
-            main_asins: parseAsins(document.getElementById('main-asin').value),
-            competitor_asins: parseAsins(document.getElementById('comp-asin').value),
+            main_asins: parseAsins(document.getElementById('main-asin')?.value || ''),
+            competitor_asins: parseAsins(document.getElementById('comp-asin')?.value || ''),
 
             // Config
-            productSite: document.getElementById('marketplace').value,
+            productSite: document.getElementById('marketplace')?.value || 'US',
             language: 'en', // Strict English
 
             // AI Config
-            llm_model: isPro ? document.getElementById('llm-model').value : 'gpt-4o-mini', // Default model
-            custom_prompt: isPro ? document.getElementById('custom-prompt').value.trim() : '',
+            llm_model: isPro ? (document.getElementById('llm-model')?.value || 'gpt-4o-mini') : 'gpt-4o-mini', // Default model
+            custom_prompt: isPro ? ((document.getElementById('custom-prompt')?.value || '').trim()) : '',
 
             // Scraping Limits
             reference_website_count: 5,

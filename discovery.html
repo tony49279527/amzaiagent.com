@@ -175,7 +175,7 @@
                                     <!-- Row 1: Report Language & LLM Model -->
                                     <div class="form-group">
                                         <label>Report Language <span class="lock-icon">🔒</span></label>
-                                        <select disabled class="pro-feature">
+                                        <select id="report-language" disabled class="pro-feature">
                                             <option value="English" selected>English (Default)</option>
                                             <option value="Français">Français</option>
                                             <option value="Deutsch">Deutsch</option>
@@ -432,6 +432,14 @@
             const paymentModal = document.getElementById('payment-modal');
             const paymentModalClose = document.getElementById('payment-modal-close');
 
+            function getSelectedFocusAreas() {
+                const selected = [];
+                document.querySelectorAll('.focus-card.active').forEach(card => {
+                    selected.push(card.dataset.value);
+                });
+                return selected.length > 0 ? selected : ['market-entry'];
+            }
+
             // Show payment modal function
             function showPaymentModal() {
                 paymentModal.style.display = 'flex';
@@ -476,8 +484,8 @@
             if (proUnlockOverlay) {
                 proUnlockOverlay.addEventListener('click', function (e) {
                     e.preventDefault();
-                    // Unlock fields first, payment on submit
-                    unlockProFeatures();
+                    // Require payment intent before enabling Pro options.
+                    showPaymentModal();
                 });
             }
 
@@ -543,6 +551,8 @@
                     errDiv.style.display = 'none';
 
                     // Construct Payload for Post-Payment
+                    const focusAreas = getSelectedFocusAreas();
+                    const reportLanguage = document.getElementById('report-language')?.value || 'English';
                     const payload = {
                         category: [
                             category1,
@@ -558,7 +568,7 @@
                         user_name: 'Pro User', // Default for Pro flow to satisfy schema
                         analysis_focus: focusAreas,
                         analysis_prompt: document.getElementById('default-prompt').value,
-                        report_language: document.querySelector('.pro-feature[disabled] option:checked, .pro-feature option:checked').parentElement.value, // Get language
+                        report_language: reportLanguage,
                         selected_model: document.getElementById('llm-model').value
                     };
 
@@ -782,13 +792,7 @@
                 const asinList = asins ? asins.split('\n').map(a => a.trim()).filter(a => a.length > 0) : [];
 
                 // Capture selected analysis focus areas
-                let focusAreas = [];
-                document.querySelectorAll('.focus-card.active').forEach(card => {
-                    focusAreas.push(card.dataset.value);
-                });
-
-                // Fallback if none selected (should not happen due to default)
-                if (focusAreas.length === 0) focusAreas = ['market-entry'];
+                const focusAreas = getSelectedFocusAreas();
 
                 // Store data
                 discoveryData = {

@@ -216,6 +216,31 @@
             return tmp.textContent || tmp.innerText || "";
         }
 
+        function sanitizeHtml(html) {
+            const container = document.createElement('div');
+            container.innerHTML = html || '';
+
+            // Remove high-risk tags completely.
+            container.querySelectorAll('script, iframe, object, embed, link, meta, style').forEach(el => el.remove());
+
+            // Strip event handlers and javascript: URLs.
+            container.querySelectorAll('*').forEach(el => {
+                Array.from(el.attributes).forEach(attr => {
+                    const name = attr.name.toLowerCase();
+                    const value = (attr.value || '').trim().toLowerCase();
+                    if (name.startsWith('on')) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+                    if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+
+            return container.innerHTML;
+        }
+
         function normalizeTitleYear(title, dateText) {
             const publishYear = new Date(dateText || '').getFullYear();
             if (!Number.isFinite(publishYear)) return title;
@@ -299,14 +324,15 @@
                 }
 
                 const displayTitle = normalizeTitleYear(post.title, post.date);
+                const safeContent = sanitizeHtml(post.content || post.content_html || '');
 
                 // Update SEO metadata dynamically
                 const pageTitle = `${displayTitle} | Amz AI Agent`;
                 document.title = pageTitle;
-                const description = post.content ? stripHtml(post.content).substring(0, 160) + '...' : displayTitle;
+                const description = safeContent ? stripHtml(safeContent).substring(0, 160) + '...' : displayTitle;
                 document.querySelector('meta[name="description"]').setAttribute('content', description);
                 document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/blog-post.html?id=${post.id}`);
-                injectSchema({ ...post, title: displayTitle });
+                injectSchema({ ...post, title: displayTitle, content: safeContent });
 
 
                 // 1. Render Article
@@ -324,7 +350,7 @@
                             ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${post.cover_image.replace('.png', '.webp')}" alt="${displayTitle}" class="article-cover" loading="lazy" onerror="this.style.display='none'"></div>` : ''}
 
                             <div class="article-content">
-                                ${post.content || post.content_html}
+                                ${safeContent}
                             </div>
 
                             <!-- Social Share -->
