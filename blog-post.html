@@ -263,6 +263,36 @@
             });
         }
 
+        function normalizeTitle(title) {
+            return (title || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getTopicKey(post) {
+            const normalized = normalizeTitle(post.title || '');
+            const dedupeRules = [
+                { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
+                { key: 'topic-bsa-compliance', pattern: /bsa compliance/ },
+                { key: 'topic-gmv-growth', pattern: /gmv growth/ },
+                { key: 'topic-seller-registration-drop', pattern: /seller registrations? drop/ },
+                { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ }
+            ];
+
+            for (const rule of dedupeRules) {
+                if (rule.pattern.test(normalized)) return rule.key;
+            }
+
+            return `post-${post.id}`;
+        }
+
+        function parseDateToTs(dateText) {
+            const ts = Date.parse(dateText || '');
+            return Number.isNaN(ts) ? 0 : ts;
+        }
+
         function injectSchema(post) {
             const ld = {
                 "@context": "https://schema.org",
@@ -405,7 +435,19 @@
                         `;
 
                 // 2. Populate Related Posts (tag-priority, fallback random)
-                const otherPosts = posts.filter(p => p.id !== post.id);
+                const dedupedRelatedPool = [];
+                const seenTopics = new Set();
+                [...posts]
+                    .sort((a, b) => parseDateToTs(b.date) - parseDateToTs(a.date))
+                    .forEach(p => {
+                        if (p.id === post.id) return;
+                        const topicKey = getTopicKey(p);
+                        if (seenTopics.has(topicKey)) return;
+                        seenTopics.add(topicKey);
+                        dedupedRelatedPool.push(p);
+                    });
+
+                const otherPosts = dedupedRelatedPool;
                 const currentTags = (post.tags || []).map(t => t.toLowerCase());
                 const scored = otherPosts.map(p => {
                     const ptags = (p.tags || []).map(t => t.toLowerCase());
