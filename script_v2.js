@@ -264,7 +264,7 @@ Present workflows in a structured table format, including:
                     errorMsg = document.createElement('div');
                     errorMsg.id = 'hero-error-msg';
                     errorMsg.style.cssText = 'color: #f87171; font-size: 0.95rem; margin-top: 0.75rem; font-weight: 500; background: rgba(0,0,0,0.5); padding: 0.25rem 0.75rem; border-radius: 4px; display: inline-block;';
-                    errorMsg.innerHTML = '⚠️ Please enter a valid ASIN (e.g. B08CVS825S)';
+                    errorMsg.innerHTML = '⚠️ Please enter at least one ASIN (e.g. B08CVS825S)';
                     // Insert after form
                     heroForm.parentNode.insertBefore(errorMsg, heroForm.nextSibling);
                 }

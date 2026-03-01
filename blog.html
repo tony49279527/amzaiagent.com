@@ -73,7 +73,8 @@
 
             function initBlog() {
                 const grid = document.getElementById('blog-grid');
-                const posts = window.blogPostsEN || [];
+                const rawPosts = window.blogPostsEN || [];
+                const posts = buildCuratedPosts(rawPosts);
 
                 grid.innerHTML = '';
 
@@ -95,7 +96,7 @@
                             </div>
                             <div class="card-content">
                                 <span class="card-tag">${featured.tags[0] || 'Featured'}</span>
-                                <h3 class="card-title">${featured.title}</h3>
+                                <h3 class="card-title">${featured.display_title || featured.title}</h3>
                                 <p class="card-desc">${stripHtml(featured.content).substring(0, 150)}...</p>
                                 <div class="card-footer">
                                     <span>📅 ${featured.date}</span>
@@ -116,12 +117,12 @@
                         <article class="card">
                             <div class="card-image-wrapper">
                                 <div style="width: 100%; height: 100%; background-color: #f1f5f9;">
-                                    <img src="${(post.cover_image || '').replace('.png', '.webp')}" style="width:100%;height:100%;object-fit:cover;" alt="${post.title}" loading="lazy" onerror="this.style.display='none'">
+                                    <img src="${(post.cover_image || '').replace('.png', '.webp')}" style="width:100%;height:100%;object-fit:cover;" alt="${post.display_title || post.title}" loading="lazy" onerror="this.style.display='none'">
                                 </div>
                             </div>
                             <div class="card-content">
                                 <span class="card-tag">${post.tags[0] || 'Article'}</span>
-                                <h3 class="card-title">${post.title}</h3>
+                                <h3 class="card-title">${post.display_title || post.title}</h3>
                                 <p class="card-desc">${stripHtml(post.content).substring(0, 120)}...</p>
                                 <div class="card-footer">
                                     <span>📅 ${post.date}</span>
@@ -132,6 +133,68 @@
                     `;
                     grid.appendChild(document.createRange().createContextualFragment(html));
                 });
+            }
+
+            function buildCuratedPosts(posts) {
+                const sorted = [...posts].sort((a, b) => parseDateToTs(b.date) - parseDateToTs(a.date));
+                const seenTopics = new Set();
+                const curated = [];
+
+                sorted.forEach(post => {
+                    const topicKey = getTopicKey(post);
+                    if (seenTopics.has(topicKey)) return;
+                    seenTopics.add(topicKey);
+                    curated.push({
+                        ...post,
+                        display_title: normalizeTitleYear(post.title, post.date)
+                    });
+                });
+
+                return curated;
+            }
+
+            function getTopicKey(post) {
+                const normalized = normalizeTitle(post.title || '');
+                const dedupeRules = [
+                    { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
+                    { key: 'topic-bsa-compliance', pattern: /bsa compliance/ },
+                    { key: 'topic-gmv-growth', pattern: /gmv growth/ },
+                    { key: 'topic-seller-registration-drop', pattern: /seller registrations? drop/ },
+                    { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ }
+                ];
+
+                for (const rule of dedupeRules) {
+                    if (rule.pattern.test(normalized)) return rule.key;
+                }
+
+                return `post-${post.id}`;
+            }
+
+            function normalizeTitle(title) {
+                return (title || '')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            function normalizeTitleYear(title, dateText) {
+                const publishYear = new Date(dateText || '').getFullYear();
+                if (!Number.isFinite(publishYear)) return title;
+
+                return (title || '').replace(/\b20\d{2}\b/g, (yearText) => {
+                    const year = Number(yearText);
+                    const gap = publishYear - year;
+                    if (gap >= 2 && gap <= 3) {
+                        return String(publishYear);
+                    }
+                    return yearText;
+                });
+            }
+
+            function parseDateToTs(dateText) {
+                const ts = Date.parse(dateText || '');
+                return Number.isNaN(ts) ? 0 : ts;
             }
 
             function stripHtml(html) {

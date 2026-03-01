@@ -56,6 +56,7 @@
                                     <option value="">-- Select Product Type --</option>
                                 </select>
                             </div>
+                            <p id="category-step-hint" class="category-step-hint">Tip: Select a main category first to unlock sub-category and product type.</p>
                         </div>
 
                         <!-- Product Keywords (PRIMARY) -->
@@ -418,6 +419,7 @@
             const level1 = document.getElementById('category-level-1');
             const level2 = document.getElementById('category-level-2');
             const level3 = document.getElementById('category-level-3');
+            const categoryStepHint = document.getElementById('category-step-hint');
 
             // Store form data
             let discoveryData = {};
@@ -678,6 +680,24 @@
                     option.textContent = cat;
                     level1.appendChild(option);
                 });
+                updateCategoryHint();
+            }
+
+            function updateCategoryHint() {
+                if (!categoryStepHint) return;
+                if (!level1.value) {
+                    categoryStepHint.textContent = 'Tip: Select a main category first to unlock sub-category and product type.';
+                    return;
+                }
+                if (!level2.value) {
+                    categoryStepHint.textContent = 'Tip: Main category selected. Choose a sub-category next.';
+                    return;
+                }
+                if (!level3.value) {
+                    categoryStepHint.textContent = 'Tip: Sub-category selected. Product type is now available.';
+                    return;
+                }
+                categoryStepHint.textContent = 'Great. Category path is complete.';
             }
 
             // Level 1 change handler
@@ -700,6 +720,7 @@
                     });
                     level2.disabled = false;
                 }
+                updateCategoryHint();
             });
 
             // Level 2 change handler
@@ -721,7 +742,10 @@
                     });
                     level3.disabled = false;
                 }
+                updateCategoryHint();
             });
+
+            level3.addEventListener('change', updateCategoryHint);
 
             // Initialize on load
             initCategories();

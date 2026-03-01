@@ -3270,7 +3270,7 @@ body.dark-theme .config-section {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.45);
     backdrop-filter: blur(2px);
     cursor: pointer;
     border-radius: 8px;
@@ -3278,9 +3278,8 @@ body.dark-theme .config-section {
 }
 
 body.dark-theme .pro-overlay {
-    background: rgba(15, 23, 42, 0.85);
-    /* Much darker for dark theme */
-    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -3740,11 +3739,6 @@ textarea:invalid:not(:placeholder-shown) {
     font-size: 1rem;
 }
 
-/* 10. Hide redundant CTA on create page */
-body.create-page .nav-actions .btn-primary {
-    display: none;
-}
-
 /* Discovery Page Mobile Fixes */
 .analysis-focus-cards {
     display: grid;
@@ -3816,4 +3810,16 @@ body.create-page .nav-actions .btn-primary {
         flex-direction: column;
         gap: 0.75rem;
     }
+}
+
+/* Discovery category disabled state helper */
+.category-select-container select:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.category-step-hint {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
 }
