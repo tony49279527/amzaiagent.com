@@ -70,6 +70,29 @@ def clean_html(raw_html):
     cleantext = re.sub(CLEANR, '', raw_html)
     return cleantext
 
+def normalize_title(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (title or "").lower()).strip()
+
+def topic_key(post: dict) -> str:
+    normalized = normalize_title(post.get("title", ""))
+    rules = [
+        ("topic-safe-t-window", r"safe t claims window"),
+        ("topic-bsa-compliance", r"bsa compliance"),
+        ("topic-gmv-growth", r"gmv growth"),
+        ("topic-seller-registration-drop", r"seller registrations? drop"),
+        ("topic-dd7-disbursement", r"dd 7|disbursement policy change"),
+    ]
+    for key, pattern in rules:
+        if re.search(pattern, normalized):
+            return key
+    return f"post-{post.get('id') or 'untitled'}"
+
+def parse_human_date(date_str: str) -> datetime:
+    try:
+        return datetime.strptime((date_str or "").strip(), "%B %d, %Y")
+    except Exception:
+        return datetime.min
+
 def extract_image_from_entry(entry):
     """
     Attempt to extract the best image URL from an RSS entry.
@@ -465,13 +488,23 @@ def save_to_json(post_data, source_link):
                 if match:
                     existing_posts = json.loads(match.group(1))
         
-        # Check for duplicates
+        # Check for exact slug duplicates
         if any(d.get('id') == new_entry['id'] for d in existing_posts):
             print("Duplicate slug detected. Skipping save.")
             return
 
-        # Insert new post at the beginning
+        # Keep only one URL per recurring topic to avoid SEO cannibalization.
+        existing_posts = [p for p in existing_posts if topic_key(p) != topic_key(new_entry)]
+
+        # Also drop exact/similar title duplicates.
+        new_title_key = normalize_title(new_entry.get("title", ""))
+        existing_posts = [p for p in existing_posts if normalize_title(p.get("title", "")) != new_title_key]
+
+        # Insert new post at the beginning.
         existing_posts.insert(0, new_entry)
+
+        # Keep deterministic date order and a bounded list size.
+        existing_posts = sorted(existing_posts, key=lambda p: parse_human_date(p.get("date")), reverse=True)[:80]
         
         # Write back as JavaScript module
         js_content = f"""

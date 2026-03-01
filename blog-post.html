@@ -271,8 +271,8 @@
                 .trim();
         }
 
-        function getTopicKey(post) {
-            const normalized = normalizeTitle(post.title || '');
+        function inferTopicKeyFromText(value) {
+            const normalized = normalizeTitle(value || '');
             const dedupeRules = [
                 { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
                 { key: 'topic-bsa-compliance', pattern: /bsa compliance/ },
@@ -285,7 +285,11 @@
                 if (rule.pattern.test(normalized)) return rule.key;
             }
 
-            return `post-${post.id}`;
+            return null;
+        }
+
+        function getTopicKey(post) {
+            return inferTopicKeyFromText(post.title || '') || `post-${post.id}`;
         }
 
         function parseDateToTs(dateText) {
@@ -345,6 +349,13 @@
             script.onload = () => {
                 // blog_posts.js sets window.blogPostsEN
                 const posts = window.blogPostsEN || [];
+                const topicLeaders = new Map();
+                [...posts]
+                    .sort((a, b) => parseDateToTs(b.date) - parseDateToTs(a.date))
+                    .forEach(p => {
+                        const key = getTopicKey(p);
+                        if (!topicLeaders.has(key)) topicLeaders.set(key, p);
+                    });
 
                 // Logic to find post by ID or Slug
                 let post = posts.find(p => p.id === postId);
@@ -358,21 +369,22 @@
                 }
 
                 if (!post) {
+                    const requestedSlug = new URLSearchParams(window.location.search).get('slug') || postId;
+                    const inferredTopicKey = inferTopicKeyFromText(requestedSlug);
+                    const canonicalPost = inferredTopicKey ? topicLeaders.get(inferredTopicKey) : null;
+                    if (canonicalPost && canonicalPost.id) {
+                        const canonicalUrl = `blog-post.html?id=${encodeURIComponent(canonicalPost.id)}`;
+                        window.location.replace(canonicalUrl);
+                        return;
+                    }
                     articleContent.innerHTML = '<div style="text-align: center; padding: 4rem;">Article not found</div>';
                     return;
                 }
 
                 // Canonicalize duplicate topic URLs to the newest post, reducing SEO cannibalization.
-                const topicLeaders = new Map();
-                [...posts]
-                    .sort((a, b) => parseDateToTs(b.date) - parseDateToTs(a.date))
-                    .forEach(p => {
-                        const key = getTopicKey(p);
-                        if (!topicLeaders.has(key)) topicLeaders.set(key, p);
-                    });
-                const canonicalPost = topicLeaders.get(getTopicKey(post));
-                if (canonicalPost && canonicalPost.id && canonicalPost.id !== post.id) {
-                    const canonicalUrl = `blog-post.html?id=${encodeURIComponent(canonicalPost.id)}`;
+                const canonicalPostForCurrent = topicLeaders.get(getTopicKey(post));
+                if (canonicalPostForCurrent && canonicalPostForCurrent.id && canonicalPostForCurrent.id !== post.id) {
+                    const canonicalUrl = `blog-post.html?id=${encodeURIComponent(canonicalPostForCurrent.id)}`;
                     window.location.replace(canonicalUrl);
                     return;
                 }
