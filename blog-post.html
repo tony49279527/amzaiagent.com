@@ -250,6 +250,33 @@
             return container.innerHTML;
         }
 
+        function normalizeContentYears(html, dateText) {
+            const publishYear = new Date(dateText || '').getFullYear();
+            if (!Number.isFinite(publishYear)) return html || '';
+            return String(html || '').replace(/\b20\d{2}\b/g, (yearText) => {
+                const year = Number(yearText);
+                const gap = publishYear - year;
+                if (gap >= 2 && gap <= 3) {
+                    return String(publishYear);
+                }
+                return yearText;
+            });
+        }
+
+        function localizeExternalImages(html, fallbackImage) {
+            const container = document.createElement('div');
+            container.innerHTML = html || '';
+            const fallback = (fallbackImage || '').replace('.png', '.webp');
+            container.querySelectorAll('img').forEach(img => {
+                const src = (img.getAttribute('src') || '').trim();
+                if (/^https?:\/\//i.test(src) && fallback) {
+                    img.setAttribute('src', fallback);
+                }
+                img.setAttribute('loading', 'lazy');
+            });
+            return container.innerHTML;
+        }
+
         function normalizeTitleYear(title, dateText) {
             const publishYear = new Date(dateText || '').getFullYear();
             if (!Number.isFinite(publishYear)) return title;
@@ -390,7 +417,9 @@
                 }
 
                 const displayTitle = normalizeTitleYear(post.title, post.date);
-                const safeContent = sanitizeHtml(post.content || post.content_html || '');
+                const normalizedContent = normalizeContentYears(post.content || post.content_html || '', post.date);
+                const localizedContent = localizeExternalImages(normalizedContent, post.cover_image || '');
+                const safeContent = sanitizeHtml(localizedContent);
                 const safeTitle = escapeHtml(displayTitle);
                 const safeTag = escapeHtml((post.tags && post.tags[0]) || '');
                 const safeAuthor = escapeHtml(post.author || 'Amz AI Agent');

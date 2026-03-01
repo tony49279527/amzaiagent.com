@@ -93,6 +93,47 @@ def parse_human_date(date_str: str) -> datetime:
     except Exception:
         return datetime.min
 
+def normalize_year_tokens(text: str, publish_year: int) -> str:
+    if not text:
+        return text
+    if not publish_year:
+        return text
+
+    def _replace(match):
+        year = int(match.group(0))
+        gap = publish_year - year
+        if 2 <= gap <= 3:
+            return str(publish_year)
+        return match.group(0)
+
+    return re.sub(r"\b20\d{2}\b", _replace, text)
+
+def sanitize_post_html_for_site(content_html: str, cover_image: str, publish_year: int) -> str:
+    """
+    Keep blog content consistent:
+    1) normalize stale year tokens (e.g. 2024/2025 in 2026 posts),
+    2) avoid external hotlink image dependencies,
+    3) enforce lazy-loading.
+    """
+    normalized_html = normalize_year_tokens(content_html or "", publish_year)
+    soup = BeautifulSoup(normalized_html, 'html.parser')
+
+    for bad in soup.find_all(['script', 'iframe', 'object', 'embed']):
+        bad.decompose()
+
+    fallback_cover = (cover_image or "").replace(".png", ".webp")
+    for img in soup.find_all('img'):
+        src = (img.get('src') or '').strip()
+        if src.startswith('http://') or src.startswith('https://'):
+            if fallback_cover:
+                img['src'] = fallback_cover
+            else:
+                img.decompose()
+                continue
+        img['loading'] = 'lazy'
+
+    return str(soup)
+
 def extract_image_from_entry(entry):
     """
     Attempt to extract the best image URL from an RSS entry.
@@ -440,11 +481,20 @@ def save_to_supabase(post_data, source_link):
     if not supabase: return
     
     print("Saving to Supabase...")
+    publish_year = datetime.now().year
+    safe_html = sanitize_post_html_for_site(
+        post_data.get("content_html", ""),
+        post_data.get("cover_image", ""),
+        publish_year
+    )
+    safe_title = normalize_year_tokens(post_data.get("title", ""), publish_year)
+    safe_excerpt = normalize_year_tokens(post_data.get("excerpt", ""), publish_year)
+
     db_record = {
-        "title": post_data["title"],
+        "title": safe_title,
         "slug": post_data["slug"],
-        "summary": post_data["excerpt"],
-        "content": post_data["content_html"],
+        "summary": safe_excerpt,
+        "content": safe_html,
         "author": "Amz AI Agent",
         "tags": post_data["tags"],
         "status": "published",
@@ -467,14 +517,22 @@ def save_to_json(post_data, source_link):
     print("Saving to blog_posts.js...")
     js_path = "data/blog/blog_posts.js"
     
+    publish_year = datetime.now().year
+    safe_html = sanitize_post_html_for_site(
+        post_data.get("content_html", ""),
+        post_data.get("cover_image", ""),
+        publish_year
+    )
+    safe_title = normalize_year_tokens(post_data.get("title", ""), publish_year)
+
     new_entry = {
         "id": post_data["slug"],
-        "title": post_data["title"],
+        "title": safe_title,
         "date": datetime.now().strftime("%B %d, %Y"),  # Human-readable format like existing posts
         "author": "Amz AI Agent",
         "cover_image": post_data.get('cover_image', "assets/images/blog_thumbs/default_news.png"),
         "tags": post_data["tags"],
-        "content": post_data["content_html"],
+        "content": safe_html,
     }
 
     try:
