@@ -362,6 +362,21 @@
                     return;
                 }
 
+                // Canonicalize duplicate topic URLs to the newest post, reducing SEO cannibalization.
+                const topicLeaders = new Map();
+                [...posts]
+                    .sort((a, b) => parseDateToTs(b.date) - parseDateToTs(a.date))
+                    .forEach(p => {
+                        const key = getTopicKey(p);
+                        if (!topicLeaders.has(key)) topicLeaders.set(key, p);
+                    });
+                const canonicalPost = topicLeaders.get(getTopicKey(post));
+                if (canonicalPost && canonicalPost.id && canonicalPost.id !== post.id) {
+                    const canonicalUrl = `blog-post.html?id=${encodeURIComponent(canonicalPost.id)}`;
+                    window.location.replace(canonicalUrl);
+                    return;
+                }
+
                 const displayTitle = normalizeTitleYear(post.title, post.date);
                 const safeContent = sanitizeHtml(post.content || post.content_html || '');
                 const safeTitle = escapeHtml(displayTitle);
