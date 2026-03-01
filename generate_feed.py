@@ -30,24 +30,11 @@ def normalize_title(title: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", (title or "").lower()).strip()
 
 
-def normalize_title_year(title: str, date_str: str) -> str:
-    publish_year = parse_date(date_str).year
-
-    def _replace(match: re.Match) -> str:
-        year = int(match.group(0))
-        gap = publish_year - year
-        if 2 <= gap <= 3:
-            return str(publish_year)
-        return match.group(0)
-
-    return re.sub(r"\b20\d{2}\b", _replace, title or "")
-
-
 def topic_key(post: Dict) -> str:
     normalized = normalize_title(post.get("title") or "")
     rules = [
         ("topic-safe-t-window", r"safe t claims window"),
-        ("topic-bsa-compliance", r"bsa compliance"),
+        ("topic-bsa-compliance", r"bsa compliance|seller tool compliance|bsa rules?"),
         ("topic-gmv-growth", r"gmv growth"),
         ("topic-seller-registration-drop", r"seller registrations? drop"),
         ("topic-dd7-disbursement", r"dd 7|disbursement policy change"),
@@ -67,9 +54,7 @@ def curate_posts(posts: List[Dict]) -> List[Dict]:
         if key in seen_keys:
             continue
         seen_keys.add(key)
-        post_copy = dict(post)
-        post_copy["title"] = normalize_title_year(post_copy.get("title") or "", post_copy.get("date", ""))
-        curated.append(post_copy)
+        curated.append(dict(post))
     return curated
 
 
@@ -87,7 +72,6 @@ def build_feed(posts: List[Dict]) -> str:
         # crude plain-text excerpt
         summary = re.sub("<[^>]+>", " ", raw_content)
         summary = " ".join(summary.split())[:300]
-        summary = normalize_title_year(summary, p.get("date", ""))
         cover = p.get("cover_image") or ""
         feed_items.append(f"""
   <entry>

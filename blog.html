@@ -85,11 +85,10 @@
 
                 // Featured post (first one)
                 const featured = posts[0];
-                const featuredContent = normalizeContentYears(featured.content || '', featured.date);
                 const featuredTitle = escapeHtml(featured.display_title || featured.title || '');
                 const featuredTag = escapeHtml((featured.tags && featured.tags[0]) || 'Featured');
                 const featuredDate = escapeHtml(featured.date || '');
-                const featuredDesc = escapeHtml(stripHtml(featuredContent).substring(0, 150));
+                const featuredDesc = escapeHtml(stripHtml(featured.content || '').substring(0, 150));
                 const featuredId = encodeURIComponent(featured.id || '');
                 const featuredHTML = `
                 <div class="featured-post">
@@ -118,11 +117,10 @@
                 // Rest of posts
                 const otherPosts = posts.slice(1);
                 otherPosts.forEach(post => {
-                    const postContent = normalizeContentYears(post.content || '', post.date);
                     const postTitle = escapeHtml(post.display_title || post.title || '');
                     const postTag = escapeHtml((post.tags && post.tags[0]) || 'Article');
                     const postDate = escapeHtml(post.date || '');
-                    const postDesc = escapeHtml(stripHtml(postContent).substring(0, 120));
+                    const postDesc = escapeHtml(stripHtml(post.content || '').substring(0, 120));
                     const postId = encodeURIComponent(post.id || '');
                     const html = `
                     <a href="blog-post.html?id=${postId}" class="card-link">
@@ -158,7 +156,7 @@
                     seenTopics.add(topicKey);
                     curated.push({
                         ...post,
-                        display_title: normalizeTitleYear(post.title, post.date)
+                        display_title: post.title
                     });
                 });
 
@@ -169,7 +167,7 @@
                 const normalized = normalizeTitle(post.title || '');
                 const dedupeRules = [
                     { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
-                    { key: 'topic-bsa-compliance', pattern: /bsa compliance/ },
+                    { key: 'topic-bsa-compliance', pattern: /bsa compliance|seller tool compliance|bsa rules?/ },
                     { key: 'topic-gmv-growth', pattern: /gmv growth/ },
                     { key: 'topic-seller-registration-drop', pattern: /seller registrations? drop/ },
                     { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ }
@@ -190,36 +188,9 @@
                     .trim();
             }
 
-            function normalizeTitleYear(title, dateText) {
-                const publishYear = new Date(dateText || '').getFullYear();
-                if (!Number.isFinite(publishYear)) return title;
-
-                return (title || '').replace(/\b20\d{2}\b/g, (yearText) => {
-                    const year = Number(yearText);
-                    const gap = publishYear - year;
-                    if (gap >= 2 && gap <= 3) {
-                        return String(publishYear);
-                    }
-                    return yearText;
-                });
-            }
-
             function parseDateToTs(dateText) {
                 const ts = Date.parse(dateText || '');
                 return Number.isNaN(ts) ? 0 : ts;
-            }
-
-            function normalizeContentYears(html, dateText) {
-                const publishYear = new Date(dateText || '').getFullYear();
-                if (!Number.isFinite(publishYear)) return html || '';
-                return String(html || '').replace(/\b20\d{2}\b/g, (yearText) => {
-                    const year = Number(yearText);
-                    const gap = publishYear - year;
-                    if (gap >= 2 && gap <= 3) {
-                        return String(publishYear);
-                    }
-                    return yearText;
-                });
             }
 
             function stripHtml(html) {

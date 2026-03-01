@@ -250,19 +250,6 @@
             return container.innerHTML;
         }
 
-        function normalizeContentYears(html, dateText) {
-            const publishYear = new Date(dateText || '').getFullYear();
-            if (!Number.isFinite(publishYear)) return html || '';
-            return String(html || '').replace(/\b20\d{2}\b/g, (yearText) => {
-                const year = Number(yearText);
-                const gap = publishYear - year;
-                if (gap >= 2 && gap <= 3) {
-                    return String(publishYear);
-                }
-                return yearText;
-            });
-        }
-
         function localizeExternalImages(html, fallbackImage) {
             const container = document.createElement('div');
             container.innerHTML = html || '';
@@ -277,19 +264,6 @@
             return container.innerHTML;
         }
 
-        function normalizeTitleYear(title, dateText) {
-            const publishYear = new Date(dateText || '').getFullYear();
-            if (!Number.isFinite(publishYear)) return title;
-            return (title || '').replace(/\b20\d{2}\b/g, (yearText) => {
-                const year = Number(yearText);
-                const gap = publishYear - year;
-                if (gap >= 2 && gap <= 3) {
-                    return String(publishYear);
-                }
-                return yearText;
-            });
-        }
-
         function normalizeTitle(title) {
             return (title || '')
                 .toLowerCase()
@@ -302,7 +276,7 @@
             const normalized = normalizeTitle(value || '');
             const dedupeRules = [
                 { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
-                { key: 'topic-bsa-compliance', pattern: /bsa compliance/ },
+                { key: 'topic-bsa-compliance', pattern: /bsa compliance|seller tool compliance|bsa rules?/ },
                 { key: 'topic-gmv-growth', pattern: /gmv growth/ },
                 { key: 'topic-seller-registration-drop', pattern: /seller registrations? drop/ },
                 { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ }
@@ -416,9 +390,8 @@
                     return;
                 }
 
-                const displayTitle = normalizeTitleYear(post.title, post.date);
-                const normalizedContent = normalizeContentYears(post.content || post.content_html || '', post.date);
-                const localizedContent = localizeExternalImages(normalizedContent, post.cover_image || '');
+                const displayTitle = post.title || '';
+                const localizedContent = localizeExternalImages(post.content || post.content_html || '', post.cover_image || '');
                 const safeContent = sanitizeHtml(localizedContent);
                 const safeTitle = escapeHtml(displayTitle);
                 const safeTag = escapeHtml((post.tags && post.tags[0]) || '');
@@ -520,9 +493,9 @@
                 if (relatedContainer && related.length > 0) {
                     relatedContainer.innerHTML = related.map(p => `
                         <a href="blog-post.html?id=${encodeURIComponent(p.id || '')}" class="related-post-card">
-                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png', '.webp')}" alt="${escapeHtml(normalizeTitleYear(p.title, p.date))}" loading="lazy">
+                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png', '.webp')}" alt="${escapeHtml(p.title || '')}" loading="lazy">
                             <div class="content">
-                                <div class="title">${escapeHtml(normalizeTitleYear(p.title, p.date))}</div>
+                                <div class="title">${escapeHtml(p.title || '')}</div>
                                 <div class="date">${escapeHtml(p.date || '')}</div>
                             </div>
                         </a>

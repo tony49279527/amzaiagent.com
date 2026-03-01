@@ -60,7 +60,7 @@ def _blog_topic_key(post: dict) -> str:
     normalized = _normalize_title(post.get("title") or "")
     rules = [
         ("topic-safe-t-window", r"safe t claims window"),
-        ("topic-bsa-compliance", r"bsa compliance"),
+        ("topic-bsa-compliance", r"bsa compliance|seller tool compliance|bsa rules?"),
         ("topic-gmv-growth", r"gmv growth"),
         ("topic-seller-registration-drop", r"seller registrations? drop"),
         ("topic-dd7-disbursement", r"dd 7|disbursement policy change"),
