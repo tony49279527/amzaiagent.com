@@ -3739,6 +3739,11 @@ textarea:invalid:not(:placeholder-shown) {
     font-size: 1rem;
 }
 
+/* Keep navbar CTA consistent on analysis pages */
+body.create-page .nav-actions .btn-primary {
+    display: inline-flex;
+}
+
 /* Discovery Page Mobile Fixes */
 .analysis-focus-cards {
     display: grid;
