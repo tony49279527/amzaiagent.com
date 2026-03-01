@@ -297,6 +297,9 @@ Present workflows in a structured table format, including:
         }
     });
 
+    const analysisForm = document.getElementById('analysis-form');
+    const isCreateAnalysisPage = !!analysisForm;
+
     // === PRO FEATURE INTERACTION ===
     // TODO: Pro unlock state is currently client-side only. For production,
     // validate Pro status via a backend API (e.g. check payment record in
@@ -324,7 +327,7 @@ Present workflows in a structured table format, including:
     enforceProLock();
 
 
-    if (unlockOverlay && proLockedSection) {
+    if (isCreateAnalysisPage && unlockOverlay && proLockedSection) {
         unlockOverlay.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -338,40 +341,42 @@ Present workflows in a structured table format, including:
 
     // LISTENER FOR PAYMENT SUCCESS (Simulated for now, would be callback based in real app)
     // We expose a global function for the payment success handler to call
-    window.unlockProFeatures = function () {
-        isProIntent = true;
+    if (isCreateAnalysisPage) {
+        window.unlockProFeatures = function () {
+            isProIntent = true;
 
-        // Visual Unlock
-        proLockedSection.classList.remove('pro-locked');
-        proLockedSection.style.opacity = '1';
-        proLockedSection.style.pointerEvents = 'auto';
+            // Visual Unlock
+            proLockedSection.classList.remove('pro-locked');
+            proLockedSection.style.opacity = '1';
+            proLockedSection.style.pointerEvents = 'auto';
 
-        // Hide Overlay
-        if (unlockOverlay) unlockOverlay.style.display = 'none';
+            // Hide Overlay
+            if (unlockOverlay) unlockOverlay.style.display = 'none';
 
-        // Enable ALL inputs and buttons within the section
-        const disabledElements = proLockedSection.querySelectorAll('[disabled]');
-        disabledElements.forEach(el => el.removeAttribute('disabled'));
+            // Enable ALL inputs and buttons within the section
+            const disabledElements = proLockedSection.querySelectorAll('[disabled]');
+            disabledElements.forEach(el => el.removeAttribute('disabled'));
 
-        // Remove .disabled class from file upload labels and update text
-        const disabledLabels = proLockedSection.querySelectorAll('label.file-upload-btn.disabled');
-        disabledLabels.forEach(lbl => {
-            lbl.classList.remove('disabled');
-            if (lbl.textContent.includes('Pro Only')) {
-                lbl.textContent = 'Choose File';
+            // Remove .disabled class from file upload labels and update text
+            const disabledLabels = proLockedSection.querySelectorAll('label.file-upload-btn.disabled');
+            disabledLabels.forEach(lbl => {
+                lbl.classList.remove('disabled');
+                if (lbl.textContent.includes('Pro Only')) {
+                    lbl.textContent = 'Choose File';
+                }
+            });
+
+            // Aggressively hide lock icons
+            const locks = proLockedSection.querySelectorAll('.lock-icon');
+            locks.forEach(icon => icon.style.display = 'none');
+
+            // Update Badge
+            if (badgePro) {
+                badgePro.style.background = '#10b981';
+                badgePro.textContent = 'PRO UNLOCKED';
             }
-        });
-
-        // Aggressively hide lock icons
-        const locks = proLockedSection.querySelectorAll('.lock-icon');
-        locks.forEach(icon => icon.style.display = 'none');
-
-        // Update Badge
-        if (badgePro) {
-            badgePro.style.background = '#10b981';
-            badgePro.textContent = 'PRO UNLOCKED';
-        }
-    };
+        };
+    }
 
     // === GLOBAL SCROLL REVEAL ===
     const observerOptions = {
@@ -400,10 +405,8 @@ Present workflows in a structured table format, including:
     const modalClose = document.getElementById('modal-close');
     const paymentModalClose = document.getElementById('payment-modal-close');
 
-    const analysisForm = document.getElementById('analysis-form');
     const modalForm = document.getElementById('modal-form');
     const payDepositBtn = document.getElementById('pay-deposit-btn');
-    const isCreateAnalysisPage = !!analysisForm;
 
     // === FORM VALIDATION HELPER ===
     const mainAsin = document.getElementById('main-asin');
