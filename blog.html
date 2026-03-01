@@ -85,9 +85,14 @@
 
                 // Featured post (first one)
                 const featured = posts[0];
+                const featuredTitle = escapeHtml(featured.display_title || featured.title || '');
+                const featuredTag = escapeHtml((featured.tags && featured.tags[0]) || 'Featured');
+                const featuredDate = escapeHtml(featured.date || '');
+                const featuredDesc = escapeHtml(stripHtml(featured.content || '').substring(0, 150));
+                const featuredId = encodeURIComponent(featured.id || '');
                 const featuredHTML = `
                 <div class="featured-post">
-                    <a href="blog-post.html?id=${featured.id}" class="card-link">
+                    <a href="blog-post.html?id=${featuredId}" class="card-link">
                         <article class="card">
                             <div class="card-image-wrapper">
                                 <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #fce7f3 0%, #e0e7ff 100%);">
@@ -95,11 +100,11 @@
                                 </div>
                             </div>
                             <div class="card-content">
-                                <span class="card-tag">${featured.tags[0] || 'Featured'}</span>
-                                <h3 class="card-title">${featured.display_title || featured.title}</h3>
-                                <p class="card-desc">${stripHtml(featured.content).substring(0, 150)}...</p>
+                                <span class="card-tag">${featuredTag}</span>
+                                <h3 class="card-title">${featuredTitle}</h3>
+                                <p class="card-desc">${featuredDesc}...</p>
                                 <div class="card-footer">
-                                    <span>📅 ${featured.date}</span>
+                                    <span>📅 ${featuredDate}</span>
                                     <span>⏱️ 5 Min Read</span>
                                 </div>
                             </div>
@@ -112,20 +117,25 @@
                 // Rest of posts
                 const otherPosts = posts.slice(1);
                 otherPosts.forEach(post => {
+                    const postTitle = escapeHtml(post.display_title || post.title || '');
+                    const postTag = escapeHtml((post.tags && post.tags[0]) || 'Article');
+                    const postDate = escapeHtml(post.date || '');
+                    const postDesc = escapeHtml(stripHtml(post.content || '').substring(0, 120));
+                    const postId = encodeURIComponent(post.id || '');
                     const html = `
-                    <a href="blog-post.html?id=${post.id}" class="card-link">
+                    <a href="blog-post.html?id=${postId}" class="card-link">
                         <article class="card">
                             <div class="card-image-wrapper">
                                 <div style="width: 100%; height: 100%; background-color: #f1f5f9;">
-                                    <img src="${(post.cover_image || '').replace('.png', '.webp')}" style="width:100%;height:100%;object-fit:cover;" alt="${post.display_title || post.title}" loading="lazy" onerror="this.style.display='none'">
+                                    <img src="${(post.cover_image || '').replace('.png', '.webp')}" style="width:100%;height:100%;object-fit:cover;" alt="${postTitle}" loading="lazy" onerror="this.style.display='none'">
                                 </div>
                             </div>
                             <div class="card-content">
-                                <span class="card-tag">${post.tags[0] || 'Article'}</span>
-                                <h3 class="card-title">${post.display_title || post.title}</h3>
-                                <p class="card-desc">${stripHtml(post.content).substring(0, 120)}...</p>
+                                <span class="card-tag">${postTag}</span>
+                                <h3 class="card-title">${postTitle}</h3>
+                                <p class="card-desc">${postDesc}...</p>
                                 <div class="card-footer">
-                                    <span>📅 ${post.date}</span>
+                                    <span>📅 ${postDate}</span>
                                 </div>
                             </div>
                         </article>
@@ -207,6 +217,15 @@
                 }
                 // Fallback to all text if no p tag found
                 return tmp.textContent || tmp.innerText || "";
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
             }
         });
     </script>

@@ -216,6 +216,15 @@
             return tmp.textContent || tmp.innerText || "";
         }
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function sanitizeHtml(html) {
             const container = document.createElement('div');
             container.innerHTML = html || '';
@@ -325,6 +334,11 @@
 
                 const displayTitle = normalizeTitleYear(post.title, post.date);
                 const safeContent = sanitizeHtml(post.content || post.content_html || '');
+                const safeTitle = escapeHtml(displayTitle);
+                const safeTag = escapeHtml((post.tags && post.tags[0]) || '');
+                const safeAuthor = escapeHtml(post.author || 'Amz AI Agent');
+                const safeDate = escapeHtml(post.date || new Date().toISOString().split('T')[0]);
+                const safeCover = (post.cover_image || '').replace('.png', '.webp');
 
                 // Update SEO metadata dynamically
                 const pageTitle = `${displayTitle} | Amz AI Agent`;
@@ -339,15 +353,15 @@
                 articleContent.innerHTML = `
                         <article>
                             <header class="article-header">
-                                ${post.tags && post.tags.length > 0 ? `<span class="article-tag">${post.tags[0]}</span>` : ''}
-                                <h1 class="article-title">${displayTitle}</h1>
+                                ${post.tags && post.tags.length > 0 ? `<span class="article-tag">${safeTag}</span>` : ''}
+                                <h1 class="article-title">${safeTitle}</h1>
                                 <div class="article-meta">
-                                    <span>📅 ${post.date || new Date().toISOString().split('T')[0]}</span>
-                                    <span>👤 ${post.author || 'Amz AI Agent'}</span>
+                                    <span>📅 ${safeDate}</span>
+                                    <span>👤 ${safeAuthor}</span>
                                 </div>
                             </header>
 
-                            ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${post.cover_image.replace('.png', '.webp')}" alt="${displayTitle}" class="article-cover" loading="lazy" onerror="this.style.display='none'"></div>` : ''}
+                            ${post.cover_image ? `<div class="article-cover-wrapper"><img src="${safeCover}" alt="${safeTitle}" class="article-cover" loading="lazy" onerror="this.style.display='none'"></div>` : ''}
 
                             <div class="article-content">
                                 ${safeContent}
@@ -407,11 +421,11 @@
                 const relatedContainer = document.getElementById('related-posts-container');
                 if (relatedContainer && related.length > 0) {
                     relatedContainer.innerHTML = related.map(p => `
-                        <a href="blog-post.html?id=${p.id}" class="related-post-card">
-                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png', '.webp')}" alt="${normalizeTitleYear(p.title, p.date)}" loading="lazy">
+                        <a href="blog-post.html?id=${encodeURIComponent(p.id || '')}" class="related-post-card">
+                            <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png', '.webp')}" alt="${escapeHtml(normalizeTitleYear(p.title, p.date))}" loading="lazy">
                             <div class="content">
-                                <div class="title">${normalizeTitleYear(p.title, p.date)}</div>
-                                <div class="date">${p.date || ''}</div>
+                                <div class="title">${escapeHtml(normalizeTitleYear(p.title, p.date))}</div>
+                                <div class="date">${escapeHtml(p.date || '')}</div>
                             </div>
                         </a>
                     `).join('');

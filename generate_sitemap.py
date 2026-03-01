@@ -6,7 +6,21 @@ from typing import Optional
 
 BASE_URL = "https://amzaiagent.com"
 # Exclude system/utility pages or pages not meant for public indexing
-EXCLUDE_FILES = ['create_old.html', 'logo_preview.html', 'failed.html', 'success.html', '404.html', 'order.html', 'processing.html', 'discovery_report.html']
+EXCLUDE_FILES = [
+    'create_old.html',
+    'logo_preview.html',
+    'logo_redesign_preview.html',
+    'failed.html',
+    'success.html',
+    '404.html',
+    'order.html',
+    'processing.html',
+    'discovery_report.html',
+    'dashboard.html',
+    'blog-post.html',
+    'temp_live_index.html',
+    'temp_local_index.html'
+]
 
 def _file_lastmod(path: str, fallback: str) -> str:
     try:
