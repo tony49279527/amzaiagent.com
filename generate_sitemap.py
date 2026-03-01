@@ -1,4 +1,6 @@
 import os
+import re
+import json
 from datetime import datetime
 from typing import Optional
 
@@ -22,6 +24,54 @@ def _parse_date(date_str: str) -> Optional[str]:
         return datetime.strptime(date_str.strip(), "%B %d, %Y").strftime('%Y-%m-%d')
     except Exception:
         return None
+
+
+def _extract_blog_posts(path: str):
+    with open(path, 'r', encoding='utf-8') as bpf:
+        content = bpf.read()
+    match = re.search(r"window\.blogPostsEN\s*=\s*(\[\s*.*?\]);", content, re.S)
+    if not match:
+        return []
+    try:
+        return json.loads(match.group(1))
+    except Exception:
+        return []
+
+
+def _normalize_title(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (title or "").lower()).strip()
+
+
+def _blog_topic_key(post: dict) -> str:
+    normalized = _normalize_title(post.get("title") or "")
+    rules = [
+        ("topic-safe-t-window", r"safe t claims window"),
+        ("topic-bsa-compliance", r"bsa compliance"),
+        ("topic-gmv-growth", r"gmv growth"),
+        ("topic-seller-registration-drop", r"seller registrations? drop"),
+        ("topic-dd7-disbursement", r"dd 7|disbursement policy change"),
+    ]
+    for key, pattern in rules:
+        if re.search(pattern, normalized):
+            return key
+    return f"post-{post.get('id') or 'untitled'}"
+
+
+def _curate_blog_posts(posts: list) -> list:
+    def _date_key(post):
+        parsed = _parse_date(post.get("date", ""))
+        return parsed or "1970-01-01"
+
+    sorted_posts = sorted(posts, key=_date_key, reverse=True)
+    seen = set()
+    curated = []
+    for post in sorted_posts:
+        key = _blog_topic_key(post)
+        if key in seen:
+            continue
+        seen.add(key)
+        curated.append(post)
+    return curated
 
 def generate_sitemap():
     # List all HTML files in current directory
@@ -84,24 +134,21 @@ def generate_sitemap():
     print("Fetching blog posts...")
     blog_posts_file = 'data/blog/blog_posts.js'
     if os.path.exists(blog_posts_file):
-        with open(blog_posts_file, 'r', encoding='utf-8') as bpf:
-            content = bpf.read()
-            # Crude extraction of IDs from JS file
-            import re
-            post_ids = re.findall(r'"id":\s*"([^"]+)"', content)
-            post_dates = dict(re.findall(r'"id":\s*"([^"]+)"[\\s\\S]*?"date":\s*"([^"]+)"', content))
-            unique_ids = sorted(list(set(post_ids)))
-            print(f"Adding {len(unique_ids)} blog posts to sitemap...")
-            for pid in unique_ids:
-                raw_date = post_dates.get(pid, "")
-                parsed_date = _parse_date(raw_date) or today
-                xml += '  <url>\n'
-                xml += f'    <loc>{BASE_URL}/blog-post.html?id={pid}</loc>\n'
-                xml += f'    <lastmod>{parsed_date}</lastmod>\n'
-                xml += f'    <changefreq>monthly</changefreq>\n'
-                xml += f'    <priority>0.6</priority>\n'
-                xml += '  </url>\n'
-                urls_added += 1
+        posts = _extract_blog_posts(blog_posts_file)
+        curated_posts = _curate_blog_posts(posts)
+        print(f"Adding {len(curated_posts)} curated blog posts to sitemap...")
+        for post in curated_posts:
+            pid = post.get("id")
+            if not pid:
+                continue
+            parsed_date = _parse_date(post.get("date", "")) or today
+            xml += '  <url>\n'
+            xml += f'    <loc>{BASE_URL}/blog-post.html?id={pid}</loc>\n'
+            xml += f'    <lastmod>{parsed_date}</lastmod>\n'
+            xml += f'    <changefreq>monthly</changefreq>\n'
+            xml += f'    <priority>0.6</priority>\n'
+            xml += '  </url>\n'
+            urls_added += 1
 
     # Add dynamic Reports/Cases
     print("Fetching reports...")
