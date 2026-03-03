@@ -4,11 +4,20 @@
   <id>https://amzaiagent.com/feed.xml</id>
   <link href="https://amzaiagent.com/feed.xml" rel="self"/>
   <link href="https://amzaiagent.com/blog.html" />
-  <updated>2026-03-02T01:09:27.829016+00:00</updated>
+  <updated>2026-03-03T01:11:10.307977+00:00</updated>
   <author>
     <name>Amz AI Agent</name>
   </author>
 
+  <entry>
+    <title>Amazon Seller Expert Program 2024: New Mentorship Initiative Launches</title>
+    <link href="https://amzaiagent.com/blog-post.html?id=amazon-seller-expert-program-2024-mentorship-initiative"/>
+    <id>https://amzaiagent.com/blog-post.html?id=amazon-seller-expert-program-2024-mentorship-initiative</id>
+    <updated>2026-03-03T00:00:00+00:00</updated>
+    <summary>Amazon Seller Expert Program 2024: Everything You Need to Know Amazon has just unveiled its groundbreaking Amazon Seller Expert Program 2024, a volunteer-based mentorship initiative designed to enhance seller support across its discussion boards. Taking inspiration from eBay&apos;s successful mentor syst</summary>
+    <author><name>Amz AI Agent</name></author>
+    <media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="assets/images/blog_thumbs/efficiency.webp"/>
+  </entry>
   <entry>
     <title>AI Inventory Forecasting for Amazon FBA: Prevent Stockouts &amp; Overstock in 2024</title>
     <link href="https://amzaiagent.com/blog-post.html?id=ai-inventory-forecasting-amazon-fba-stockouts-overstock"/>
