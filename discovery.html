@@ -61,7 +61,10 @@
                                     <option value="">-- Select Product Type --</option>
                                 </select>
                             </div>
-                            <p id="category-step-hint" class="category-step-hint">Tip: Select a main category first to unlock sub-category and product type.</p>
+                            <div id="category-step-hint" class="category-step-hint" role="status">
+                                <span class="category-step-hint-icon">💡</span>
+                                <span class="category-step-hint-text">Select a main category first to unlock sub-category and product type.</span>
+                            </div>
                         </div>
 
                         <!-- Product Keywords (PRIMARY) -->
@@ -353,9 +356,9 @@
                     style="background: #eef2ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                     <span style="font-size: 2rem;">💎</span>
                 </div>
-                <h2>Unlock Premium Discovery</h2>
+                <h2>Complete Payment to Start Pro Discovery</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-size: 0.95rem;">
-                    Get <strong>deeper market insights, custom analysis, and expert recommendations</strong>.
+                    You've configured Pro options. Pay the deposit below to start your analysis.
                 </p>
             </div>
 
@@ -466,39 +469,38 @@
                 });
             }
 
-            // Upgrade links trigger payment modal
+            // Upgrade / Unlock: let user edit all Pro options first; payment when they submit
             const upgradeFocusLink = document.getElementById('upgrade-focus-link');
             const upgradePromptLink = document.getElementById('upgrade-prompt-link');
 
             if (upgradeFocusLink) {
                 upgradeFocusLink.addEventListener('click', function (e) {
                     e.preventDefault();
-                    showPaymentModal();
+                    unlockProFeatures();
                 });
             }
 
             if (upgradePromptLink) {
                 upgradePromptLink.addEventListener('click', function (e) {
                     e.preventDefault();
-                    showPaymentModal();
+                    unlockProFeatures();
                 });
             }
 
-            // Ad vanced Options Pro unlock overlay
+            // Advanced Options: click overlay to unlock Pro (user can edit everything, pay on submit)
             const proUnlockOverlay = document.getElementById('pro-unlock-overlay');
             if (proUnlockOverlay) {
                 proUnlockOverlay.addEventListener('click', function (e) {
                     e.preventDefault();
-                    // Require payment intent before enabling Pro options.
-                    showPaymentModal();
+                    unlockProFeatures();
                 });
             }
 
-            // Focus card click handlers - locked cards show payment modal
+            // Focus card click: locked cards unlock Pro so user can select; payment on submit
             focusCards.forEach(card => {
                 card.addEventListener('click', function () {
                     if (this.classList.contains('locked')) {
-                        showPaymentModal();
+                        unlockProFeatures();
                         return;
                     }
 
@@ -707,20 +709,21 @@
             }
 
             function updateCategoryHint() {
-                if (!categoryStepHint) return;
+                const hintText = categoryStepHint ? categoryStepHint.querySelector('.category-step-hint-text') : null;
+                if (!hintText) return;
                 if (!level1.value) {
-                    categoryStepHint.textContent = 'Tip: Select a main category first to unlock sub-category and product type.';
+                    hintText.textContent = 'Select a main category first to unlock sub-category and product type.';
                     return;
                 }
                 if (!level2.value) {
-                    categoryStepHint.textContent = 'Tip: Main category selected. Choose a sub-category next.';
+                    hintText.textContent = 'Main category selected. Choose a sub-category next.';
                     return;
                 }
                 if (!level3.value) {
-                    categoryStepHint.textContent = 'Tip: Sub-category selected. Product type is now available.';
+                    hintText.textContent = 'Sub-category selected. Product type is now available.';
                     return;
                 }
-                categoryStepHint.textContent = 'Great. Category path is complete.';
+                hintText.textContent = 'Category path complete. You can proceed.';
             }
 
             // Level 1 change handler
