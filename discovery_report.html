@@ -351,6 +351,22 @@
         }
 
         /* Preview Badge */
+        .success-banner {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            font-weight: 500;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .success-banner-icon {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
         .preview-badge {
             display: inline-flex;
             align-items: center;
@@ -402,6 +418,12 @@
             </div>
         </div>
     </nav>
+
+    <!-- Success banner (shown after balance payment) -->
+    <div id="success-banner" class="success-banner" style="display: none;" role="alert">
+        <span class="success-banner-icon">✓</span>
+        <span id="success-banner-text"></span>
+    </div>
 
     <!-- Report Header -->
     <header class="discovery-report-header">
@@ -785,6 +807,18 @@
                 }
             }
 
+            function showSuccessBanner(text) {
+                const el = document.getElementById('success-banner');
+                const textEl = document.getElementById('success-banner-text');
+                if (el && textEl) {
+                    textEl.textContent = text;
+                    el.style.display = 'flex';
+                    setTimeout(function () {
+                        el.style.display = 'none';
+                    }, 8000);
+                }
+            }
+
             async function unlockReport() {
                 document.querySelectorAll('.report-section.locked').forEach(section => {
                     section.classList.remove('locked');
@@ -811,12 +845,25 @@
                 document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/discovery_report.html?id=${reportId}`);
             }
 
-            if (balancePaid && sessionId) {
+            if (balancePaid && sessionId && reportId) {
                 try {
                     const verifyResp = await fetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
                     const verifyData = await verifyResp.json();
                     if (verifyData.status === 'paid') {
-                        await unlockReport();
+                        const confirmResp = await fetch('/api/payments/confirm-balance-paid', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ session_id: sessionId, report_id: reportId })
+                        });
+                        if (confirmResp.ok) {
+                            await unlockReport();
+                            showSuccessBanner('Payment successful. Full report unlocked; a copy has been sent to your email.');
+                            const reportResp = await fetch('/api/discovery-report/' + encodeURIComponent(reportId));
+                            if (reportResp.ok) {
+                                const data = await reportResp.json();
+                                if (data.report_markdown) renderFullReport(data.report_markdown);
+                            }
+                        }
                     }
                 } catch (e) {
                     console.error('Payment verification failed:', e);

@@ -516,6 +516,69 @@ class ConfirmSessionRequest(PydanticBaseModel):
     customer_email: Optional[str] = None  # When provided, also add to paid_reports for Pro verification
     order_id: Optional[str] = None
 
+
+class ConfirmBalancePaidRequest(PydanticBaseModel):
+    session_id: str
+    report_id: str
+
+
+@app.post("/api/payments/confirm-balance-paid")
+async def confirm_balance_paid(req: ConfirmBalancePaidRequest, request: Request):
+    """
+    After user pays $25 balance on discovery_report page: verify session, add report to paid_orders,
+    and send full report email. Idempotent: if report_id already in paid_orders, only returns success.
+    """
+    if not req.session_id or not req.report_id:
+        raise HTTPException(status_code=400, detail="session_id and report_id required")
+    # 1) Verify session is paid (memory or Stripe API)
+    if req.session_id not in verified_sessions:
+        stripe_key = os.getenv("STRIPE_SECRET_KEY")
+        if stripe_key and req.session_id.startswith("cs_"):
+            try:
+                import stripe
+                stripe.api_key = stripe_key
+                sess = stripe.checkout.Session.retrieve(req.session_id)
+                if getattr(sess, "payment_status", None) == "paid" and getattr(sess, "status", None) == "complete":
+                    verified_sessions.add(req.session_id)
+                    _persist_payment_state()
+            except Exception as e:
+                print(f"Stripe verify error in confirm-balance-paid: {e}")
+                raise HTTPException(status_code=402, detail="Payment not verified")
+        else:
+            raise HTTPException(status_code=402, detail="Payment not verified")
+    # 2) Mark report as paid
+    already_paid = req.report_id in paid_orders
+    paid_orders.add(req.report_id)
+    _persist_payment_state()
+    _log_event(
+        "payment.balance_paid_confirmed",
+        {"report_id": req.report_id, "session_id": req.session_id, "already_paid": already_paid},
+        request
+    )
+    # 3) Send full report email once
+    if not already_paid:
+        report = reports_store.get(req.report_id)
+        if not report:
+            try:
+                from .report_store import get_report
+                report = get_report(req.report_id)
+            except Exception as e:
+                print(f"confirm_balance_paid: get_report failed: {e}")
+        if report:
+            len_md = len(report.report_markdown or "")
+            len_html = len(report.report_html or "")
+            print(f"confirm_balance_paid: report_id={req.report_id} report_markdown={len_md} chars report_html={len_html} chars")
+            if len_md < 500 and len_html < 500:
+                print(f"Warning: report content very short. Full report email may be incomplete.")
+            try:
+                await send_email_report(report, is_pro_flow=False)
+                _log_event("report.full_email_sent", {"report_id": req.report_id}, request)
+            except Exception as e:
+                print(f"Failed to send full report email: {e}")
+                _log_event("report.full_email_failed", {"report_id": req.report_id, "error": str(e)}, request)
+    return {"status": "ok", "report_id": req.report_id}
+
+
 @app.post("/api/payments/confirm-session")
 async def confirm_payment_session(req: ConfirmSessionRequest, request: Request):
     """
