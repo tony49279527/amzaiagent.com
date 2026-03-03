@@ -74,15 +74,18 @@ class OpenRouterClient:
         self,
         prompt: str,
         model: str = DEFAULT_MODEL_PRO,
-        max_retries: int = 3
+        max_retries: int = 3,
+        max_tokens: int = 50000
     ) -> Optional[str]:
         """
-        Generate with automatic retry on failure
+        Generate with automatic retry on failure.
+        Uses higher max_tokens by default so long reports (e.g. 5000+ words) are not truncated.
         
         Args:
             prompt: The analysis prompt
             model: Model to use
             max_retries: Maximum retry attempts
+            max_tokens: Max response tokens (default 50000 for full reports)
             
         Returns:
             Generated text or None
@@ -90,7 +93,7 @@ class OpenRouterClient:
         import asyncio
         
         for attempt in range(max_retries):
-            result = await self.generate_analysis(prompt, model)
+            result = await self.generate_analysis(prompt, model, max_tokens=max_tokens)
             
             if result:
                 return result

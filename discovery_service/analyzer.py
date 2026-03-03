@@ -243,7 +243,9 @@ class ProductDiscoveryAnalyzer:
             )
         
         try:
-            report = await self.ai_client.generate_with_retry(prompt, model=model)
+            # Use higher max_tokens for Pro (5000+ word report); Free tier also benefits
+            max_tokens = 50000 if user_tier == UserTier.PRO else 20000
+            report = await self.ai_client.generate_with_retry(prompt, model=model, max_tokens=max_tokens)
             
             if not report:
                 error_msg = f"Failed to generate report using model {model} after retries. sources={len(web_sources)} web, {len(amazon_products)} products."
