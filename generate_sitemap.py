@@ -22,6 +22,26 @@ EXCLUDE_FILES = [
     'temp_local_index.html'
 ]
 
+# Blog IDs that 301 to another URL — do not list these in sitemap
+BLOG_REDIRECT_FROM_IDS = {
+    'amazon-bsa-compliance-2024-seller-tools-ai',
+    'amazon-bsa-compliance-2024-seller-tools-deadline',
+    'amazon-bsa-compliance-update-2024-fba-sellers',
+    'amazon-seller-tool-compliance-2024-bsa-rules',
+    'amazon-safe-t-claims-window-30-days-2026',
+    'amazon-safe-t-claims-window-30-days-2026-update',
+    'amazon-safe-t-claims-window-change-2026',
+    'amazon-safe-t-claims-window-changes-2026',
+    'amazon-safe-t-claims-window-reduction-2026',
+    'amazon-gmv-growth-2025-record-milestone',
+    'amazon-gmv-growth-2025-sales-impact-fba-sellers',
+    'amazon-gmv-growth-2025-seller-impact',
+    'amazon-fba-shipping-costs-2026-protect-profit-margins',
+    'amazon-seller-registrations-2025-drop-fba-impact',
+    'amazon-disbursement-policy-changes-dd7-2024',
+    'ai-inventory-forecasting-amazon-fba-stockouts-overstock',
+}
+
 def _file_lastmod(path: str, fallback: str) -> str:
     try:
         ts = os.path.getmtime(path)
@@ -153,7 +173,7 @@ def generate_sitemap():
         print(f"Adding {len(curated_posts)} curated blog posts to sitemap...")
         for post in curated_posts:
             pid = post.get("id")
-            if not pid:
+            if not pid or pid in BLOG_REDIRECT_FROM_IDS:
                 continue
             parsed_date = _parse_date(post.get("date", "")) or today
             xml += '  <url>\n'
