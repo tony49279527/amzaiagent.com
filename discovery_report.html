@@ -29,6 +29,10 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
+        /* Clear fixed navbar (64px) so report title is fully visible */
+        body {
+            padding-top: 64px;
+        }
         /* Discovery Report Specific Styles */
         .discovery-report-header {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%);
@@ -138,6 +142,60 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
+
+        /* Markdown-rendered tables: clear layout, borders, spacing */
+        .report-content-area .section-content,
+        .report-section .section-content {
+            overflow-x: auto;
+        }
+        .report-content-area .section-content table,
+        .report-section .section-content table {
+            width: 100%;
+            min-width: 400px;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.9375rem;
+            table-layout: auto;
+        }
+        .report-content-area .section-content table th,
+        .report-section .section-content table th {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+        }
+        .report-content-area .section-content table td,
+        .report-section .section-content table td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .report-content-area .section-content table tr:nth-child(even) td,
+        .report-section .section-content table tr:nth-child(even) td {
+            background: #fafafa;
+        }
+        .report-content-area .section-content table tr:hover td,
+        .report-section .section-content table tr:hover td {
+            background: #f8fafc;
+        }
+        .report-content-area .section-content h1,
+        .report-section .section-content h1 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; color: #1e293b; }
+        .report-content-area .section-content h2,
+        .report-section .section-content h2 { font-size: 1.25rem; margin: 1.25rem 0 0.5rem; color: #334155; }
+        .report-content-area .section-content h3,
+        .report-section .section-content h3 { font-size: 1.1rem; margin: 1rem 0 0.5rem; color: #475569; }
+        .report-content-area .section-content p,
+        .report-section .section-content p { margin: 0.5rem 0 1rem; line-height: 1.65; }
+        .report-content-area .section-content ul,
+        .report-section .section-content ul { margin: 0.5rem 0 1rem; padding-left: 1.5rem; }
+        .report-content-area .section-content ol,
+        .report-section .section-content ol { margin: 0.5rem 0 1rem; padding-left: 1.5rem; }
+        .report-content-area .section-content li,
+        .report-section .section-content li { margin-bottom: 0.35rem; }
 
         .report-section {
             padding: 2rem;
@@ -755,6 +813,10 @@
 
         // Load report data from URL params
         document.addEventListener('DOMContentLoaded', async () => {
+            // Enable GFM (GitHub Flavored Markdown) so tables and line breaks render correctly
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({ gfm: true, breaks: true });
+            }
             const urlParams = new URLSearchParams(window.location.search);
             const reportId = urlParams.get('id');
             const balancePaid = urlParams.get('balance_paid') === 'true';
