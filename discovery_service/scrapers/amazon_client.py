@@ -36,7 +36,13 @@ class AmazonClient:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    product_data = data.get("data", {})
+                    if not isinstance(data, dict):
+                        print(f"[Amazon API] Response is not a dict: {type(data).__name__}")
+                        return None
+                    product_data = data.get("data") or {}
+                    if not isinstance(product_data, dict):
+                        print(f"[Amazon API] data field is not a dict: {type(product_data).__name__}")
+                        return None
                     
                     # Enhanced field extraction - try multiple field names
                     features = (
@@ -196,11 +202,17 @@ class AmazonClient:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    products = data.get("data", {}).get("products", [])
+                    if not isinstance(data, dict):
+                        print(f"[Amazon Search] Response is not a dict: {type(data).__name__}")
+                        return []
+                    data_obj = data.get("data")
+                    if not isinstance(data_obj, dict):
+                        data_obj = {}
+                    products = data_obj.get("products") if isinstance(data_obj.get("products"), list) else []
                     
                     asins = []
                     for p in products:
-                        if p.get("asin"):
+                        if isinstance(p, dict) and p.get("asin"):
                             asins.append(p.get("asin"))
                             
                     print(f"[Amazon Search] Found {len(asins)} ASINs")

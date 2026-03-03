@@ -60,7 +60,22 @@ class OpenRouterClient:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    return data["choices"][0]["message"]["content"]
+                    if not isinstance(data, dict):
+                        print(f"OpenRouter API unexpected response type: {type(data).__name__}")
+                        return None
+                    choices = data.get("choices")
+                    if not choices or not isinstance(choices, list):
+                        print(f"OpenRouter API missing or invalid 'choices': {list(data.keys()) if data else 'empty'}")
+                        return None
+                    first = choices[0]
+                    if not isinstance(first, dict):
+                        print("OpenRouter API first choice is not a dict")
+                        return None
+                    message = first.get("message")
+                    if not isinstance(message, dict):
+                        print("OpenRouter API missing or invalid 'message'")
+                        return None
+                    return message.get("content")
                 else:
                     print(f"OpenRouter API error: {response.status_code}")
                     print(f"Response: {response.text}")
