@@ -165,9 +165,14 @@ class YouTubeClient:
                 else:
                     raise e
             
-            # Combine all transcript pieces
-            full_text = " ".join([item['text'] for item in transcript_list])
-            return full_text
+            # Combine all transcript pieces (guard against non-dict items)
+            if not isinstance(transcript_list, list):
+                return None
+            texts = []
+            for item in transcript_list:
+                if isinstance(item, dict) and "text" in item:
+                    texts.append(str(item["text"]))
+            return " ".join(texts) if texts else None
             
         except ImportError:
             print("[YouTube] youtube-transcript-api not installed, falling back to empty")

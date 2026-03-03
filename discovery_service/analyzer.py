@@ -130,8 +130,11 @@ class ProductDiscoveryAnalyzer:
             if len(successful_sources) >= required_count:
                 print(f"[Web] Got {required_count} successful sources, stopping.")
                 break
-            
-            url = result["url"]
+            if not isinstance(result, dict):
+                continue
+            url = result.get("url")
+            if not url:
+                continue
             print(f"[Scraping] Starting {i+1}/{len(search_results)}: {url[:60]}...")
             
             # Try to scrape this single URL (returns WebSource or None)
@@ -296,9 +299,13 @@ class ProductDiscoveryAnalyzer:
             request.marketplace.value
         )
         
+        top_title = "None"
+        if search_results and isinstance(search_results[0], dict):
+            top_title = search_results[0].get("title", "Unknown")
+        sources_preview = [s.get("title", "Unknown") for s in search_results[:5] if isinstance(s, dict)]
         await emit("Web Research", f"Found {len(search_results)} potential sources", 15, {
-            "log": f"Top Source: {search_results[0]['title'] if search_results else 'None'}",
-            "sources_preview": [s['title'] for s in search_results[:5]]
+            "log": f"Top Source: {top_title}",
+            "sources_preview": sources_preview
         })
         
         # Step 2: Scrape web sources (get first 3 successful)
