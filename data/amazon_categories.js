@@ -101,6 +101,14 @@ const amazonCategories = {
         "Television & Video": ["Televisions", "Streaming Media Players", "Projectors", "Blue-ray Players"],
         "Wearable Technology": ["Fitness Trackers", "Smartwatches", "Virtual Reality"]
     },
+    "Hardware & Tools": {
+        "Power Tools": ["Drills", "Circular Saws", "Sanders", "Grinders", "Nail Guns", "Multi-Tools"],
+        "Hand Tools": ["Wrenches", "Screwdrivers", "Hammers", "Pliers", "Cutting Tools", "Measuring Tools"],
+        "Tool Storage": ["Tool Boxes", "Tool Cabinets", "Shelving", "Workbenches"],
+        "Hardware & Fasteners": ["Nails & Screws", "Anchors", "Adhesives", "Cabinet Hardware", "Door Hardware"],
+        "Plumbing Tools": ["Wrenches", "Cutters", "Inspection", "Faucet Repair"],
+        "Electrical Tools": ["Testers", "Wire Tools", "Drills", "Fish Tape"]
+    },
     "Grocery & Gourmet Food": {
         "Beverages": ["Coffee", "Tea", "Water", "Soft Drinks", "Sports Drinks"],
         "Breakfast Foods": ["Cereal", "Breakfast Bars", "Pancakes & Waffles", "Oatmeal"],

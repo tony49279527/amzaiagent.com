@@ -389,7 +389,7 @@
                     style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 1rem;">
             </div>
 
-            <button id="pay-deposit-btn" class="submit-btn"
+            <button type="button" id="pay-deposit-btn" class="submit-btn"
                 style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); width: 100%;">
                 Pay $4.99 Deposit with Stripe
             </button>
@@ -523,22 +523,28 @@
             // Payment handler (Stripe via backend proxy)
             const payDepositBtn = document.getElementById('pay-deposit-btn');
             if (payDepositBtn) {
-                payDepositBtn.addEventListener('click', async function () {
-                    const proEmail = document.getElementById('pro-email-input').value.trim();
+                payDepositBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const proEmailInput = document.getElementById('pro-email-input');
+                    const proEmail = proEmailInput ? proEmailInput.value.trim() : '';
 
                     // Validate Email
-                    if (!proEmail) {
-                        alert('Please enter your email address');
+                    if (!proEmail || !proEmail.includes('@')) {
+                        alert('Please enter a valid email address.');
+                        if (proEmailInput) proEmailInput.focus();
                         return;
                     }
 
                     // Validate Main Inputs
-                    const category1 = document.getElementById('category-level-1').value;
-                    const keywords = document.getElementById('product-keywords').value.trim();
+                    const category1El = document.getElementById('category-level-1');
+                    const keywordsEl = document.getElementById('product-keywords');
+                    const category1 = category1El ? category1El.value : '';
+                    const keywords = keywordsEl ? keywordsEl.value.trim() : '';
 
                     if (!category1 || !keywords) {
                         alert('Please select a Main Category and enter Product Keywords first.');
-                        paymentModal.style.display = 'none';
                         return;
                     }
 
@@ -605,8 +611,8 @@
 
                         const data = await resp.json();
 
-                        // Stripe or Polar URLs
-                        const paymentUrl = data.checkout_url || data.url || (Array.isArray(data) && data[0] && data[0].url);
+                        // Stripe / n8n may return checkout_url, url, or array with url
+                        const paymentUrl = (data && (data.checkout_url || data.url)) || (Array.isArray(data) && data[0] && (data[0].checkout_url || data[0].url));
 
                         if (paymentUrl) {
                             window.location.href = paymentUrl;
@@ -615,8 +621,10 @@
                         }
                     } catch (e) {
                         console.error(e);
-                        errDiv.textContent = 'Service Error: ' + e.message + ' - Please try again later.';
-                        errDiv.style.display = 'block';
+                        if (errDiv) {
+                            errDiv.textContent = 'Service Error: ' + (e.message || String(e)) + ' — Please try again later.';
+                            errDiv.style.display = 'block';
+                        }
                         payDepositBtn.disabled = false;
                         payDepositBtn.textContent = 'Pay $4.99 Deposit with Stripe';
                     }
