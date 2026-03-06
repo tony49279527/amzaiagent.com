@@ -4,11 +4,20 @@
   <id>https://amzaiagent.com/feed.xml</id>
   <link href="https://amzaiagent.com/feed.xml" rel="self"/>
   <link href="https://amzaiagent.com/blog.html" />
-  <updated>2026-03-05T01:09:24.208872+00:00</updated>
+  <updated>2026-03-06T01:13:33.894852+00:00</updated>
   <author>
     <name>Amz AI Agent</name>
   </author>
 
+  <entry>
+    <title>Amazon FBA AI Analytics Tool 2024: New Sales Insights Dashboard for Sellers</title>
+    <link href="https://amzaiagent.com/blog-post.html?id=amazon-fba-ai-analytics-tool-2024-sales-insights"/>
+    <id>https://amzaiagent.com/blog-post.html?id=amazon-fba-ai-analytics-tool-2024-sales-insights</id>
+    <updated>2026-03-06T00:00:00+00:00</updated>
+    <summary>Amazon FBA AI Analytics Tool 2024: Revolutionary Sales Dashboard Unveiled Amazon has just revolutionized the FBA selling landscape with their new AI Analytics Tool, enabling sellers to drill deep into their sales data like never before. This game-changing feature, announced in March 2024, provides i</summary>
+    <author><name>Amz AI Agent</name></author>
+    <media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="assets/images/blog_thumbs/agentic.webp"/>
+  </entry>
   <entry>
     <title>Amazon FBA AI Analytics Tool 2024: A Game-Changer for Seller Insights</title>
     <link href="https://amzaiagent.com/blog-post.html?id=amazon-fba-ai-analytics-tool-2024"/>
