@@ -145,8 +145,8 @@ def _get_blog_slug_to_id() -> dict:
 # Handle blog post paths if they are like /blog/some-post.html
 @app.get("/blog/{post_slug}.html")
 async def read_blog_post(post_slug: str):
-    # Strategy 1: If static HTML exists in data/blog/
-    path1 = f"data/blog/{post_slug}.html"
+    # Strategy 1: If static HTML exists in blog/
+    path1 = f"blog/{post_slug}.html"
     if os.path.exists(path1):
         return FileResponse(path1)
 
