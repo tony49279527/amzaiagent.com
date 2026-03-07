@@ -311,6 +311,7 @@ class TrackEventRequest(PydanticBaseModel):
 @app.post("/api/track")
 async def track_event(req: TrackEventRequest, request: Request):
     """Client-side analytics events for page views and key clicks."""
+    _check_api_rate_limit(request, "track", max_per_minute=60)
     event_name = (req.event or "").strip()
     if not event_name or len(event_name) > 80:
         raise HTTPException(status_code=400, detail="invalid event")
@@ -436,6 +437,7 @@ async def start_analysis_task(
     Start analysis with Real-time Progress Tracking
     Returns a task_id immediately. Client should then connect to /ws/progress/{task_id}
     """
+    _check_api_rate_limit(http_request, "start-task", max_per_minute=20)
     try:
         _log_event(
             "discovery.start_requested",
@@ -585,12 +587,25 @@ async def confirm_balance_paid(req: ConfirmBalancePaidRequest, request: Request)
     return {"status": "ok", "report_id": req.report_id}
 
 
+def _require_confirm_session_auth(request: Request) -> None:
+    """If N8N_CONFIRM_SESSION_SECRET is set, require X-Webhook-Secret header to match. Otherwise no check (backward compatible)."""
+    import hmac as _hmac
+    secret = os.getenv("N8N_CONFIRM_SESSION_SECRET", "")
+    if not secret:
+        return
+    provided = (request.headers.get("X-Webhook-Secret") or "").strip()
+    if not provided or not _hmac.compare_digest(provided, secret):
+        raise HTTPException(status_code=403, detail="Invalid or missing X-Webhook-Secret")
+
+
 @app.post("/api/payments/confirm-session")
 async def confirm_payment_session(req: ConfirmSessionRequest, request: Request):
     """
     Called by n8n when Stripe payment succeeds. Adds session to verified_sessions.
     If customer_email provided, also adds to paid_reports for Discovery Pro verification.
+    Requires X-Webhook-Secret header when N8N_CONFIRM_SESSION_SECRET is set.
     """
+    _require_confirm_session_auth(request)
     if not req.session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     verified_sessions.add(req.session_id)
@@ -629,17 +644,19 @@ WEBHOOK_SECRET = os.getenv("POLAR_WEBHOOK_SECRET", "")
 @app.post("/api/webhooks/polar")
 async def polar_webhook(request: Request):
     """Handle Polar payment webhooks"""
+    is_production = os.getenv("ENV", "").strip().lower() == "production"
+    if is_production and not WEBHOOK_SECRET:
+        raise HTTPException(status_code=403, detail="Webhook signature verification required in production")
     payload = await request.body()
     signature = request.headers.get("webhook-signature") or request.headers.get("stripe-signature")
-
-    # Verify webhook signature
     if WEBHOOK_SECRET:
-        import hmac, hashlib
-        expected = hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
-        if not signature or not hmac.compare_digest(signature, expected):
+        import hmac as _hmac_wh, hashlib as _hashlib_wh
+        expected = _hmac_wh.new(WEBHOOK_SECRET.encode(), payload, _hashlib_wh.sha256).hexdigest()
+        if not signature or not _hmac_wh.compare_digest(signature, expected):
             raise HTTPException(status_code=403, detail="Invalid webhook signature")
     else:
-        print("WARNING: POLAR_WEBHOOK_SECRET not set — webhook signature verification disabled")
+        if not is_production:
+            print("WARNING: POLAR_WEBHOOK_SECRET not set — webhook signature verification disabled (dev only)")
 
     import json
     data = json.loads(payload)
@@ -721,6 +738,24 @@ class ContactFormRequest(PydanticBaseModel):
 import re
 from datetime import datetime as _dt
 _contact_rate_limit: dict = {}  # IP -> (count, window_start)
+_api_rate_limit: dict = {}  # (ip, key) -> (count, window_start)
+
+def _check_api_rate_limit(request: Request, key: str, max_per_minute: int = 30) -> None:
+    """Raise 429 if IP exceeds max_per_minute for the given key (60s window)."""
+    client_ip = request.client.host if request.client else "unknown"
+    k = (client_ip, key)
+    now = _dt.now()
+    if k in _api_rate_limit:
+        count, window_start = _api_rate_limit[k]
+        if (now - window_start).total_seconds() < 60:
+            if count >= max_per_minute:
+                raise HTTPException(status_code=429, detail="Too many requests. Try again in a minute.")
+            _api_rate_limit[k] = (count + 1, window_start)
+        else:
+            _api_rate_limit[k] = (1, now)
+    else:
+        _api_rate_limit[k] = (1, now)
+
 
 @app.post("/api/contact")
 async def handle_contact_form(req: ContactFormRequest, request: Request):
@@ -799,37 +834,27 @@ N8N_FREE_ANALYSIS_URL = os.getenv("N8N_FREE_ANALYSIS_URL", "")
 N8N_PRO_ANALYSIS_URL = os.getenv("N8N_PRO_ANALYSIS_WEBHOOK_URL", "") or os.getenv("N8N_PRO_ANALYSIS_URL", "")
 N8N_SEND_REPORT_URL = os.getenv("N8N_SEND_REPORT_WEBHOOK_URL", "") or os.getenv("N8N_SEND_REPORT_URL", "")
 
-# CRITICAL: Validate webhook URLs on startup
+# CRITICAL: Validate webhook URLs on startup (no URL/suffix logging in production)
+_debug_config = os.getenv("ENV", "").strip().lower() != "production"
 print("=" * 60)
 print("[STARTUP] Webhook Configuration Check")
 print("=" * 60)
 print(f"[CONFIG] N8N_FREE_ANALYSIS_URL configured: {'YES' if N8N_FREE_ANALYSIS_URL else 'NO'}")
 print(f"[CONFIG] N8N_PRO_ANALYSIS_URL configured: {'YES' if N8N_PRO_ANALYSIS_URL else 'NO'}")
-
-if N8N_FREE_ANALYSIS_URL:
-    free_suffix = N8N_FREE_ANALYSIS_URL[-20:]
-    print(f"[CONFIG] Free webhook ends with: ...{free_suffix}")
-    # Expected: ...c6b3034f-250a-433f-9017-c14c3f8c7f9f
+if _debug_config and N8N_FREE_ANALYSIS_URL:
     if "c6b3034f-250a-433f-9017-c14c3f8c7f9f" in N8N_FREE_ANALYSIS_URL:
         print("[CONFIG] ✓ Free webhook URL matches expected pattern")
     else:
         print("[WARNING] Free webhook URL does not match expected pattern!")
-
-if N8N_PRO_ANALYSIS_URL:
-    pro_suffix = N8N_PRO_ANALYSIS_URL[-20:]
-    print(f"[CONFIG] Pro webhook ends with: ...{pro_suffix}")
-    # Expected: ...3f76a439-5a54-4d08-97cd-6e98d7b6e034
+if _debug_config and N8N_PRO_ANALYSIS_URL:
     if "3f76a439-5a54-4d08-97cd-6e98d7b6e034" in N8N_PRO_ANALYSIS_URL:
         print("[CONFIG] ✓ Pro webhook URL matches expected pattern")
     else:
         print("[WARNING] Pro webhook URL does not match expected pattern!")
-
-# CRITICAL CHECK: Ensure webhooks are different
-if N8N_FREE_ANALYSIS_URL and N8N_PRO_ANALYSIS_URL:
-    if N8N_FREE_ANALYSIS_URL == N8N_PRO_ANALYSIS_URL:
-        print("[CRITICAL ERROR] Free and Pro webhooks are IDENTICAL!")
-        print("[CRITICAL ERROR] This will cause routing errors!")
-    else:
+if N8N_FREE_ANALYSIS_URL and N8N_PRO_ANALYSIS_URL and N8N_FREE_ANALYSIS_URL == N8N_PRO_ANALYSIS_URL:
+    print("[CRITICAL ERROR] Free and Pro webhooks are IDENTICAL!")
+else:
+    if N8N_FREE_ANALYSIS_URL and N8N_PRO_ANALYSIS_URL and _debug_config:
         print("[CONFIG] ✓ Free and Pro webhooks are different (correct)")
 print("=" * 60)
 
@@ -847,6 +872,7 @@ class SendReportRequest(PydanticBaseModel):
 @app.post("/api/proxy/create-checkout")
 async def proxy_create_checkout(req: CheckoutRequest, request: Request):
     """Proxy Stripe checkout creation to n8n (keeps webhook URL server-side)"""
+    _check_api_rate_limit(request, "proxy-create-checkout", max_per_minute=20)
     if not N8N_CHECKOUT_URL:
         _log_event("checkout.create_failed", {"reason": "not_configured", "amount": req.amount}, request)
         raise HTTPException(status_code=503, detail="Payment service not configured")
@@ -870,6 +896,7 @@ async def proxy_create_checkout(req: CheckoutRequest, request: Request):
 @app.post("/api/proxy/pro-analysis")
 async def proxy_pro_analysis(payload: dict, request: Request):
     """Proxy Pro analysis submission to n8n - CRITICAL: Must use Pro webhook URL"""
+    _check_api_rate_limit(request, "proxy-pro-analysis", max_per_minute=20)
     if not N8N_PRO_ANALYSIS_URL:
         print("[ERROR] N8N_PRO_ANALYSIS_URL is not configured!")
         _log_event("analysis.pro_failed", {"reason": "not_configured"}, request)
@@ -884,8 +911,6 @@ async def proxy_pro_analysis(payload: dict, request: Request):
         # Server-side paywall: ignore client-side unlock state and require payment proof.
         user_email = str(payload.get("user_email", "")).strip()
         order_id = str(payload.get("order_id", "")).strip()
-        print(f"[PRO ANALYSIS] Request received - Email: {user_email}, Order: {order_id}")
-        print(f"[PRO ANALYSIS] Webhook URL (last 20 chars): ...{N8N_PRO_ANALYSIS_URL[-20:]}")
         _log_event(
             "analysis.pro_requested",
             {
@@ -893,7 +918,6 @@ async def proxy_pro_analysis(payload: dict, request: Request):
                 "order_id": order_id,
                 "main_asins_count": len(payload.get("main_asins", []) or []),
                 "competitor_asins_count": len(payload.get("competitor_asins", []) or []),
-                "webhook_url_suffix": N8N_PRO_ANALYSIS_URL[-20:] if N8N_PRO_ANALYSIS_URL else "NOT_SET",
             },
             request
         )
@@ -922,9 +946,7 @@ async def proxy_pro_analysis(payload: dict, request: Request):
             else:
                 form_data[key] = str(value)
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Debug: Log the actual webhook URL being used
-            print(f"[DEBUG] Pro analysis webhook URL: {N8N_PRO_ANALYSIS_URL}")
-            _log_event("analysis.pro_webhook_called", {"webhook_url": N8N_PRO_ANALYSIS_URL, "order_id": order_id}, request)
+            _log_event("analysis.pro_webhook_called", {"order_id": order_id}, request)
             resp = await client.post(N8N_PRO_ANALYSIS_URL, data=form_data)
             resp.raise_for_status()
             _log_event("analysis.pro_success", {"order_id": order_id, "user_email": user_email}, request)
@@ -942,6 +964,7 @@ async def proxy_pro_analysis(payload: dict, request: Request):
 @app.post("/api/proxy/free-analysis")
 async def proxy_free_analysis(payload: dict, request: Request):
     """Proxy Free analysis submission to n8n - CRITICAL: Must use Free webhook URL"""
+    _check_api_rate_limit(request, "proxy-free-analysis", max_per_minute=20)
     if not N8N_FREE_ANALYSIS_URL:
         print("[ERROR] N8N_FREE_ANALYSIS_URL is not configured!")
         _log_event("analysis.free_failed", {"reason": "not_configured"}, request)
@@ -955,8 +978,6 @@ async def proxy_free_analysis(payload: dict, request: Request):
     try:
         user_email = str(payload.get("user_email", "")).strip()
         order_id = str(payload.get("order_id", "")).strip()
-        print(f"[FREE ANALYSIS] Request received - Email: {user_email}, Order: {order_id}")
-        print(f"[FREE ANALYSIS] Webhook URL (last 20 chars): ...{N8N_FREE_ANALYSIS_URL[-20:]}")
         _log_event(
             "analysis.free_requested",
             {
@@ -964,7 +985,6 @@ async def proxy_free_analysis(payload: dict, request: Request):
                 "order_id": order_id,
                 "main_asins_count": len(payload.get("main_asins", []) or []),
                 "competitor_asins_count": len(payload.get("competitor_asins", []) or []),
-                "webhook_url_suffix": N8N_FREE_ANALYSIS_URL[-20:] if N8N_FREE_ANALYSIS_URL else "NOT_SET",
             },
             request
         )
@@ -976,9 +996,7 @@ async def proxy_free_analysis(payload: dict, request: Request):
             else:
                 form_data[key] = str(value)
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Debug: Log the actual webhook URL being used
-            print(f"[DEBUG] Free analysis webhook URL: {N8N_FREE_ANALYSIS_URL}")
-            _log_event("analysis.free_webhook_called", {"webhook_url": N8N_FREE_ANALYSIS_URL, "user_email": user_email}, request)
+            _log_event("analysis.free_webhook_called", {"user_email": user_email}, request)
             resp = await client.post(N8N_FREE_ANALYSIS_URL, data=form_data)
             resp.raise_for_status()
             _log_event("analysis.free_success", {"user_email": user_email}, request)
@@ -994,6 +1012,7 @@ async def proxy_free_analysis(payload: dict, request: Request):
 @app.post("/api/proxy/send-full-report")
 async def proxy_send_full_report(req: SendReportRequest, request: Request):
     """Proxy full report trigger to n8n"""
+    _check_api_rate_limit(request, "proxy-send-report", max_per_minute=20)
     if not N8N_SEND_REPORT_URL:
         _log_event("report.send_full_failed", {"reason": "not_configured", "order_id": req.order_id}, request)
         raise HTTPException(status_code=503, detail="Report service not configured")

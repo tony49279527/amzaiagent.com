@@ -28,7 +28,7 @@ with open('blog-post.html', 'r', encoding='utf-8') as f:
     template = f.read()
 
 # 3. Fix relative paths in template so it works from /blog/ dir
-template = template.replace('href="styles.css"', 'href="/styles.css"')
+template = template.replace('href="styles.css"', 'href="/styles.css?v=5"')
 template = template.replace('href="index.html"', 'href="/index.html"')
 template = template.replace('href="blog.html"', 'href="/blog.html"')
 template = template.replace('href="create.html"', 'href="/create.html"')
@@ -36,8 +36,12 @@ template = template.replace('href="discovery.html"', 'href="/discovery.html"')
 template = template.replace('href="cases.html"', 'href="/cases.html"')
 template = template.replace('href="pricing.html"', 'href="/pricing.html"')
 template = template.replace("src='js/components.js'", "src='/js/components.js'")
-template = template.replace('href="data:image', 'HREF_DATA_IMAGE') # temp protection
+template = template.replace('href="data:image', 'HREF_DATA_IMAGE')  # temp protection
+template = template.replace('href="https://', 'HREF_HTTPS')
+template = template.replace('href="http://', 'HREF_HTTP')
 template = template.replace('href="', 'href="/')
+template = template.replace('HREF_HTTPS', 'href="https://')
+template = template.replace('HREF_HTTP', 'href="http://')
 template = template.replace('HREF_DATA_IMAGE', 'href="data:image')
 
 # 4. Process each post

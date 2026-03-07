@@ -2751,7 +2751,7 @@ textarea {
     margin-bottom: 0.5rem;
 }
 
-.succ.hero-subtitle {
+.success-hero .hero-subtitle {
     font-size: 1.25rem;
     color: var(--text-secondary);
     margin-bottom: 2.5rem;

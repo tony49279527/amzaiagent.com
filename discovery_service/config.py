@@ -55,5 +55,6 @@ MAX_REVIEWS_PER_ASIN = 100  # Max reviews to analyze per product (increased)
 # Polar.sh Payment Settings
 POLAR_ACCESS_TOKEN = os.getenv("POLAR_ACCESS_TOKEN", "")
 POLAR_ORGANIZATION_ID = os.getenv("POLAR_ORGANIZATION_ID", "")
+# 生产建议在环境变量中显式设置，未设置时使用下列默认值以保证现有部署可用
 POLAR_PRODUCT_ID = os.getenv("POLAR_PRODUCT_ID", "dc5fea6e-0719-4bbd-9138-da29b495e242")
 POLAR_CHECKOUT_SUCCESS_URL = "https://amz-ai-replica-550177383294.us-central1.run.app/processing.html?taskId={CHECKOUT_ID}"

@@ -49,3 +49,7 @@ jobs:
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+          POLAR_WEBHOOK_SECRET=${{ secrets.POLAR_WEBHOOK_SECRET }}
+          POLAR_PRODUCT_ID=${{ secrets.POLAR_PRODUCT_ID }}
+          N8N_CONFIRM_SESSION_SECRET=${{ secrets.N8N_CONFIRM_SESSION_SECRET }}
+          ENV=${{ secrets.ENV }}
