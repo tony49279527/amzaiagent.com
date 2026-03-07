@@ -13,6 +13,23 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="robots" content="noindex">
+    <!-- Cache busting: Add version timestamp -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        // Force reload if this is an old cached version (updated: 2026-02-27 20:35)
+        const CURRENT_VERSION = '2026-02-27-20:35';
+        const cachedVersion = sessionStorage.getItem('processing_version');
+        if (cachedVersion && cachedVersion !== CURRENT_VERSION) {
+            console.log('[Cache] Version mismatch, forcing reload. Old:', cachedVersion, 'New:', CURRENT_VERSION);
+            sessionStorage.setItem('processing_version', CURRENT_VERSION);
+            window.location.reload(true);
+        } else {
+            sessionStorage.setItem('processing_version', CURRENT_VERSION);
+            console.log('[Cache] Version check passed:', CURRENT_VERSION);
+        }
+    </script>
 </head>
 
 <body>
@@ -136,9 +153,21 @@
             const email = params.get('email') || localStorage.getItem('pending_email');
             const taskId = params.get('taskId') || params.get('report_id') || localStorage.getItem('pending_task_id');
             const sessionId = params.get('session_id');
-            const isProFlow = params.get('pro') === 'true';
+            let isProFlow = params.get('pro') === 'true';
             const isSubmitted = params.get('submitted') === 'true';
             const orderId = params.get('orderId') || localStorage.getItem('pending_order_id') || 'ORD-' + (taskId ? taskId.substring(0, 8).toUpperCase() : 'UNKNOWN');
+
+            // Polar flow: URL has no pro=true, but pending payload has payment_status
+            const pendingPayloadRaw = localStorage.getItem('pending_analysis_payload');
+            if (!isProFlow && pendingPayloadRaw) {
+                try {
+                    const pp = JSON.parse(pendingPayloadRaw);
+                    if (pp.payment_status === 'deposit_paid' || pp.amount_paid > 0) {
+                        isProFlow = true;
+                        console.log('[DEBUG] Detected Pro flow from pending payload (Polar redirect)');
+                    }
+                } catch (e) {}
+            }
 
             // 1. Basic Info Populating
             document.getElementById('display-order-id').innerText = orderId;
@@ -329,7 +358,25 @@
                     logToTerminal("Payment", "No session_id found, falling back to server-side payment check...", "#facc15");
                 }
 
-                const endpoint = isCompetitorPayload(payload) ? '/api/proxy/pro-analysis' : '/api/discovery/start-task';
+                // CRITICAL: Check both payload type AND isProFlow to route correctly
+                let endpoint;
+                if (isCompetitorPayload(payload)) {
+                    // Competitor Analysis: route to Pro or Free based on payment status
+                    if (isProFlow) {
+                        endpoint = '/api/proxy/pro-analysis';
+                        console.log('[DEBUG] Processing.html: Routing to PRO endpoint for competitor analysis');
+                        logToTerminal("System", "Routing to Pro analysis endpoint...", "#4ade80");
+                    } else {
+                        endpoint = '/api/proxy/free-analysis';
+                        console.log('[DEBUG] Processing.html: Routing to FREE endpoint for competitor analysis');
+                        logToTerminal("System", "Routing to Free analysis endpoint...", "#facc15");
+                    }
+                } else {
+                    // Product Discovery: use discovery endpoint
+                    endpoint = '/api/discovery/start-task';
+                    console.log('[DEBUG] Processing.html: Routing to Discovery endpoint');
+                }
+                console.log('[DEBUG] Final endpoint selected:', endpoint, 'isProFlow:', isProFlow);
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
