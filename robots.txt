@@ -4,5 +4,7 @@ Disallow: /dashboard.html
 Disallow: /processing.html
 Disallow: /failed.html
 Disallow: /success.html
+Disallow: /reports.html
+Disallow: /report.html
 
 Sitemap: https://amzaiagent.com/sitemap.xml

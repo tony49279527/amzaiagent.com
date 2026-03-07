@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decoding COSMO and Rufus Algorithms: How to Use &quot;Intent Graphs&quot; to Help Your Listing Survive in the AI Search Era | Amz AI Agent Blog</title>
+    <meta name="description" content="Introduction: The End of Keyword Stuffing   For a long time, Amazon SEO essentially meant "Keyword Stuffing." The more keywords you embedded, the more traf...">
+
+    <link rel="stylesheet" href="//styles.css">
+    <link href="/https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="alternate" type="application/atom+xml" href="/https://amzaiagent.com/feed.xml">
+    <style>
+        /* Article specific styles */
+        .article-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .article-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .article-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .article-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-color);
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .article-cover-wrapper {
+            width: 100%;
+            max-height: 280px;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .article-content {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: var(--text-color);
+        }
+
+        /* Fix for inline images - prevent overflow */
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+
+        .article-content h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 2.5rem 0 1.25rem;
+            color: var(--text-color);
+        }
+
+        .article-content h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--primary-color);
+            background-color: #f8fafc;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: var(--text-light);
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        /* FAQ section styling - transparent background to match page */
+        .faq-section {
+            background: transparent;
+            margin: 2rem 0;
+        }
+
+        .faq-section h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .faq-section p {
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+    </style>
+    <link rel="canonical" href="https://amzaiagent.com/blog/amazon-cosmo-rufus-algorithm-intent-graph.html">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M50 20 L20 80 H35 L42 65 H58 L65 80 H80 L50 20 Z M45 58 L50 45 L55 58 H45 Z%22 fill=%22white%22/></svg>">
+
+    <meta property="og:title" content="Decoding COSMO and Rufus Algorithms: How to Use &quot;Intent Graphs&quot; to Help Your Listing Survive in the AI Search Era | Amz AI Agent Blog">
+    <meta property="og:description" content="Introduction: The End of Keyword Stuffing   For a long time, Amazon SEO essentially meant "Keyword Stuffing." The more keywords you embedded, the more traf...">
+    <meta property="og:url" content="https://amzaiagent.com/blog/amazon-cosmo-rufus-algorithm-intent-graph.html">
+    <meta property="og:type" content="article">
+    <meta property="og:image" content="https://amzaiagent.com/assets/images/blog_thumbs/algo.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Decoding COSMO and Rufus Algorithms: How to Use &quot;Intent Graphs&quot; to Help Your Listing Survive in the AI Search Era">
+    <meta name="twitter:description" content="Introduction: The End of Keyword Stuffing   For a long time, Amazon SEO essentially meant "Keyword Stuffing." The more keywords you embedded, the more traf...">
+    <meta name="twitter:image" content="https://amzaiagent.com/assets/images/blog_thumbs/algo.webp">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Decoding COSMO and Rufus Algorithms: How to Use \"Intent Graphs\" to Help Your Listing Survive in the AI Search Era",
+  "image": [
+    "https://amzaiagent.com/assets/images/blog_thumbs/algo.webp"
+  ],
+  "datePublished": "August 22, 2025",
+  "author": [
+    {
+      "@type": "Organization",
+      "name": "Amz AI Agent",
+      "url": "https://amzaiagent.com"
+    }
+  ]
+}
+</script>
+</head>
+
+<body>
+    <div class="reading-progress"></div>
+    <!-- Navbar -->
+    <div id="navbar-placeholder">
+    <noscript>
+        <nav aria-label="Main Navigation">
+            <a href="//">Home</a>
+            <a href="//create.html">Competitor Analysis</a>
+            <a href="//discovery.html">Product Discovery</a>
+            <a href="//cases.html">Cases</a>
+            <a href="//blog.html">Blog</a>
+            <a href="//pricing.html">Pricing</a>
+        </nav>
+    </noscript>
+</div>
+
+    <!-- Content -->
+    <main class="article-container" id="main-content">
+        <!-- Breadcrumb Navigation (Same as Case detail page) -->
+        <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+            <a href="/#" id="back-to-list" class="breadcrumb-back">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5" />
+                    <path d="M12 19l-7-7 7-7" />
+                </svg>
+                Back to Blog
+            </a>
+            <ol class="breadcrumb-path">
+                <li><a href="//index.html">Home</a></li>
+                <li class="separator">/</li>
+                <li><a href="//blog.html">Blog</a></li>
+                <li class="separator">/</li>
+                <li class="current" id="breadcrumb-title">Decoding COSMO and Rufus Algorithms: How to Use "Intent Graphs" to Help Your Listing Survive in the AI Search Era</li>
+            </ol>
+        </nav>
+
+        <div id="article-content">
+
+    <div class="article-header">
+        <h1 class="article-title">Decoding COSMO and Rufus Algorithms: How to Use "Intent Graphs" to Help Your Listing Survive in the AI Search Era</h1>
+    </div>
+    <div class="article-content">
+        <div class="article-content">
+  <h2>Introduction: The End of Keyword Stuffing</h2>
+  <p>For a long time, Amazon SEO essentially meant "Keyword Stuffing." The more keywords you embedded, the more traffic you got.</p>
+  <p>But with Amazon's release of the <strong>COSMO</strong> algorithm and the instant Q&A assistant <strong>Rufus</strong>, this logic is collapsing. Search is shifting from "Keyword Match" to "Intent Match."</p>
+
+  <h2>1. What Is an "Intent Graph"?</h2>
+  <p>Simply put, COSMO tries to understand <strong>"why the user wants to buy"</strong>, not just <strong>"what they searched for."</strong></p>
+  <p>For example: A user searches "Camping Chair."</p>
+  <ul>
+    <li><strong>A9 Algorithm (Old):</strong> Shows you products with "Camping Chair" in the title and high sales volume.</li>
+    <li><strong>COSMO Algorithm (New):</strong> Infers the user might want to go to the beach, fishing, or particularly attend a ball game. If your Listing clearly relates to the specific scenario "Heavy duty for uneven ground," you'll get precise intent-based traffic.</li>
+  </ul>
+
+  <h2>2. How to Use FlowAI Agent to Build Intent Graphs</h2>
+  <p>We need to shift from "keyword embedding" to "scenario embedding."</p>
+  <ol>
+    <li><strong>Mine Hidden Scenarios:</strong> Use FlowAgent to analyze competitor reviews for "Usage Scenarios." You'll discover buyers of your product aren't just "campers"—they might be "parents who need to stand in long lines."</li>
+    <li><strong>Structured Layout:</strong> In Bullet Points, instead of just stacking specifications, use <strong>[User Goal] + [Feature] + [Benefit]</strong> structure.</li>
+    <li><strong>Q&A Keyword Embedding:</strong> Specifically set up Q&A about scenario suitability for Rufus (e.g., "Is this suitable for the beach? Yes, our anti-sink foot design...").</li>
+  </ol>
+
+  <h2>Conclusion: Be the AI That Understands Users</h2>
+  <p>Future e-commerce competition is about who understands users better. Using AI analysis tools to capture changes in user intent faster than humans means you can stand firm amid algorithm iteration waves.</p>
+</div>
+    </div>
+    
+</div>
+</main>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const backBtn = document.getElementById('back-to-list');
+            if (backBtn) {
+                backBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (document.referrer && document.referrer.includes(window.location.host)) {
+                        window.history.back();
+                    } else {
+                        window.location.href = '/blog.html';
+                    }
+                });
+            }
+        });
+    </script>
+    
+</body>
+
+</html>

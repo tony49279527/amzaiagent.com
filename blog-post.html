@@ -147,7 +147,18 @@
 <body>
     <div class="reading-progress"></div>
     <!-- Navbar -->
-    <div id="navbar-placeholder"></div>
+    <div id="navbar-placeholder">
+        <noscript>
+            <nav aria-label="Main Navigation">
+                <a href="/">Home</a>
+                <a href="/create.html">Competitor Analysis</a>
+                <a href="/discovery.html">Product Discovery</a>
+                <a href="/cases.html">Cases</a>
+                <a href="/blog.html">Blog</a>
+                <a href="/pricing.html">Pricing</a>
+            </nav>
+        </noscript>
+    </div>
 
     <!-- Content -->
     <main class="article-container" id="main-content">
@@ -358,7 +369,7 @@
             const postId = urlParams.get('id');
 
             if (postId && BLOG_301_MAP[postId]) {
-                const canonicalUrl = 'https://amzaiagent.com/blog-post.html?id=' + encodeURIComponent(BLOG_301_MAP[postId]);
+                const canonicalUrl = '/blog/' + encodeURIComponent(BLOG_301_MAP[postId]) + '.html';
                 window.location.replace(canonicalUrl);
                 return;
             }
@@ -400,7 +411,7 @@
                     const inferredTopicKey = inferTopicKeyFromText(requestedSlug);
                     const canonicalPost = inferredTopicKey ? topicLeaders.get(inferredTopicKey) : null;
                     if (canonicalPost && canonicalPost.id) {
-                        const canonicalUrl = `blog-post.html?id=${encodeURIComponent(canonicalPost.id)}`;
+                        const canonicalUrl = `/blog/${encodeURIComponent(canonicalPost.id)}.html`;
                         window.location.replace(canonicalUrl);
                         return;
                     }
@@ -411,11 +422,16 @@
                 // Canonicalize duplicate topic URLs to the newest post, reducing SEO cannibalization.
                 const canonicalPostForCurrent = topicLeaders.get(getTopicKey(post));
                 if (canonicalPostForCurrent && canonicalPostForCurrent.id && canonicalPostForCurrent.id !== post.id) {
-                    const canonicalUrl = `blog-post.html?id=${encodeURIComponent(canonicalPostForCurrent.id)}`;
+                    const canonicalUrl = `/blog/${encodeURIComponent(canonicalPostForCurrent.id)}.html`;
                     window.location.replace(canonicalUrl);
                     return;
                 }
 
+                // Redirect successful match to the new static SSG page
+                window.location.replace(`/blog/${encodeURIComponent(post.id)}.html`);
+                return;
+
+                // The rest of the function will not execute.
                 const displayTitle = post.title || '';
                 const localizedContent = localizeExternalImages(post.content || post.content_html || '', post.cover_image || '');
                 const safeContent = sanitizeHtml(localizedContent);

@@ -184,26 +184,7 @@ def generate_sitemap():
             xml += '  </url>\n'
             urls_added += 1
 
-    # Add dynamic Reports/Cases
-    print("Fetching reports...")
-    reports_file = 'data/reports/reports.js'
-    if os.path.exists(reports_file):
-        with open(reports_file, 'r', encoding='utf-8') as rf:
-            content = rf.read()
-            report_ids = re.findall(r'"id":\s*"([^"]+)"', content)
-            report_dates = dict(re.findall(r'"id":\s*"([^"]+)"[\\s\\S]*?"created_at":\s*"([^"]+)"', content))
-            unique_rids = sorted(list(set(report_ids)))
-            print(f"Adding {len(unique_rids)} case reports to sitemap...")
-            for rid in unique_rids:
-                rid_date = report_dates.get(rid, "")
-                parsed_date = _parse_date(rid_date) or rid_date[:10] or today
-                xml += '  <url>\n'
-                xml += f'    <loc>{BASE_URL}/report.html?id={rid}</loc>\n'
-                xml += f'    <lastmod>{parsed_date}</lastmod>\n'
-                xml += f'    <changefreq>monthly</changefreq>\n'
-                xml += f'    <priority>0.5</priority>\n'
-                xml += '  </url>\n'
-                urls_added += 1
+    # Add dynamic Reports/Cases is intentionally removed to avoid leaking private reports.
     
     xml += '</urlset>'
     

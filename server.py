@@ -21,6 +21,10 @@ from supabase_client import get_report
 PORT = int(os.environ.get('PORT', 8000))
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
+    def do_HEAD(self):
+        # Fallback to standard HEAD handling for static files
+        super().do_HEAD()
+
     def do_GET(self):
         # 1. Routing: /api/report?report_id=...
         if self.path.startswith('/api/report'):
