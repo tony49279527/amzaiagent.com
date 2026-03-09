@@ -65,7 +65,7 @@ def build_feed(posts: List[Dict]) -> str:
     for p in curated_posts[:50]:  # cap to avoid an overly large feed
         pid = p.get("id") or "untitled"
         title = p.get("title") or "Untitled"
-        link = f"{BASE_URL}/blog-post.html?id={pid}"
+        link = f"{BASE_URL}/blog/{pid}.html"
         updated = parse_date(p.get("date", "")).isoformat()
         summary = ""
         raw_content = p.get("content") or ""

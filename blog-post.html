@@ -315,7 +315,7 @@
                 "@type": "Article",
                 "mainEntityOfPage": {
                     "@type": "WebPage",
-                    "@id": `https://amzaiagent.com/blog-post.html?id=${post.id}`
+                    "@id": `https://amzaiagent.com/blog/${post.id}.html`
                 },
                 "headline": post.title,
                 "description": stripHtml(post.content || "").substring(0, 300),
@@ -343,21 +343,18 @@
 
         // 301 redirect: duplicate blog URLs → canonical (SEO consolidation)
         var BLOG_301_MAP = {
-            'amazon-bsa-compliance-2024-seller-tools-ai': 'amazon-bsa-compliance-update-2024-seller-tools-ai',
-            'amazon-bsa-compliance-2024-seller-tools-deadline': 'amazon-bsa-compliance-update-2024-seller-tools-ai',
-            'amazon-bsa-compliance-update-2024-fba-sellers': 'amazon-bsa-compliance-update-2024-seller-tools-ai',
-            'amazon-seller-tool-compliance-2024-bsa-rules': 'amazon-bsa-compliance-update-2024-seller-tools-ai',
-            'amazon-safe-t-claims-window-30-days-2026': 'amazon-safe-t-claims-window-2026-update-fba-sellers',
-            'amazon-safe-t-claims-window-30-days-2026-update': 'amazon-safe-t-claims-window-2026-update-fba-sellers',
-            'amazon-safe-t-claims-window-change-2026': 'amazon-safe-t-claims-window-2026-update-fba-sellers',
-            'amazon-safe-t-claims-window-changes-2026': 'amazon-safe-t-claims-window-2026-update-fba-sellers',
-            'amazon-safe-t-claims-window-reduction-2026': 'amazon-safe-t-claims-window-2026-update-fba-sellers',
+            'amazon-bsa-compliance-2024-seller-tools-ai': 'amazon-seller-tool-compliance-2024-bsa-rules',
+            'amazon-bsa-compliance-2024-seller-tools-deadline': 'amazon-seller-tool-compliance-2024-bsa-rules',
+            'amazon-bsa-compliance-update-2024-fba-sellers': 'amazon-seller-tool-compliance-2024-bsa-rules',
+            'amazon-safe-t-claims-window-30-days-2026': 'amazon-safe-t-claims-window-30-days-2026-update',
+            'amazon-safe-t-claims-window-change-2026': 'amazon-safe-t-claims-window-30-days-2026-update',
+            'amazon-safe-t-claims-window-changes-2026': 'amazon-safe-t-claims-window-30-days-2026-update',
+            'amazon-safe-t-claims-window-reduction-2026': 'amazon-safe-t-claims-window-30-days-2026-update',
             'amazon-gmv-growth-2025-record-milestone': 'amazon-gmv-growth-2025-milestone',
             'amazon-gmv-growth-2025-sales-impact-fba-sellers': 'amazon-gmv-growth-2025-milestone',
             'amazon-gmv-growth-2025-seller-impact': 'amazon-gmv-growth-2025-milestone',
             'amazon-fba-shipping-costs-2026-protect-profit-margins': 'amazon-fba-shipping-cost-increases-2026-protect-margins',
             'amazon-seller-registrations-2025-drop-fba-impact': 'amazon-seller-registration-drop-2025-fba-impact',
-            'amazon-disbursement-policy-changes-dd7-2024': 'amazon-dd7-disbursement-policy-change-2024',
             'ai-inventory-forecasting-amazon-fba-stockouts-overstock': 'ai-inventory-forecasting-amazon-fba-guide'
         };
 
@@ -446,7 +443,7 @@
                 document.title = pageTitle;
                 const description = safeContent ? stripHtml(safeContent).substring(0, 160) + '...' : displayTitle;
                 document.querySelector('meta[name="description"]').setAttribute('content', description);
-                document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/blog-post.html?id=${post.id}`);
+                document.getElementById('canonical-link').setAttribute('href', `https://amzaiagent.com/blog/${post.id}.html`);
                 injectSchema({ ...post, title: displayTitle, content: safeContent });
 
 
@@ -534,7 +531,7 @@
                 const relatedContainer = document.getElementById('related-posts-container');
                 if (relatedContainer && related.length > 0) {
                     relatedContainer.innerHTML = related.map(p => `
-                        <a href="blog-post.html?id=${encodeURIComponent(p.id || '')}" class="related-post-card">
+                        <a href="/blog/${encodeURIComponent(p.id || '')}.html" class="related-post-card">
                             <img src="${(p.cover_image || 'assets/images/blog_thumbs/default.webp').replace('.png', '.webp')}" alt="${escapeHtml(p.title || '')}" loading="lazy">
                             <div class="content">
                                 <div class="title">${escapeHtml(p.title || '')}</div>
