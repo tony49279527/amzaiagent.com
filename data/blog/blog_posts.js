@@ -2,6 +2,22 @@
 window.blogPostsCN = [];
 window.blogPostsEN = [
   {
+    "id": "amazon-seller-ad-fees-outage-2026-fba-impact",
+    "title": "Amazon Seller Ad Fees During Outage 2026: What FBA Sellers Need to Know",
+    "date": "March 09, 2026",
+    "author": "Amz AI Agent",
+    "cover_image": "assets/images/blog_thumbs/amazon-seller-ad-fees-outage-2026-fba-impact.webp",
+    "tags": [
+      "Amazon FBA",
+      "Amazon Advertising",
+      "Platform Outage",
+      "Seller Fees",
+      "E-commerce",
+      "Amazon Updates 2026"
+    ],
+    "content": "<div> <h1>Amazon Seller Ad Fees During Outage 2026: What FBA Sellers Need to Know</h1> <img alt=\"Amazon Seller Ad Fees During Outage 2026 - Platform Error\" class=\"rounded-lg my-4 w-full object-cover\" loading=\"lazy\" src=\"assets/images/blog_thumbs/amazon-seller-ad-fees-outage-2026-fba-impact.webp\"/> <p>In a concerning development for Amazon FBA sellers, the e-commerce giant continued charging advertising fees during Thursday's major platform outage in March 2026. This incident has raised significant questions about seller compensation and the platform's advertising fee structure. As your trusted <a href=\"/about.html\">Amazon FBA consultants</a>, we're breaking down everything you need to know about this critical situation.</p> <h2>Understanding the March 2026 Amazon Outage</h2> <p>The platform-wide outage resulted in Amazon's infamous 'UH-Oh' error message featuring their signature dog images, preventing customers from completing purchases. Despite the inability to process transactions, sellers reported continued ad fee charges, effectively paying for zero-conversion advertising periods.</p> <h2>Impact on FBA Sellers</h2> <p>The outage has created several challenges for sellers:</p> <ul> <li>Continued ad spend without potential sales</li> <li>Lost revenue during peak shopping hours</li> <li>Customer service complications</li> <li>Inventory management disruptions</li> </ul> <h2>3 Immediate Actions for Affected Sellers</h2> <ul> <li>Document all ad campaigns running during the outage period</li> <li>Calculate estimated losses using our <a href=\"/index.html\">Amz AI Agent calculator</a></li> <li>Submit detailed reports to Amazon Seller Support</li> </ul> <h2>Frequently Asked Questions</h2> <h3>Will Amazon refund ad fees charged during the outage?</h3> <p>Amazon has not yet officially announced their compensation policy for affected sellers. Historical precedent suggests potential credits or adjustments may be issued.</p> <h3>How can sellers protect themselves from future outages?</h3> <p>Implement automated campaign rules, set daily spending limits, and maintain detailed records of all advertising activities. Check our <a href=\"/faq.html\">FBA FAQ</a> for more prevention strategies.</p> <h3>What documentation should sellers maintain?</h3> <p>Keep screenshots of ad campaigns, performance metrics, and any error messages received during the outage period.</p> <h2>Moving Forward</h2> <p>This incident highlights the importance of having contingency plans for platform outages and maintaining robust tracking of advertising expenditures. We recommend implementing automated monitoring systems and diversifying sales channels to minimize future risks.</p> <p>Have you been affected by the recent Amazon outage? Share your experience and how you're handling the ad fee situation in the comments below.</p> </div>"
+  },
+  {
     "id": "amazon-fba-ad-fee-outage-2026-seller-impact",
     "title": "Amazon FBA Ad Fee Outage 2026: What Sellers Need to Know",
     "date": "March 08, 2026",
