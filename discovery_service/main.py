@@ -4,7 +4,7 @@ FastAPI Main Application for Product Discovery Service
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
@@ -86,8 +86,41 @@ async def health_check():
 @app.get("/index.html")
 async def redirect_index():
     """Redirect /index.html to / for canonical URL"""
-    from starlette.responses import RedirectResponse
     return RedirectResponse(url="/", status_code=301)
+
+
+LEGACY_BLOG_REDIRECTS = {
+    "amazon-bsa-compliance-2024-seller-tools-ai": "amazon-seller-tool-compliance-2024-bsa-rules",
+    "amazon-bsa-compliance-2024-seller-tools-deadline": "amazon-seller-tool-compliance-2024-bsa-rules",
+    "amazon-bsa-compliance-update-2024-fba-sellers": "amazon-seller-tool-compliance-2024-bsa-rules",
+    "amazon-safe-t-claims-window-30-days-2026": "amazon-safe-t-claims-window-30-days-2026-update",
+    "amazon-safe-t-claims-window-change-2026": "amazon-safe-t-claims-window-30-days-2026-update",
+    "amazon-safe-t-claims-window-changes-2026": "amazon-safe-t-claims-window-30-days-2026-update",
+    "amazon-safe-t-claims-window-reduction-2026": "amazon-safe-t-claims-window-30-days-2026-update",
+    "amazon-gmv-growth-2025-record-milestone": "amazon-gmv-growth-2025-milestone",
+    "amazon-gmv-growth-2025-sales-impact-fba-sellers": "amazon-gmv-growth-2025-milestone",
+    "amazon-gmv-growth-2025-seller-impact": "amazon-gmv-growth-2025-milestone",
+    "amazon-fba-shipping-costs-2026-protect-profit-margins": "amazon-fba-shipping-cost-increases-2026-protect-margins",
+    "amazon-seller-registrations-2025-drop-fba-impact": "amazon-seller-registration-drop-2025-fba-impact",
+    "ai-inventory-forecasting-amazon-fba-stockouts-overstock": "ai-inventory-forecasting-amazon-fba-guide",
+}
+
+
+@app.get("/blog-post.html")
+async def redirect_legacy_blog_post(id: Optional[str] = None):
+    """
+    Legacy query-based blog URLs should not return a 200 shell page.
+    Redirect valid IDs to the static blog page and return a real 404 otherwise.
+    """
+    if not id:
+        raise HTTPException(status_code=404, detail="Blog post not found")
+
+    canonical_id = LEGACY_BLOG_REDIRECTS.get(id, id)
+    static_path = f"blog/{canonical_id}.html"
+    if os.path.exists(static_path):
+        return RedirectResponse(url=f"/blog/{canonical_id}.html", status_code=301)
+
+    raise HTTPException(status_code=404, detail="Blog post not found")
 
 @app.get("/{filename}.css")
 async def read_css(filename: str):
@@ -161,10 +194,9 @@ async def read_blog_post(post_slug: str):
     if not canonical_id:
         raise HTTPException(status_code=404, detail="Blog post not found")
 
-    # Valid slug - redirect to canonical blog-post.html?id=xxx for proper indexing
-    if os.path.exists("blog-post.html"):
-        from starlette.responses import RedirectResponse
-        return RedirectResponse(url=f"/blog-post.html?id={canonical_id}", status_code=301)
+    static_canonical_path = f"blog/{canonical_id}.html"
+    if os.path.exists(static_canonical_path):
+        return RedirectResponse(url=f"/blog/{canonical_id}.html", status_code=301)
 
     raise HTTPException(status_code=404, detail="Blog post not found")
 

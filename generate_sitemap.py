@@ -18,6 +18,8 @@ EXCLUDE_FILES = [
     'discovery_report.html',
     'dashboard.html',
     'blog-post.html',
+    'report.html',
+    'reports.html',
     'temp_live_index.html',
     'temp_local_index.html'
 ]
@@ -27,9 +29,7 @@ BLOG_REDIRECT_FROM_IDS = {
     'amazon-bsa-compliance-2024-seller-tools-ai',
     'amazon-bsa-compliance-2024-seller-tools-deadline',
     'amazon-bsa-compliance-update-2024-fba-sellers',
-    'amazon-seller-tool-compliance-2024-bsa-rules',
     'amazon-safe-t-claims-window-30-days-2026',
-    'amazon-safe-t-claims-window-30-days-2026-update',
     'amazon-safe-t-claims-window-change-2026',
     'amazon-safe-t-claims-window-changes-2026',
     'amazon-safe-t-claims-window-reduction-2026',
@@ -38,7 +38,6 @@ BLOG_REDIRECT_FROM_IDS = {
     'amazon-gmv-growth-2025-seller-impact',
     'amazon-fba-shipping-costs-2026-protect-profit-margins',
     'amazon-seller-registrations-2025-drop-fba-impact',
-    'amazon-disbursement-policy-changes-dd7-2024',
     'ai-inventory-forecasting-amazon-fba-stockouts-overstock',
 }
 
@@ -126,7 +125,6 @@ def generate_sitemap():
         'discovery.html': '0.9',
         'cases.html': '0.8',
         'blog.html': '0.8',
-        'reports.html': '0.8',
         'contact.html': '0.7',
         'about.html': '0.7',
         'faq.html': '0.7'
@@ -177,7 +175,7 @@ def generate_sitemap():
                 continue
             parsed_date = _parse_date(post.get("date", "")) or today
             xml += '  <url>\n'
-            xml += f'    <loc>{BASE_URL}/blog-post.html?id={pid}</loc>\n'
+            xml += f'    <loc>{BASE_URL}/blog/{pid}.html</loc>\n'
             xml += f'    <lastmod>{parsed_date}</lastmod>\n'
             xml += f'    <changefreq>monthly</changefreq>\n'
             xml += f'    <priority>0.6</priority>\n'

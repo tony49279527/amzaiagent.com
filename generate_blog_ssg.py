@@ -27,22 +27,29 @@ posts = json.loads(match.group(1))
 with open('blog-post.html', 'r', encoding='utf-8') as f:
     template = f.read()
 
+def rewrite_root_relative_links(html: str) -> str:
+    replacements = {
+        'href="styles.css"': 'href="/styles.css?v=5"',
+        "src='js/components.js'": "src='/js/components.js'",
+        'src="js/components.js"': 'src="/js/components.js"',
+        'href="index.html"': 'href="/index.html"',
+        'href="blog.html"': 'href="/blog.html"',
+        'href="create.html"': 'href="/create.html"',
+        'href="discovery.html"': 'href="/discovery.html"',
+        'href="cases.html"': 'href="/cases.html"',
+        'href="pricing.html"': 'href="/pricing.html"',
+        'href="faq.html"': 'href="/faq.html"',
+        'href="about.html"': 'href="/about.html"',
+        'href="contact.html"': 'href="/contact.html"',
+        'href="privacy.html"': 'href="/privacy.html"',
+        'href="terms.html"': 'href="/terms.html"',
+    }
+    for source, target in replacements.items():
+        html = html.replace(source, target)
+    return html
+
 # 3. Fix relative paths in template so it works from /blog/ dir
-template = template.replace('href="styles.css"', 'href="/styles.css?v=5"')
-template = template.replace('href="index.html"', 'href="/index.html"')
-template = template.replace('href="blog.html"', 'href="/blog.html"')
-template = template.replace('href="create.html"', 'href="/create.html"')
-template = template.replace('href="discovery.html"', 'href="/discovery.html"')
-template = template.replace('href="cases.html"', 'href="/cases.html"')
-template = template.replace('href="pricing.html"', 'href="/pricing.html"')
-template = template.replace("src='js/components.js'", "src='/js/components.js'")
-template = template.replace('href="data:image', 'HREF_DATA_IMAGE')  # temp protection
-template = template.replace('href="https://', 'HREF_HTTPS')
-template = template.replace('href="http://', 'HREF_HTTP')
-template = template.replace('href="', 'href="/')
-template = template.replace('HREF_HTTPS', 'href="https://')
-template = template.replace('HREF_HTTP', 'href="http://')
-template = template.replace('HREF_DATA_IMAGE', 'href="data:image')
+template = rewrite_root_relative_links(template)
 
 # 4. Process each post
 for post in posts:
@@ -92,8 +99,10 @@ for post in posts:
     html = html.replace('</head>', f'{og_tags}\n{schema_script}\n</head>')
     
     # Inject static content
-    # We must fix image src inside post content to be absolute or root-relative
+    # We must fix image src and root links inside post content.
     post_content = post['content'].replace('src="assets/', 'src="/assets/')
+    post_content = post_content.replace("src='assets/", "src='/assets/")
+    post_content = rewrite_root_relative_links(post_content)
     
     static_content = f"""
     <div class="article-header">
