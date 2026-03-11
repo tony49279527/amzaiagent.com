@@ -2,6 +2,22 @@
 window.blogPostsCN = [];
 window.blogPostsEN = [
   {
+    "id": "amazon-fba-ad-fee-charges-system-outage-2026",
+    "title": "Amazon FBA Ad Fee Charges During System Outage 2026: What Sellers Need to Know",
+    "date": "March 11, 2026",
+    "author": "Amz AI Agent",
+    "cover_image": "assets/images/blog_thumbs/efficiency.png",
+    "tags": [
+      "Amazon FBA",
+      "Amazon Ad Fees",
+      "E-commerce News",
+      "Amazon Seller Updates",
+      "PPC Management",
+      "Amazon System Outage"
+    ],
+    "content": "<div> <h1>Amazon FBA Ad Fee Charges During System Outage 2026: Critical Updates for Sellers</h1> <img alt=\"Amazon FBA Ad Fee Charges During System Outage 2026 - Platform Error\" class=\"rounded-lg my-4 w-full object-cover\" loading=\"lazy\" src=\"assets/images/blog_thumbs/efficiency.webp\"/> <p>In a significant development affecting Amazon FBA sellers, the e-commerce giant continued charging advertising fees during Thursday's widespread system outage in 2026. This incident has raised serious concerns among sellers using our <a href=\"/index.html\">Amazon seller tools</a>, particularly regarding fee transparency and compensation procedures.</p> <h2>Understanding the Amazon FBA Ad Fee Crisis</h2> <p>The platform experienced a major outage where customers encountered the infamous 'UH-Oh' error page featuring Amazon's signature dogs. Despite the inability to process sales or checkouts, sellers reported continuous ad fee charges, creating a problematic situation where advertising costs accumulated without the possibility of conversions.</p> <h2>Impact on Amazon FBA Sellers</h2> <ul> <li>Lost sales opportunities during peak shopping hours</li> <li>Continued ad spend without conversion potential</li> <li>Skewed advertising metrics and ACOS calculations</li> </ul> <h2>3 Immediate Actions for Affected Sellers</h2> <ul> <li>Document all ad campaigns running during the outage period</li> <li>Calculate estimated losses using your advertising dashboard</li> <li>Submit a detailed claim through Seller Central (Check our <a href=\"/faq.html\">FAQ section</a> for guidance)</li> </ul> <h2>Frequently Asked Questions</h2> <h3>Will Amazon refund ad fees charged during the outage?</h3> <p>Amazon has not yet made an official statement regarding refunds, but based on historical precedent, sellers should document their losses and submit formal requests through Seller Central.</p> <h3>How can sellers prevent ad spend during future outages?</h3> <p>Implement automated rules for your PPC campaigns that pause ads when specific performance metrics aren't met within a set timeframe.</p> <h3>What documentation should sellers maintain for refund requests?</h3> <p>Keep screenshots of error messages, ad spend reports, and typical conversion rates from comparable time periods as evidence.</p> <h2>Moving Forward: Protection Strategies</h2> <p>This incident highlights the importance of having robust monitoring systems and contingency plans in place. Consider implementing automated alerts and maintaining detailed records of your advertising campaigns.</p> <p>Have you been affected by the recent Amazon outage? Share your experience and strategies for protecting your business in the comments below.</p> </div>"
+  },
+  {
     "id": "amazon-fba-outage-2026-seller-ad-charges",
     "title": "Amazon FBA Outage 2026: Sellers Hit with Unexpected Ad Charges During System Failure",
     "date": "March 10, 2026",
