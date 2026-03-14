@@ -1,8 +1,8 @@
 import os
-import re
-import json
 from datetime import datetime
 from typing import Optional
+
+from blog_curation import build_redirect_map, curate_posts, extract_posts_from_blog_js
 
 BASE_URL = "https://amzaiagent.com"
 # Exclude system/utility pages or pages not meant for public indexing
@@ -24,23 +24,6 @@ EXCLUDE_FILES = [
     'temp_local_index.html'
 ]
 
-# Blog IDs that 301 to another URL — do not list these in sitemap
-BLOG_REDIRECT_FROM_IDS = {
-    'amazon-bsa-compliance-2024-seller-tools-ai',
-    'amazon-bsa-compliance-2024-seller-tools-deadline',
-    'amazon-bsa-compliance-update-2024-fba-sellers',
-    'amazon-safe-t-claims-window-30-days-2026',
-    'amazon-safe-t-claims-window-change-2026',
-    'amazon-safe-t-claims-window-changes-2026',
-    'amazon-safe-t-claims-window-reduction-2026',
-    'amazon-gmv-growth-2025-record-milestone',
-    'amazon-gmv-growth-2025-sales-impact-fba-sellers',
-    'amazon-gmv-growth-2025-seller-impact',
-    'amazon-fba-shipping-costs-2026-protect-profit-margins',
-    'amazon-seller-registrations-2025-drop-fba-impact',
-    'ai-inventory-forecasting-amazon-fba-stockouts-overstock',
-}
-
 def _file_lastmod(path: str, fallback: str) -> str:
     try:
         ts = os.path.getmtime(path)
@@ -57,54 +40,6 @@ def _parse_date(date_str: str) -> Optional[str]:
         return datetime.strptime(date_str.strip(), "%B %d, %Y").strftime('%Y-%m-%d')
     except Exception:
         return None
-
-
-def _extract_blog_posts(path: str):
-    with open(path, 'r', encoding='utf-8') as bpf:
-        content = bpf.read()
-    match = re.search(r"window\.blogPostsEN\s*=\s*(\[\s*.*?\]);", content, re.S)
-    if not match:
-        return []
-    try:
-        return json.loads(match.group(1))
-    except Exception:
-        return []
-
-
-def _normalize_title(title: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", (title or "").lower()).strip()
-
-
-def _blog_topic_key(post: dict) -> str:
-    normalized = _normalize_title(post.get("title") or "")
-    rules = [
-        ("topic-safe-t-window", r"safe t claims window"),
-        ("topic-bsa-compliance", r"bsa compliance|seller tool compliance|bsa rules?"),
-        ("topic-gmv-growth", r"gmv growth"),
-        ("topic-seller-registration-drop", r"seller registrations? drop"),
-        ("topic-dd7-disbursement", r"dd 7|disbursement policy change"),
-    ]
-    for key, pattern in rules:
-        if re.search(pattern, normalized):
-            return key
-    return f"post-{post.get('id') or 'untitled'}"
-
-
-def _curate_blog_posts(posts: list) -> list:
-    def _date_key(post):
-        parsed = _parse_date(post.get("date", ""))
-        return parsed or "1970-01-01"
-
-    sorted_posts = sorted(posts, key=_date_key, reverse=True)
-    seen = set()
-    curated = []
-    for post in sorted_posts:
-        key = _blog_topic_key(post)
-        if key in seen:
-            continue
-        seen.add(key)
-        curated.append(post)
-    return curated
 
 def generate_sitemap():
     # List all HTML files in current directory
@@ -166,12 +101,13 @@ def generate_sitemap():
     print("Fetching blog posts...")
     blog_posts_file = 'data/blog/blog_posts.js'
     if os.path.exists(blog_posts_file):
-        posts = _extract_blog_posts(blog_posts_file)
-        curated_posts = _curate_blog_posts(posts)
+        posts = extract_posts_from_blog_js()
+        curated_posts = curate_posts(posts)
+        redirect_map = build_redirect_map(posts)
         print(f"Adding {len(curated_posts)} curated blog posts to sitemap...")
         for post in curated_posts:
             pid = post.get("id")
-            if not pid or pid in BLOG_REDIRECT_FROM_IDS:
+            if not pid or redirect_map.get(pid, pid) != pid:
                 continue
             parsed_date = _parse_date(post.get("date", "")) or today
             xml += '  <url>\n'

@@ -122,6 +122,8 @@ function renderFooter() {
                     <h4>Company</h4>
                     <a href="about.html">About Us</a>
                     <a href="contact.html">Contact</a>
+                    <a href="mailto:contact@amzaiagent.com">Email Us</a>
+                    <a href="#">WeChat: tony49279527</a>
                     <a href="privacy.html">Privacy Policy</a>
                     <a href="terms.html">Terms of Service</a>
                 </div>

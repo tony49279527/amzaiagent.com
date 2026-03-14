@@ -189,11 +189,17 @@
             function getTopicKey(post) {
                 const normalized = normalizeTitle(post.title || '');
                 const dedupeRules = [
+                    { key: 'topic-ad-fee-outage', pattern: /((ad fee|advertising fees?|ad charges?).*(outage|system failure|system outage|platform outage))|(outage.*(ad fee|advertising fees?|ad charges?))/ },
+                    { key: 'topic-ai-analytics', pattern: /ai sales analytics tool|ai analytics tool/ },
+                    { key: 'topic-spring-sale', pattern: /spring deal days|big spring sale/ },
+                    { key: 'topic-inventory-forecasting', pattern: /inventory forecasting/ },
                     { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
                     { key: 'topic-bsa-compliance', pattern: /bsa compliance|seller tool compliance|bsa rules?/ },
                     { key: 'topic-gmv-growth', pattern: /gmv growth/ },
                     { key: 'topic-seller-registration-drop', pattern: /seller registrations? drop/ },
-                    { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ }
+                    { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ },
+                    { key: 'topic-shipping-costs', pattern: /fba shipping cost/ },
+                    { key: 'topic-elite-seller-share', pattern: /elite 1 6|control half of marketplace sales|marketplace revenue/ }
                 ];
 
                 for (const rule of dedupeRules) {

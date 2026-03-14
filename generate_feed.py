@@ -1,63 +1,17 @@
 import re
-import json
 from datetime import datetime, timezone
 from typing import List, Dict
+
+from blog_curation import curate_posts, extract_posts_from_blog_js
 
 BASE_URL = "https://amzaiagent.com"
 BLOG_FILE = "data/blog/blog_posts.js"
 FEED_FILE = "feed.xml"
-
-
-def parse_posts() -> List[Dict]:
-    with open(BLOG_FILE, "r", encoding="utf-8") as f:
-        content = f.read()
-    match = re.search(r"window\.blogPostsEN\s*=\s*(\[\s*.*?\]);", content, re.S)
-    if not match:
-        raise RuntimeError("Could not find blogPostsEN array in blog_posts.js")
-    json_blob = match.group(1)
-    posts = json.loads(json_blob)
-    return posts
-
-
 def parse_date(date_str: str) -> datetime:
     try:
         return datetime.strptime(date_str.strip(), "%B %d, %Y").replace(tzinfo=timezone.utc)
     except Exception:
         return datetime.now(timezone.utc)
-
-
-def normalize_title(title: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", (title or "").lower()).strip()
-
-
-def topic_key(post: Dict) -> str:
-    normalized = normalize_title(post.get("title") or "")
-    rules = [
-        ("topic-safe-t-window", r"safe t claims window"),
-        ("topic-bsa-compliance", r"bsa compliance|seller tool compliance|bsa rules?"),
-        ("topic-gmv-growth", r"gmv growth"),
-        ("topic-seller-registration-drop", r"seller registrations? drop"),
-        ("topic-dd7-disbursement", r"dd 7|disbursement policy change"),
-    ]
-    for key, pattern in rules:
-        if re.search(pattern, normalized):
-            return key
-    return f"post-{post.get('id') or 'untitled'}"
-
-
-def curate_posts(posts: List[Dict]) -> List[Dict]:
-    sorted_posts = sorted(posts, key=lambda p: parse_date(p.get("date", "")), reverse=True)
-    seen_keys = set()
-    curated = []
-    for post in sorted_posts:
-        key = topic_key(post)
-        if key in seen_keys:
-            continue
-        seen_keys.add(key)
-        curated.append(dict(post))
-    return curated
-
-
 def build_feed(posts: List[Dict]) -> str:
     now_iso = datetime.now(timezone.utc).isoformat()
     feed_items = []
@@ -111,7 +65,7 @@ def escape_xml(text: str) -> str:
 
 
 def main():
-    posts = parse_posts()
+    posts = extract_posts_from_blog_js()
     feed = build_feed(posts)
     with open(FEED_FILE, "w", encoding="utf-8") as f:
         f.write(feed)

@@ -12,9 +12,11 @@ import httpx
 import json
 import threading
 import hashlib
+from functools import lru_cache
 from pydantic import BaseModel as PydanticBaseModel
 from typing import Optional, Any
 
+from blog_curation import build_redirect_map, extract_posts_from_blog_js
 from .models import DiscoveryRequest, DiscoveryResponse, UserTier
 from .analyzer import ProductDiscoveryAnalyzer
 from .config import DEFAULT_MODEL_FREE, PRO_MODELS
@@ -89,21 +91,12 @@ async def redirect_index():
     return RedirectResponse(url="/", status_code=301)
 
 
-LEGACY_BLOG_REDIRECTS = {
-    "amazon-bsa-compliance-2024-seller-tools-ai": "amazon-seller-tool-compliance-2024-bsa-rules",
-    "amazon-bsa-compliance-2024-seller-tools-deadline": "amazon-seller-tool-compliance-2024-bsa-rules",
-    "amazon-bsa-compliance-update-2024-fba-sellers": "amazon-seller-tool-compliance-2024-bsa-rules",
-    "amazon-safe-t-claims-window-30-days-2026": "amazon-safe-t-claims-window-30-days-2026-update",
-    "amazon-safe-t-claims-window-change-2026": "amazon-safe-t-claims-window-30-days-2026-update",
-    "amazon-safe-t-claims-window-changes-2026": "amazon-safe-t-claims-window-30-days-2026-update",
-    "amazon-safe-t-claims-window-reduction-2026": "amazon-safe-t-claims-window-30-days-2026-update",
-    "amazon-gmv-growth-2025-record-milestone": "amazon-gmv-growth-2025-milestone",
-    "amazon-gmv-growth-2025-sales-impact-fba-sellers": "amazon-gmv-growth-2025-milestone",
-    "amazon-gmv-growth-2025-seller-impact": "amazon-gmv-growth-2025-milestone",
-    "amazon-fba-shipping-costs-2026-protect-profit-margins": "amazon-fba-shipping-cost-increases-2026-protect-margins",
-    "amazon-seller-registrations-2025-drop-fba-impact": "amazon-seller-registration-drop-2025-fba-impact",
-    "ai-inventory-forecasting-amazon-fba-stockouts-overstock": "ai-inventory-forecasting-amazon-fba-guide",
-}
+@lru_cache(maxsize=1)
+def get_blog_redirects() -> dict:
+    try:
+        return build_redirect_map(extract_posts_from_blog_js())
+    except Exception:
+        return {}
 
 
 @app.get("/blog-post.html")
@@ -115,7 +108,7 @@ async def redirect_legacy_blog_post(id: Optional[str] = None):
     if not id:
         raise HTTPException(status_code=404, detail="Blog post not found")
 
-    canonical_id = LEGACY_BLOG_REDIRECTS.get(id, id)
+    canonical_id = get_blog_redirects().get(id, id)
     static_path = f"blog/{canonical_id}.html"
     if os.path.exists(static_path):
         return RedirectResponse(url=f"/blog/{canonical_id}.html", status_code=301)
@@ -184,6 +177,10 @@ def _get_blog_slug_to_id() -> dict:
 # Handle blog post paths if they are like /blog/some-post.html
 @app.get("/blog/{post_slug}.html")
 async def read_blog_post(post_slug: str):
+    canonical_slug = get_blog_redirects().get(post_slug, post_slug)
+    if canonical_slug != post_slug:
+        return RedirectResponse(url=f"/blog/{canonical_slug}.html", status_code=301)
+
     # Strategy 1: If static HTML exists in blog/
     path1 = f"blog/{post_slug}.html"
     if os.path.exists(path1):

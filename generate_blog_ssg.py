@@ -1,8 +1,8 @@
 import os
 import re
 import json
-import shutil
-from datetime import datetime
+
+from blog_curation import curate_posts, extract_posts_from_blog_js
 
 os.makedirs('blog', exist_ok=True)
 
@@ -12,16 +12,8 @@ def strip_html(html):
     text = text.replace('\n', ' ').strip()
     return text[:155] + '...' if len(text) > 155 else text
 
-# 1. Read blog posts
-with open('data/blog/blog_posts.js', 'r', encoding='utf-8') as f:
-    content = f.read()
-
-match = re.search(r"window\.blogPostsEN\s*=\s*(\[\s*.*?\]);", content, re.S)
-if not match:
-    print("Could not find blogPostsEN")
-    exit(1)
-
-posts = json.loads(match.group(1))
+# 1. Read canonical blog posts
+posts = curate_posts(extract_posts_from_blog_js())
 
 # 2. Read template
 with open('blog-post.html', 'r', encoding='utf-8') as f:
@@ -51,7 +43,12 @@ def rewrite_root_relative_links(html: str) -> str:
 # 3. Fix relative paths in template so it works from /blog/ dir
 template = rewrite_root_relative_links(template)
 
-# 4. Process each post
+# 4. Remove stale generated pages before rebuilding canonical pages
+for name in os.listdir('blog'):
+    if name.endswith('.html'):
+        os.remove(os.path.join('blog', name))
+
+# 5. Process each post
 for post in posts:
     pid = post['id']
     title = post['title']

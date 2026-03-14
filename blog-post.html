@@ -298,11 +298,17 @@
         function inferTopicKeyFromText(value) {
             const normalized = normalizeTitle(value || '');
             const dedupeRules = [
+                { key: 'topic-ad-fee-outage', pattern: /((ad fee|advertising fees?|ad charges?).*(outage|system failure|system outage|platform outage))|(outage.*(ad fee|advertising fees?|ad charges?))/ },
+                { key: 'topic-ai-analytics', pattern: /ai sales analytics tool|ai analytics tool/ },
+                { key: 'topic-spring-sale', pattern: /spring deal days|big spring sale/ },
+                { key: 'topic-inventory-forecasting', pattern: /inventory forecasting/ },
                 { key: 'topic-safe-t-window', pattern: /safe t claims window/ },
                 { key: 'topic-bsa-compliance', pattern: /bsa compliance|seller tool compliance|bsa rules?/ },
                 { key: 'topic-gmv-growth', pattern: /gmv growth/ },
                 { key: 'topic-seller-registration-drop', pattern: /seller registrations? drop/ },
-                { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ }
+                { key: 'topic-dd7-disbursement', pattern: /dd 7|disbursement policy change/ },
+                { key: 'topic-shipping-costs', pattern: /fba shipping cost/ },
+                { key: 'topic-elite-seller-share', pattern: /elite 1 6|control half of marketplace sales|marketplace revenue/ }
             ];
 
             for (const rule of dedupeRules) {
@@ -367,7 +373,15 @@
             'amazon-gmv-growth-2025-seller-impact': 'amazon-gmv-growth-2025-milestone',
             'amazon-fba-shipping-costs-2026-protect-profit-margins': 'amazon-fba-shipping-cost-increases-2026-protect-margins',
             'amazon-seller-registrations-2025-drop-fba-impact': 'amazon-seller-registration-drop-2025-fba-impact',
-            'ai-inventory-forecasting-amazon-fba-stockouts-overstock': 'ai-inventory-forecasting-amazon-fba-guide'
+            'ai-inventory-forecasting-amazon-fba-stockouts-overstock': 'ai-inventory-forecasting-amazon-fba-guide',
+            'amazon-fba-ad-fee-charges-system-outage-2026': 'amazon-fba-ad-fee-crisis-2026-outage-charges',
+            'amazon-fba-outage-2026-seller-ad-charges': 'amazon-fba-ad-fee-crisis-2026-outage-charges',
+            'amazon-seller-ad-fees-outage-2026-fba-impact': 'amazon-fba-ad-fee-crisis-2026-outage-charges',
+            'amazon-fba-ad-fee-outage-2026-seller-impact': 'amazon-fba-ad-fee-crisis-2026-outage-charges',
+            'amazon-fba-ai-analytics-tool-2024-sales-insights': 'amazon-ai-sales-analytics-tool-guide-fba-sellers',
+            'amazon-fba-ai-analytics-tool-2024': 'amazon-ai-sales-analytics-tool-guide-fba-sellers',
+            'amazon-spring-deal-days-2026-seller-guide': 'amazon-big-spring-sale-2026-dates-deals-guide',
+            'amazon-top-seller-statistics-2024': 'amazon-fba-elite-sellers-marketplace-revenue-2024'
         };
 
         document.addEventListener('DOMContentLoaded', () => {
