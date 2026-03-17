@@ -4,11 +4,20 @@
   <id>https://amzaiagent.com/feed.xml</id>
   <link href="https://amzaiagent.com/feed.xml" rel="self"/>
   <link href="https://amzaiagent.com/blog.html" />
-  <updated>2026-03-16T01:18:37.925774+00:00</updated>
+  <updated>2026-03-17T01:10:27.097455+00:00</updated>
   <author>
     <name>Amz AI Agent</name>
   </author>
 
+  <entry>
+    <title>Amazon Shop Direct Product Feeds: Complete Guide for Merchants 2024</title>
+    <link href="https://amzaiagent.com/blog/amazon-shop-direct-product-feeds-guide-2024.html"/>
+    <id>https://amzaiagent.com/blog/amazon-shop-direct-product-feeds-guide-2024.html</id>
+    <updated>2026-03-17T00:00:00+00:00</updated>
+    <summary>Amazon Shop Direct Product Feeds: Complete Guide for Merchants 2024 In a groundbreaking move, Amazon has expanded its AI-powered Shop Direct feature by introducing third-party product feed integration. This development allows merchants to syndicate their off-Amazon product catalogs through the platf</summary>
+    <author><name>Amz AI Agent</name></author>
+    <media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="assets/images/blog_thumbs/agentic.webp"/>
+  </entry>
   <entry>
     <title>Amazon FBA Ad Fee Crisis 2026: Sellers Charged During Major Outage</title>
     <link href="https://amzaiagent.com/blog/amazon-fba-ad-fee-crisis-2026-outage-charges.html"/>
