@@ -90,6 +90,20 @@ async def redirect_index():
     """Redirect /index.html to / for canonical URL"""
     return RedirectResponse(url="/", status_code=301)
 
+@app.get("/feed.xml")
+async def read_feed():
+    """Serve RSS/Atom feed from project root."""
+    if os.path.exists("feed.xml"):
+        return FileResponse("feed.xml", media_type="application/xml")
+    raise HTTPException(status_code=404, detail="Feed not found")
+
+@app.get("/favicon.ico")
+async def read_favicon():
+    """Serve favicon from project root."""
+    if os.path.exists("favicon.ico"):
+        return FileResponse("favicon.ico", media_type="image/x-icon")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
 
 @lru_cache(maxsize=1)
 def get_blog_redirects() -> dict:
