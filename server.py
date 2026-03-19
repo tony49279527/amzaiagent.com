@@ -26,6 +26,37 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         super().do_HEAD()
 
     def do_GET(self):
+        # 0. SEO 301 Redirects for old blog URLs
+        if self.path.startswith('/blog-post.html'):
+            from urllib.parse import urlparse, parse_qs
+            query = parse_qs(urlparse(self.path).query)
+            old_id = query.get('id', [None])[0]
+            
+            if old_id:
+                # Manual mappings for mismatched slugs
+                mappings = {
+                    'amazon-gmv-growth-2025-record-milestone': 'amazon-gmv-growth-2025-milestone',
+                    'amazon-bsa-compliance-update-2024-seller-tools-ai': 'amazon-seller-tool-compliance-2024-bsa-rules',
+                    'amazon-seller-ad-fees-outage-2026-fba-impact': 'amazon-fba-ad-fee-crisis-2026-outage-charges',
+                    'amazon-fba-ad-fee-outage-2026-seller-impact': 'amazon-fba-ad-fee-crisis-2026-outage-charges',
+                }
+                new_slug = mappings.get(old_id, old_id)
+                new_path = f"/blog/{new_slug}.html"
+                
+                # Check file existence to avoid 404s after redirect
+                file_sys_path = os.path.join(os.path.dirname(__file__), 'blog', f"{new_slug}.html")
+                if os.path.exists(file_sys_path):
+                    redirect_url = new_path
+                else:
+                    redirect_url = "/blog.html"
+            else:
+                redirect_url = "/blog.html"
+                
+            self.send_response(301)
+            self.send_header('Location', redirect_url)
+            self.end_headers()
+            return
+
         # 1. Routing: /api/report?report_id=...
         if self.path.startswith('/api/report'):
             from urllib.parse import urlparse, parse_qs
