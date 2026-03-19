@@ -231,47 +231,7 @@ analyzer = ProductDiscoveryAnalyzer()
 # Store for completed reports (fallback when Supabase not configured)
 reports_store = {}
 
-# Payment state persistence (fallback). In production, use a real external DB.
-PAYMENT_STATE_FILE = os.getenv(
-    "PAYMENT_STATE_FILE",
-    os.path.join(os.path.dirname(__file__), ".payment_state.json")
-)
-_payment_state_lock = threading.Lock()
-paid_reports = set()  # tracks paid emails
-verified_sessions = set()  # tracks verified checkout session IDs
-paid_orders = set()  # tracks paid order IDs
-paid_order_to_email = {}  # order_id -> customer_email
-
-
-def _persist_payment_state():
-    state = {
-        "paid_reports": sorted(paid_reports),
-        "verified_sessions": sorted(verified_sessions),
-        "paid_orders": sorted(paid_orders),
-        "paid_order_to_email": paid_order_to_email,
-    }
-    tmp_path = PAYMENT_STATE_FILE + ".tmp"
-    with _payment_state_lock:
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(state, f)
-        os.replace(tmp_path, PAYMENT_STATE_FILE)
-
-
-def _load_payment_state():
-    if not os.path.exists(PAYMENT_STATE_FILE):
-        return
-    try:
-        with open(PAYMENT_STATE_FILE, "r", encoding="utf-8") as f:
-            state = json.load(f)
-        paid_reports.update(state.get("paid_reports", []))
-        verified_sessions.update(state.get("verified_sessions", []))
-        paid_orders.update(state.get("paid_orders", []))
-        paid_order_to_email.update(state.get("paid_order_to_email", {}))
-    except Exception as e:
-        print(f"Payment state load failed: {e}")
-
-
-_load_payment_state()
+from . import payment_store
 
 # Lightweight analytics log for conversion funnel visibility.
 ANALYTICS_LOG_FILE = os.getenv(
@@ -374,7 +334,7 @@ async def get_discovery_report(report_id: str, request: Request):
     # - Free reports (DEFAULT_MODEL_FREE) can be read in full.
     # - Pro reports require final payment (paid_orders contains report_id).
     is_pro_report = report.model_used != DEFAULT_MODEL_FREE
-    full_report_unlocked = (not is_pro_report) or (report_id in paid_orders)
+    full_report_unlocked = (not is_pro_report) or payment_store.is_order_paid(report_id)
     _log_event(
         "discovery.report_view",
         {"report_id": report_id, "is_pro_report": is_pro_report, "unlocked": full_report_unlocked},
@@ -492,7 +452,7 @@ async def start_analysis_task(
 
         # Pro tier: verify payment before starting (Polar webhook populates paid_reports)
         if request.user_tier == UserTier.PRO:
-            if request.user_email not in paid_reports:
+            if not payment_store.is_email_paid(request.user_email):
                 _log_event(
                     "discovery.pro_blocked_unpaid",
                     {"email_hash": _hash_email(request.user_email)},
@@ -534,8 +494,8 @@ async def verify_payment_session(session_id: str, request: Request):
     """Verify checkout session. Uses verified_sessions (from n8n) or direct Stripe API as fallback."""
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    if session_id in verified_sessions:
-        _log_event("payment.session_verify", {"status": "paid", "source": "memory", "session_id": session_id}, request)
+    if payment_store.is_session_verified(session_id):
+        _log_event("payment.session_verify", {"status": "paid", "source": "supabase", "session_id": session_id}, request)
         return {"status": "paid", "session_id": session_id}
 
     # Fallback: direct Stripe API verification (handles race when n8n webhook is slow)
@@ -546,8 +506,7 @@ async def verify_payment_session(session_id: str, request: Request):
             stripe.api_key = stripe_key
             sess = stripe.checkout.Session.retrieve(session_id)
             if getattr(sess, "payment_status", None) == "paid" and getattr(sess, "status", None) == "complete":
-                verified_sessions.add(session_id)
-                _persist_payment_state()
+                payment_store.add_verified_session(session_id)
                 _log_event("payment.session_verify", {"status": "paid", "source": "stripe_api", "session_id": session_id}, request)
                 return {"status": "paid", "session_id": session_id}
         except Exception as e:
@@ -577,7 +536,7 @@ async def confirm_balance_paid(req: ConfirmBalancePaidRequest, request: Request)
     if not req.session_id or not req.report_id:
         raise HTTPException(status_code=400, detail="session_id and report_id required")
     # 1) Verify session is paid (memory or Stripe API)
-    if req.session_id not in verified_sessions:
+    if not payment_store.is_session_verified(req.session_id):
         stripe_key = os.getenv("STRIPE_SECRET_KEY")
         if stripe_key and req.session_id.startswith("cs_"):
             try:
@@ -585,17 +544,16 @@ async def confirm_balance_paid(req: ConfirmBalancePaidRequest, request: Request)
                 stripe.api_key = stripe_key
                 sess = stripe.checkout.Session.retrieve(req.session_id)
                 if getattr(sess, "payment_status", None) == "paid" and getattr(sess, "status", None) == "complete":
-                    verified_sessions.add(req.session_id)
-                    _persist_payment_state()
+                    payment_store.add_verified_session(req.session_id)
             except Exception as e:
                 print(f"Stripe verify error in confirm-balance-paid: {e}")
                 raise HTTPException(status_code=402, detail="Payment not verified")
         else:
             raise HTTPException(status_code=402, detail="Payment not verified")
     # 2) Mark report as paid
-    already_paid = req.report_id in paid_orders
-    paid_orders.add(req.report_id)
-    _persist_payment_state()
+    already_paid = payment_store.is_order_paid(req.report_id)
+    if not already_paid:
+        payment_store.add_paid_order(req.report_id)
     _log_event(
         "payment.balance_paid_confirmed",
         {"report_id": req.report_id, "session_id": req.session_id, "already_paid": already_paid},
@@ -633,14 +591,11 @@ async def confirm_payment_session(req: ConfirmSessionRequest, request: Request):
     """
     if not req.session_id:
         raise HTTPException(status_code=400, detail="session_id required")
-    verified_sessions.add(req.session_id)
+    payment_store.add_verified_session(req.session_id)
     if req.customer_email:
-        paid_reports.add(req.customer_email)
+        payment_store.add_paid_email(req.customer_email)
     if req.order_id:
-        paid_orders.add(req.order_id)
-        if req.customer_email:
-            paid_order_to_email[req.order_id] = req.customer_email
-    _persist_payment_state()
+        payment_store.add_paid_order(req.order_id, req.customer_email)
     _log_event(
         "payment.session_confirmed",
         {"session_id": req.session_id, "order_id": req.order_id, "customer_email": req.customer_email},
@@ -696,18 +651,16 @@ async def polar_webhook(request: Request):
             print(f"Payment succeeded for {email}")
             # In a real app, mark the report as paid in DB
             # For now, we'll use the email to match or a metadata field if supported
-            paid_reports.add(email)
+            if email:
+                payment_store.add_paid_email(email)
             metadata = checkout_data.get("metadata") or {}
             order_id = metadata.get("order_id") or metadata.get("orderId")
             if order_id:
-                paid_orders.add(order_id)
-                if email:
-                    paid_order_to_email[order_id] = email
+                payment_store.add_paid_order(order_id, email)
             # Also track checkout session ID if available
             checkout_id = checkout_data.get("id") or checkout_data.get("checkout_id")
             if checkout_id:
-                verified_sessions.add(checkout_id)
-            _persist_payment_state()
+                payment_store.add_verified_session(checkout_id)
             _log_event(
                 "payment.webhook_succeeded",
                 {"customer_email": email, "order_id": order_id, "checkout_id": checkout_id},
@@ -893,8 +846,8 @@ async def proxy_pro_analysis(payload: dict, request: Request):
             },
             request
         )
-        email_paid = bool(user_email and user_email in paid_reports)
-        order_paid = bool(order_id and order_id in paid_orders)
+        email_paid = bool(user_email and payment_store.is_email_paid(user_email))
+        order_paid = bool(order_id and payment_store.is_order_paid(order_id))
         if not email_paid and not order_paid:
             _log_event("analysis.pro_rejected", {"reason": "payment_required", "user_email": user_email, "order_id": order_id}, request)
             raise HTTPException(
@@ -902,7 +855,7 @@ async def proxy_pro_analysis(payload: dict, request: Request):
                 detail="Payment required. Please complete payment before submitting Pro analysis."
             )
         if order_paid and user_email:
-            mapped_email = paid_order_to_email.get(order_id)
+            mapped_email = payment_store.get_order_email(order_id)
             if mapped_email and mapped_email != user_email:
                 _log_event("analysis.pro_rejected", {"reason": "order_email_mismatch", "order_id": order_id, "user_email": user_email}, request)
                 raise HTTPException(
