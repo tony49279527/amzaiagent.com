@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+gcp_key.json
+private-evidence/
+docs/aws-identity-review.md
+__pycache__/
+venv/
+.DS_Store

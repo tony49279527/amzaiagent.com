@@ -12,3 +12,9 @@ __pycache__/
 gcp_key.json
 amzaiagent_deploy_v2_2026_01_20.zip
 windows_latest_version.zip
+
+# Keep local credentials and private review evidence out of uploads
+.env
+.env.*
+private-evidence/
+docs/aws-identity-review.md

@@ -103,6 +103,8 @@ function renderFooter() {
                     <h3 class="footer-logo" style="margin-bottom: 0;">Amz AI Agent</h3>
                 </div>
                 <p class="footer-tagline">AI Amazon Competitor Review Analysis Platform</p>
+                <p class="footer-operator">Amz AI Agent is operated by SmartOps AI Limited Liability Company, a Wyoming limited liability company.
+                    <a href="/about.html">Company &amp; product information</a></p>
             </div>
             <!-- Middle: 3 Link Columns -->
             <div class="footer-columns">
